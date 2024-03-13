@@ -8,11 +8,9 @@ This repository contains helm charts for use by CloudZero users, which can be in
 
 ## Table of Contents
 
-Make sure this is updated based on the sections included:
-
 - [Documentation](#documentation)
 - [Installation](#installation)
-- [Getting Started](#getting-started)
+- [Testing](#testing)
 - [Contributing](#contributing)
 - [Support + Feedback](#support--feedback)
 - [Vulnerability Reporting](#vulnerability-reporting)
@@ -35,7 +33,7 @@ After the `helm` command is available, charts should be installable with the `in
 helm upgrade --install <release-name> cloudzero/<chart-name>
 ```
 
-Installation can also be managed by deployment tools such as ArgoCD or Spinnaker if desired, but this document assume that releases are managed via helm.
+Installation can also be managed by deployment tools such as ArgoCD or Spinnaker if desired, but installation instructions in this repository assume the use of the Helm CLI.
 
 ## Testing
 
@@ -43,6 +41,8 @@ Each helm chart should maintain its own [tests](https://helm.sh/docs/topics/char
 ```bash
 helm test <chart-name>
 ```
+
+This is in addition to integration and load tests not managed in this repository.
 
 ## Contributing
 
