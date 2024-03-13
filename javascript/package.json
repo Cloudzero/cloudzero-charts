@@ -1,0 +1,16 @@
+{
+  "name": "template-cloudzero-open-source",
+  "version": "0.0.1",
+  "description": "A template for open source projects at CloudZero",
+  "author": "CloudZero <support@cloudzero.com> (https://www.cloudzero.com)",
+  "license": "Apache-2.0",
+  "keywords": ["cloudzero"],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cloudzero/template-cloudzero-open-source"
+  },
+  "main": "index.js",
+  "scripts": {},
+  "devDependencies": {},
+  "dependencies": {}
+}

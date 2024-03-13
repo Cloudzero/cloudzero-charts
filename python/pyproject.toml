@@ -1,0 +1,22 @@
+[project]
+name = "template-cloudzero-open-source"
+dynamic = ["version"]
+description = "CloudZero Open Source Template"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Apache-2.0"}
+authors = [
+    { name = "CloudZero", email = "support@cloudzero.com" },
+]
+keywords = [
+    "CloudZero"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3.9",
+]
