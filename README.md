@@ -1,85 +1,77 @@
-# CloudZero Open Source Template
+# CloudZero Helm Charts
 
-This repo contains sample files to be used in CloudZero open source software repositories. These files are guidelines 
-that can be used in a CloudZero or any open source project to ensure that the project is described properly, the 
-contribution process is clear, and additional tools like CI, coverage monitors, and quality checkers are 
-configured properly. 
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE-OF-CONDUCT.md)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+![GitHub release](https://img.shields.io/github/release/cloudzero/template-cloudzero-open-source.svg)
 
-This template is based largely on Auth0's [open-source-template](https://github.com/auth0/open-source-template),
-thank you Auth0, we :heart: you all, and not just because you have a zero in your company name! :hugs:
+This repository contains helm charts for use by CloudZero users, which can be installed into any cloud-hosted Kubernetes cluster.
 
 ## Table of Contents
 
+Make sure this is updated based on the sections included:
+
+- [Documentation](#documentation)
+- [Installation](#installation)
 - [Getting Started](#getting-started)
-- [Contribution](#contribution)
-- [Thank You](#thank-you)
+- [Contributing](#contributing)
+- [Support + Feedback](#support--feedback)
+- [Vulnerability Reporting](#vulnerability-reporting)
+- [What is CloudZero?](#what-is-cloudzero)
 - [License](#license)
 
-## Getting Started
+## Documentation
 
-This repo can be cloned, modified, then re-purposed for new open source projects. It can also be used piecemeal to improve
-existing repos.
+Detailed documentation of each helm chart should be available within each chart README.md. Other documentation that may be helpful:
+- [CloudZero Docs](https://docs.cloudzero.com/) for general information on CloudZero.
+- [Helm Documentation](https://helm.sh/) for information on what Helm is, and how it is used to install artifacts on Kubernetes clusters.
+- [Kubernetes Documentation](https://kubernetes.io/docs/home/) for information on Kubernetes itself.
 
-### Copy README-sample.md to README.md
+## Installation
 
-The core of open source repo quality is the `README.md` file that's displayed on the repo's homepage in Github. 
-The `README-sample.md` included here was collaboratively created by CloudZero's engineering team and community
-engineering team based on samples of high-quality README files around the web.
+The helm charts in this repository generally assume the use of Helm v3 for installation. More detailed installation instructions are located within the README of each chart. See the [official Helm documentation](https://helm.sh/docs/intro/install/) for instructions on installing Helm v3.
 
-Most sections within this file should be considered required, even if that section contains a link to a more relevant
-page. Certain sections will contain repo-specific information and should be modified as needed:
+After the `helm` command is available, charts should be installable with the `install` or `upgrade` command:
+```bash
+helm upgrade --install <release-name> cloudzero/<chart-name>
+```
 
-- Description (below the title)
-- Badges
-- Documentation
-- Installation
-- Getting Started
-- Thank you
-- License
+Installation can also be managed by deployment tools such as ArgoCD or Spinnaker if desired, but this document assume that releases are managed via helm.
 
-Other sections should be used as-is with minimal changes:
+## Testing
 
-- Table of Contents
-- Contribution
-- Support + Feedback
-- Vulnerability Reporting
-- What is CloudZero?
+Each helm chart should maintain its own [tests](https://helm.sh/docs/topics/chart_tests/). These tests should be executed with the command:
+```bash
+helm test <chart-name>
+```
 
-### Modify templates in `.github`
+## Contributing
 
-The issue and PR templates contained in this repo are general guidelines for what to include. What is being asked for is entirely up to the repo maintainer but a template of some kind should be included.
+We appreciate feedback and contribution to this repo! Before you get started, please see the following:
 
-### Update LICENSE
+- [Auth0's general contribution guidelines](https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md)
+- [Auth0's code of conduct guidelines](https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md)
+- [This repo's contribution guide](CONTRIBUTING.md)
 
-See `README-sample.md` for guidelines.
+## Support + Feedback
 
-### Modify .gitignore
+Contact support@cloudzero.com for usage, questions, specific cases. See the [CloudZero Docs](https://docs.cloudzero.com/) for general information on CloudZero.
 
-This file contains files that will be excluded from git. Modify as needed based on the technology being used.
+## Vulnerability Reporting
 
-### Modify/remove platform-specific files
+Please do not report security vulnerabilities on the public GitHub issue tracker. Email [security@cloudzero.com](mailto:security@cloudzero.com) instead.
 
-Additional template files have been included here for the specific technology that we work with. These should be considered as guidelines and not enforced in any way.
+## What is CloudZero?
 
-## Contribution
+CloudZero is the only cloud cost intelligence platform that puts engineering in control by connecting technical decisions to business results.:
 
-We appreciate feedback and contribution to this template! Before you get started, please see the following:
+- [Cost Allocation And Tagging](https://www.cloudzero.com/tour/allocation) Organize and allocate cloud spend in new ways, increase tagging coverage, or work on showback.
+- [Kubernetes Cost Visibility](https://www.cloudzero.com/tour/kubernetes) Understand your Kubernetes spend alongside total spend across containerized and non-containerized environments.
+- [FinOps And Financial Reporting](https://www.cloudzero.com/tour/finops) Operationalize reporting on metrics such as cost per customer, COGS, gross margin. Forecast spend, reconcile invoices and easily investigate variance.
+- [Engineering Accountability](https://www.cloudzero.com/tour/engineering) Foster a cost-conscious culture, where engineers understand spend, proactively consider cost, and get immediate feedback with fewer interruptions and faster and more efficient innovation.
+- [Optimization And Reducing Waste](https://www.cloudzero.com/tour/optimization) Focus on immediately reducing spend by understanding where we have waste, inefficiencies, and discounting opportunities.
 
-- [CloudZero's general contribution guidelines](GENERAL-CONTRIBUTING.md)
-- [CloudZero's code of conduct guidelines](CODE-OF-CONDUCT.md)
-
-## Thank You!
-
-A big thank you to all of our sources of inspiration!
-
-- [First Contributions by @Roshanjossey](https://github.com/Roshanjossey/first-contributions)
-- [First Timers Only](https://www.firsttimersonly.com/)
-- [Sane Github Labels](https://medium.com/@dave_lunny/sane-github-labels-c5d2e6004b63)
-- [Awesome README by @matiassingers](https://github.com/matiassingers/awesome-readme)
-- [Auth0](https://github.com/auth0/open-source-template) for pulling all this together!
-
-... and many more!
+Learn more about [CloudZero](https://www.cloudzero.com/) on our website [www.cloudzero.com](https://www.cloudzero.com/)
 
 ## License
 
-This repo is covered under the [Apache 2.0](LICENSE).
+This project is licenced under the Apache 2.0 [LICENSE](LICENSE).
