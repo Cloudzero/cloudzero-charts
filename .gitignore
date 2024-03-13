@@ -135,3 +135,7 @@ dmypy.json
 # IDE Cruft
 .vscode/
 .idea/
+
+# Helm
+/charts/*/charts
+*.tgz
