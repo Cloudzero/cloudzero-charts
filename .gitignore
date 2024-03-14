@@ -135,3 +135,12 @@ dmypy.json
 # IDE Cruft
 .vscode/
 .idea/
+
+# macOS stuff
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Helm
+/charts/*/charts
+*.tgz
