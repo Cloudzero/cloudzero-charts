@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 ![GitHub release](https://img.shields.io/github/release/cloudzero/template-cloudzero-open-source.svg)
 
-A chart for deploying Prometheus in agent mode for the purpose of sending cluster metrics to the CloudZero paltform
+A chart for deploying Prometheus in agent mode for the purpose of sending cluster metrics to the CloudZero platform.
 
 ## Prerequisites
 

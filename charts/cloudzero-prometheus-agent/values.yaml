@@ -1,5 +1,3 @@
-
-
 global:
   cloudzeroHost: api.cloudzero.com
   secretName: &secretName cloudzero-api-key
