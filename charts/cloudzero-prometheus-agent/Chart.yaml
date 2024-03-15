@@ -1,0 +1,11 @@
+apiVersion: v2
+name: cloudzero-prometheus-agent
+description: A wrapper chart around Prometheus for running in agent mode.
+type: application
+version: 0.0.1
+appVersion: "v2.48.1"
+dependencies:
+  - name: kube-prometheus-stack
+    version: "55.8.*"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: kube-prometheus-stack.enabled

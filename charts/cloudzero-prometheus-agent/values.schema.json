@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "required": [
+        "api_key",
+        "global"
+      ],
+    "properties": {
+      "api_key": {
+        "type": "string"
+      },
+      "global": {
+        "type": "object",
+        "properties": {
+          "cloudzeroHost": {
+            "type": "string"
+          },
+          "cluster_name": {
+            "type": "string"
+          },
+          "cloud_account_id": {
+            "type": ["string", "integer"]
+          }
+        },
+        "required": [
+          "cloudzeroHost",
+          "cluster_name",
+          "cloud_account_id"
+        ]
+      }
+    }
+  }

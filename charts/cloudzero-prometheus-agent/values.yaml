@@ -1,0 +1,47 @@
+
+
+global:
+  cloudzeroHost: api.cloudzero.com
+  secretName: &secretName cloudzero-api-key
+  cluster_name: null
+  cloud_account_id: null
+  createSecret: true
+
+kube-prometheus-stack:
+  enabled: true
+  prometheus:
+    enabled: true
+    agentMode: true
+    prometheusSpec:
+      secrets:
+      - *secretName
+      remoteWrite:
+        - url: '{{ include "cloudzero-prometheus-agent.remoteWriteUrl" . }}'
+          authorization:
+            credentials_file: '/etc/prometheus/secrets/{{ include "cloudzero-prometheus-agent.secretName" . }}'
+          writeRelabelConfigs:
+            - sourceLabels: [__name__]
+              regex: "^(container_cpu_usage_seconds_total|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_transmit_bytes_total|kube_node_status_capacity|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_labels|kube_pod_info|node_dmi_info|kube_node_info)$"
+              action: keep
+          metadataConfig:
+            send: false
+  kubeControllerManager:
+    enabled: false
+  grafana:
+    enabled: false
+  prometheus-windows-exporter:
+    enabled: false
+  alertmanager:
+    enabled: false
+  coreDns:
+    enabled: false
+  prometheus-node-exporter:
+    prometheus:
+      monitor:
+        relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          separator: ;
+          regex: ^(.*)$
+          targetLabel: node
+          replacement: $1
+          action: replace
