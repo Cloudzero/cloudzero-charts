@@ -3,6 +3,7 @@
 global:
   cloudzeroHost: api.cloudzero.com
   secretName: &secretName cloudzero-api-key
+  secretHostPath: &secretHostPath /etc/prometheus/secrets/cloudzero-api-key/value
   cluster_name: null
   cloud_account_id: null
   createSecret: true
@@ -18,7 +19,7 @@ kube-prometheus-stack:
       remoteWrite:
         - url: '{{ include "cloudzero-prometheus-agent.remoteWriteUrl" . }}'
           authorization:
-            credentials_file: '/etc/prometheus/secrets/{{ include "cloudzero-prometheus-agent.secretName" . }}'
+            credentialsFile: *secretHostPath
           writeRelabelConfigs:
             - sourceLabels: [__name__]
               regex: "^(container_cpu_usage_seconds_total|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_transmit_bytes_total|kube_node_status_capacity|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_labels|kube_pod_info|node_dmi_info|kube_node_info)$"
