@@ -1,0 +1,98 @@
+cloudzero:
+  host: api.cloudzero.com
+  cloud_account_id: null
+  cluster_name: null
+
+credentials:
+  createSecret: true
+  secretName: ""
+
+promethuesConfig:
+  configMapNameOverride: ''
+  configOverride: ''
+  metrics: []
+
+
+kube-state-metrics:
+  enabled: true
+prometheus-node-exporter:
+  enabled: true
+
+serverFiles:
+  prometheus.yml:
+    rule_files:
+imagePullSecrets: []
+nodeSelector: {}
+server:
+  name: server
+  image:
+    repository: quay.io/prometheus/prometheus
+    # if not set appVersion field from Chart.yaml is used
+    tag: ""
+    # When digest is set to a non-empty value, images will be pulled by digest (regardless of tag value).
+    digest: ""
+    pullPolicy: IfNotPresent
+  resources: {}
+  deploymentAnnotations: {}
+  podAnnotations: {}
+  service:
+    enabled: true
+  strategy:
+    type: Recreate
+  priorityClassName: ""
+  configMapOverrideName: configuration
+  args:
+    - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
+    - --web.enable-lifecycle
+    - --web.console.libraries=/etc/prometheus/console_libraries
+    - --web.console.templates=/etc/prometheus/consoles
+    - --enable-feature=agent
+  readinessProbeInitialDelay: 30
+  readinessProbePeriodSeconds: 5
+  readinessProbeTimeout: 4
+  readinessProbeFailureThreshold: 3
+  readinessProbeSuccessThreshold: 1
+  livenessProbeInitialDelay: 30
+  livenessProbePeriodSeconds: 15
+  livenessProbeTimeout: 10
+  livenessProbeFailureThreshold: 3
+  livenessProbeSuccessThreshold: 1
+  useExistingClusterRoleName: false
+  persistentVolume:
+    existingClaim: ""
+    enabled: false
+    mountPath: /data
+    subPath: ""
+    size: 8Gi
+    accessModes:
+      - ReadWriteOnce
+  emptyDir:
+    sizeLimit: 8Gi
+
+serviceAccounts:
+  server:
+    create: true
+    name: ""
+    annotations: {}
+
+rbac:
+  create: true
+
+commonMetaLabels: {}
+
+configmapReload:
+  reloadUrl: ""
+  env: []
+  prometheus:
+    enabled: true
+    name: configmap-reload
+    image:
+      repository: quay.io/prometheus-operator/prometheus-config-reloader
+      tag: v0.70.0
+      # When digest is set to a non-empty value, images will be pulled by digest (regardless of tag value).
+      digest: ""
+      pullPolicy: IfNotPresent
+
+    containerSecurityContext: {}
+    resources: {}
+
