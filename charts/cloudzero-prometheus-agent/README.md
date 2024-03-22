@@ -28,8 +28,8 @@ _See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentati
 ```console
 helm install [RELEASE_NAME] cloudzero/cloudzero-prometheus-agent \
     --set api_key=CLOUDZERO_API_KEY \
-    --set global.cluster_name=CLUSTER_NAME \
-    --set global.cloud_account_id=CLOUD_ACCOUNT_ID \
+    --set cloudzero.cluster_name=CLUSTER_NAME \
+    --set cloudzero.cloud_account_id=CLOUD_ACCOUNT_ID \
 ```
 
 ## Dependencies
