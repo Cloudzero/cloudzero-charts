@@ -32,11 +32,17 @@ helm install [RELEASE_NAME] cloudzero/cloudzero-prometheus-agent \
     --set cloudzero.cloud_account_id=CLOUD_ACCOUNT_ID \
 ```
 
+### Secret Management
+
+The chart requires an CloudZero API key in order to send metric data to the CloudZero platform. Admins can retrieve API keys [here](https://app.cloudzero.com/organization/api-keys).
+
+The Deployment running Prometheus ingests the API key via a Secret; this Secret can be created by the chart (default), or an existing secret can be specified.
+
 ## Dependencies
 
 By default this chart installs additional, dependent charts:
 
-- [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+helm-charts/tree/main/charts/kube-prometheus-stack)
 - [prometheus-community/kube-state-metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
 - [prometheus-community/prometheus-node-exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter)
-- [grafana/grafana](https://github.com/grafana/helm-charts/tree/main/charts/grafana)
+
