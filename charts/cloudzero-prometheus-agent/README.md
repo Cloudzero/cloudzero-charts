@@ -27,6 +27,7 @@ _See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentati
 
 The chart can be installed directly with Helm or any other common Kubernetes deployment tool.
 
+If installing with Helm directly, the following command will install the chart:
 ```console
 helm install [RELEASE_NAME] cloudzero/cloudzero-prometheus-agent \
     --set api_key=CLOUDZERO_API_KEY \
