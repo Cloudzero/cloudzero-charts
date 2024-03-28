@@ -9,6 +9,7 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - endpoints
       - nodes
       - nodes/proxy
       - nodes/metrics
