@@ -5,6 +5,19 @@ cloudzero:
   cloud_account_id: null
   # -- Name of the clusters.
   cluster_name: null
+
+credentials:
+  # -- CloudZero API key. Required if createSecret is false.
+  api_key: null
+  # -- If true, a secret containing the CloudZero API key will be created using the `api_key` value.
+  # createSecret: true
+  createSecret: false
+  # -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
+  secretName: null
+
+promethuesConfig:
+  configMapNameOverride: ''
+  configOverride: ''
   metrics:
   - container_cpu_usage_seconds_total
   - container_memory_working_set_bytes
@@ -18,18 +31,6 @@ cloudzero:
   - kube_pod_info
   - node_cpu_seconds_total
   - node_dmi_info
-
-credentials:
-  # -- If true, a secret containing the CloudZero API key will be created using the `api_key` value.
-  createSecret: true
-  # -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
-  secretName: ""
-
-promethuesConfig:
-  configMapNameOverride: ''
-  configOverride: ''
-  metrics: []
-
 
 kube-state-metrics:
   enabled: true
