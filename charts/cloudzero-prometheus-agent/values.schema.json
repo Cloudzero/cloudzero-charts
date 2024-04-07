@@ -14,7 +14,7 @@
               },
               "cluster_name": {
                   "type": "string",
-                  "pattern": "^[a-z]+(-[a-z]+)*$"
+                  "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
               },
               "cloud_account_id": {
                   "type": [

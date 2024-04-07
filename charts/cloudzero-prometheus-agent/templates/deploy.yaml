@@ -14,11 +14,6 @@ spec:
     matchLabels:
       {{- include "cloudzero-agent.server.matchLabels" . | nindent 6 }}
   replicas: 1
-  {{- if .Values.server.strategy }}
-  strategy:
-{{ toYaml .Values.server.strategy | trim | indent 4 }}
-    {{ if eq .Values.server.strategy.type "Recreate" }}rollingUpdate: null{{ end }}
-{{- end }}
   template:
     metadata:
     {{- if .Values.server.podAnnotations }}
@@ -34,48 +29,19 @@ spec:
 {{- if .Values.server.priorityClassName }}
       priorityClassName: "{{ .Values.server.priorityClassName }}"
 {{- end }}
-{{- if .Values.server.schedulerName }}
-      schedulerName: "{{ .Values.server.schedulerName }}"
-{{- end }}
       serviceAccountName: {{ template "cloudzero-agent.serviceAccountName.server" . }}
-{{- if kindIs "bool" .Values.server.automountServiceAccountToken }}
-      automountServiceAccountToken: {{ .Values.server.automountServiceAccountToken }}
-{{- end }}
-      {{- if .Values.server.extraInitContainers }}
-      initContainers:
-{{ toYaml .Values.server.extraInitContainers | indent 8 }}
-      {{- end }}
       containers:
         {{- if .Values.configmapReload.prometheus.enabled }}
-        - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-{{ .Values.configmapReload.prometheus.name }}
+        - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-configmap-reload
           {{- if .Values.configmapReload.prometheus.image.digest }}
           image: "{{ .Values.configmapReload.prometheus.image.repository }}@{{ .Values.configmapReload.prometheus.image.digest }}"
           {{- else }}
           image: "{{ .Values.configmapReload.prometheus.image.repository }}:{{ .Values.configmapReload.prometheus.image.tag }}"
           {{- end }}
           imagePullPolicy: "{{ .Values.configmapReload.prometheus.image.pullPolicy }}"
-          {{- with .Values.configmapReload.prometheus.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 8 }}
-          {{- end }}
           args:
             - --watched-dir=/etc/config
-          {{- $default_url := "http://127.0.0.1:9090/-/reload" }}
-          {{- with .Values.server.prefixURL }}
-          {{- $default_url = printf "http://127.0.0.1:9090%s/-/reload" . }}
-          {{- end }}
-            - --reload-url={{ default $default_url .Values.configmapReload.reloadUrl }}
-          {{- range $key, $value := .Values.configmapReload.prometheus.extraArgs }}
-            - --{{ $key }}={{ $value }}
-          {{- end }}
-          {{- with .Values.configmapReload.env }}
-          env:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- if .Values.configmapReload.prometheus.containerPort }}
-          ports:
-            - containerPort: {{ .Values.configmapReload.prometheus.containerPort }}
-          {{- end }}
+            - --reload-url="http://127.0.0.1:9090/-/reload"
           {{- with .Values.configmapReload.prometheus.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -100,32 +66,26 @@ spec:
         {{ toYaml .Values.server.args | nindent 12}}
           ports:
             - containerPort: 9090
-          {{- if .Values.server.portName }}
-              name: {{ .Values.server.portName }}
-          {{- end }}
-          {{- if .Values.server.hostPort }}
-              hostPort: {{ .Values.server.hostPort }}
-          {{- end }}
           readinessProbe:
             httpGet:
               path: /-/ready
               port: 9090
               scheme: HTTP
-            initialDelaySeconds: {{ .Values.server.readinessProbeInitialDelay }}
-            periodSeconds: {{ .Values.server.readinessProbePeriodSeconds }}
-            timeoutSeconds: {{ .Values.server.readinessProbeTimeout }}
-            failureThreshold: {{ .Values.server.readinessProbeFailureThreshold }}
-            successThreshold: {{ .Values.server.readinessProbeSuccessThreshold }}
+            initialDelaySeconds: {{ default 30 .Values.server.readinessProbeInitialDelay }}
+            periodSeconds: {{ default 5 .Values.server.readinessProbePeriodSeconds }}
+            timeoutSeconds: {{ default 4 .Values.server.readinessProbeTimeout }}
+            failureThreshold: {{ default 3 .Values.server.readinessProbeFailureThreshold }}
+            successThreshold: {{ default 1 .Values.server.readinessProbeSuccessThreshold }}
           livenessProbe:
             httpGet:
               path: /-/healthy
               port: 9090
               scheme: HTTP
-            initialDelaySeconds: {{ .Values.server.livenessProbeInitialDelay }}
-            periodSeconds: {{ .Values.server.livenessProbePeriodSeconds }}
-            timeoutSeconds: {{ .Values.server.livenessProbeTimeout }}
-            failureThreshold: {{ .Values.server.livenessProbeFailureThreshold }}
-            successThreshold: {{ .Values.server.livenessProbeSuccessThreshold }}
+            initialDelaySeconds: {{ default 30 .Values.server.livenessProbeInitialDelay }}
+            periodSeconds: {{ default 15 .Values.server.livenessProbePeriodSeconds }}
+            timeoutSeconds: {{ default 10 .Values.server.livenessProbeTimeout }}
+            failureThreshold: {{ default 3 .Values.server.livenessProbeFailureThreshold }}
+            successThreshold: {{ default 1 .Values.server.livenessProbeSuccessThreshold }}
           {{- with .Values.server.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -140,21 +100,12 @@ spec:
               mountPath: /etc/config/prometheus/secrets/
               subPath: ""
               readOnly: true
-      {{- if .Values.server.containerSecurityContext }}
-      {{- toYaml .Values.server.containerSecurityContext | nindent 6 }}
-      {{- else }}
       securityContext:
         runAsUser: 65534
         runAsNonRoot: true
         runAsGroup: 65534
         fsGroup: 65534
-          {{- end }}
-    {{- if .Values.server.hostNetwork }}
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-    {{- else }}
       dnsPolicy: ClusterFirst
-    {{- end }}
     {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 8 }}
@@ -162,18 +113,6 @@ spec:
     {{- if .Values.server.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.server.nodeSelector | indent 8 }}
-    {{- end }}
-    {{- if .Values.server.hostAliases }}
-      hostAliases:
-{{ toYaml .Values.server.hostAliases | indent 8 }}
-    {{- end }}
-    {{- if .Values.server.dnsConfig }}
-      dnsConfig:
-{{ toYaml .Values.server.dnsConfig | indent 8 }}
-    {{- end }}
-    {{- with .Values.server.securityContext }}
-      securityContext:
-        {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- if .Values.server.tolerations }}
       tolerations:
@@ -187,7 +126,7 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ default 300 .Values.server.terminationGracePeriodSeconds }}
       volumes:
         - name: config-volume
           configMap:
