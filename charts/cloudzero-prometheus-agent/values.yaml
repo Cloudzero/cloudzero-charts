@@ -32,9 +32,9 @@ promethuesConfig:
   - node_dmi_info
 
 kube-state-metrics:
-  enabled: true
+  enabled: false
 prometheus-node-exporter:
-  enabled: true
+  enabled: false
 
 imagePullSecrets: []
 nodeSelector: {}
