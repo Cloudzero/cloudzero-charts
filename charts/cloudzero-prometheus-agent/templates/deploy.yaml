@@ -41,7 +41,7 @@ spec:
           imagePullPolicy: "{{ .Values.configmapReload.prometheus.image.pullPolicy }}"
           args:
             - --watched-dir=/etc/config
-            - --reload-url="http://127.0.0.1:9090/-/reload"
+            - --reload-url=http://127.0.0.1:9090/-/reload
           {{- with .Values.configmapReload.prometheus.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
