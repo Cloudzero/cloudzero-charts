@@ -51,9 +51,9 @@ data:
 This chart uses metrics from the [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and [node-exporter](https://github.com/prometheus/node_exporter) projects as chart dependencies. By default, these subcharts are disabled so that the agent can scrape metrics from existing instances of `kube-state-metrics` and `node-exporter`. They can optionally be enabled with the settings:
 ```yaml
 kube-state-metrics:
-  enabled: false
+  enabled: true
 prometheus-node-exporter:
-  enabled: false
+  enabled: true
 ```
 This will deploy the required resources for metric scraping.
 
