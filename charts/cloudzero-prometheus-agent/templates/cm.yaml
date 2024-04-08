@@ -141,7 +141,7 @@ data:
           credentials_file: /etc/config/prometheus/secrets/value
         write_relabel_configs:
           - source_labels: [__name__]
-            regex: "^({{ join "|" .Values.cloudzero.metrics }})$"
+            regex: "^({{ join "|" .Values.promethuesConfig.metrics }})$"
             action: keep
         metadata_config:
           send: false

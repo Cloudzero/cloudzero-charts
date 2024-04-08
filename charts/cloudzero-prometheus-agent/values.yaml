@@ -5,6 +5,18 @@ cloudzero:
   cloud_account_id: null
   # -- Name of the clusters.
   cluster_name: null
+
+credentials:
+  # -- CloudZero API key. Required if createSecret is false.
+  api_key: null
+  # -- If true, a secret containing the CloudZero API key will be created using the `api_key` value.
+  createSecret: true
+  # -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
+  secretName: null
+
+promethuesConfig:
+  configMapNameOverride: ''
+  configOverride: ''
   metrics:
   - container_cpu_usage_seconds_total
   - container_memory_working_set_bytes
@@ -19,26 +31,11 @@ cloudzero:
   - node_cpu_seconds_total
   - node_dmi_info
 
-credentials:
-  # -- If true, a secret containing the CloudZero API key will be created using the `api_key` value.
-  createSecret: true
-  # -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
-  secretName: ""
-
-promethuesConfig:
-  configMapNameOverride: ''
-  configOverride: ''
-  metrics: []
-
-
 kube-state-metrics:
-  enabled: true
+  enabled: false
 prometheus-node-exporter:
-  enabled: true
+  enabled: false
 
-serverFiles:
-  prometheus.yml:
-    rule_files:
 imagePullSecrets: []
 nodeSelector: {}
 server:
@@ -53,29 +50,13 @@ server:
   resources: {}
   deploymentAnnotations: {}
   podAnnotations: {}
-  service:
-    enabled: true
-  strategy:
-    type: Recreate
-  priorityClassName: ""
   configMapOverrideName: configuration
   args:
     - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
     - --web.enable-lifecycle
     - --web.console.libraries=/etc/prometheus/console_libraries
     - --web.console.templates=/etc/prometheus/consoles
-    - --enable-feature=agent
-  readinessProbeInitialDelay: 30
-  readinessProbePeriodSeconds: 5
-  readinessProbeTimeout: 4
-  readinessProbeFailureThreshold: 3
-  readinessProbeSuccessThreshold: 1
-  livenessProbeInitialDelay: 30
-  livenessProbePeriodSeconds: 15
-  livenessProbeTimeout: 10
-  livenessProbeFailureThreshold: 3
-  livenessProbeSuccessThreshold: 1
-  useExistingClusterRoleName: false
+    # - --enable-feature=agent
   persistentVolume:
     existingClaim: ""
     enabled: false
@@ -103,11 +84,9 @@ configmapReload:
   env: []
   prometheus:
     enabled: true
-    name: configmap-reload
     image:
       repository: quay.io/prometheus-operator/prometheus-config-reloader
       tag: v0.70.0
-      # When digest is set to a non-empty value, images will be pulled by digest (regardless of tag value).
       digest: ""
       pullPolicy: IfNotPresent
 
