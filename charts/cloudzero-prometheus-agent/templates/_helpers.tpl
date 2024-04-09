@@ -20,7 +20,7 @@ https://{{ .Values.global.cloudzeroHost }}/v1/container-metrics?cluster_name={{.
 
 {{/* Define the secret name which holds the CloudZero API key */}}
 {{ define "cloudzero-agent.secretName" -}}
-{{ .Values.credentials.secretName | default (printf "%s-api-key" .Release.Name) }}
+{{ .Values.cloudzero.secretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end}}
 
 {{ define "cloudzero-agent.configMapName" -}}

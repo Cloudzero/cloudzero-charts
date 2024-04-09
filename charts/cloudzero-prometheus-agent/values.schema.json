@@ -2,8 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "required": [
-      "cloudzero",
-      "credentials"
+      "cloudzero"
   ],
   "properties": {
       "cloudzero": {
@@ -21,26 +20,28 @@
                       "string",
                       "integer"
                   ]
+              },
+              "api_key":{
+                "type": ["object","string"],
+                "properties": {
+                    "createSecret" :{
+                        "type":"boolean"
+                    }
+                },
+                "dependentRequired": {
+                    "createSecret" : [
+                        "api_key"
+                    ]
+                }
               }
           },
           "required": [
               "host",
               "cluster_name",
-              "cloud_account_id"
+              "cloud_account_id",
+              "api_key"
+              
           ]
-      },
-      "credentials": {
-          "type": "object",
-          "properties": {
-              "createSecret": {
-                  "type": "boolean"
-              }
-          },
-          "dependentRequired": {
-              "createSecret": [
-                  "api_key"
-              ]
-          }
       }
   }
 }

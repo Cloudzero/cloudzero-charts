@@ -5,14 +5,13 @@ cloudzero:
   cloud_account_id: null
   # -- Name of the clusters.
   cluster_name: null
-
-credentials:
   # -- CloudZero API key. Required if createSecret is false.
   api_key: null
   # -- If true, a secret containing the CloudZero API key will be created using the `api_key` value.
   createSecret: true
   # -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
   secretName: null
+
 
 promethuesConfig:
   configMapNameOverride: ''
@@ -52,11 +51,11 @@ server:
   podAnnotations: {}
   configMapOverrideName: configuration
   args:
-    - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
-    - --web.enable-lifecycle
-    - --web.console.libraries=/etc/prometheus/console_libraries
-    - --web.console.templates=/etc/prometheus/consoles
-    # - --enable-feature=agent
+  - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
+  - --web.enable-lifecycle
+  - --web.console.libraries=/etc/prometheus/console_libraries
+  - --web.console.templates=/etc/prometheus/consoles
+  # - --enable-feature=agent
   persistentVolume:
     existingClaim: ""
     enabled: false
@@ -64,7 +63,7 @@ server:
     subPath: ""
     size: 8Gi
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
   emptyDir:
     sizeLimit: 8Gi
 

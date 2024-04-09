@@ -29,10 +29,10 @@ The chart can be installed directly with Helm or any other common Kubernetes dep
 
 If installing with Helm directly, the following command will install the chart:
 ```console
-helm install [RELEASE_NAME] cloudzero/cloudzero-prometheus-agent \
-    --set api_key=CLOUDZERO_API_KEY \
-    --set cloudzero.cluster_name=CLUSTER_NAME \
-    --set cloudzero.cloud_account_id=CLOUD_ACCOUNT_ID \
+helm install <RELEASE_NAME> cloudzero/cloudzero-prometheus-agent \
+    --set cloudzero.api_key=<CLOUDZERO_API_KEY> \
+    --set cloudzero.cluster_name=<CLUSTER_NAME> \
+    --set cloudzero.cloud_account_id=<CLOUD_ACCOUNT_ID> \
 ```
 
 ### Secret Management
@@ -81,9 +81,9 @@ See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-
 | cloudzero.cloud_account_id | string | `nil` | Account ID of the account the cluster is running in. |
 | cloudzero.cluster_name | string | `nil` | Name of the clusters. |
 | cloudzero.host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. |
-| credentials.createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `credentials.api_key` value. |
-| credentials.api_key | string | `nil` | The CloudZero API key to use to export metrics. Only used if `credentials.createSecret` is true |
-| credentials.secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if createSecret is false. |
+| cloudzero.createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `credentials.api_key` value. |
+| cloudzero.api_key | string | `nil` | The CloudZero API key to use to export metrics. Only used if `credentials.createSecret` is true |
+| cloudzero.secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if createSecret is false. |
 
 ## Requirements
 
