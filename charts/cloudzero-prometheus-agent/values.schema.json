@@ -1,47 +1,39 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "required": [
-      "cloudzero"
-  ],
   "properties": {
-      "cloudzero": {
-          "type": "object",
-          "properties": {
-              "host": {
-                  "type": "string"
-              },
-              "cluster_name": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-              },
-              "cloud_account_id": {
-                  "type": [
-                      "string",
-                      "integer"
-                  ]
-              },
-              "api_key":{
-                "type": ["object","string"],
-                "properties": {
-                    "createSecret" :{
-                        "type":"boolean"
-                    }
-                },
-                "dependentRequired": {
-                    "createSecret" : [
-                        "api_key"
-                    ]
-                }
-              }
-          },
-          "required": [
-              "host",
-              "cluster_name",
-              "cloud_account_id",
-              "api_key"
-              
+    "host": {
+        "type": "string"
+    },
+    "clusterName": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "cloudAccountId": {
+        "type": [
+            "string",
+            "integer"
+        ]
+    },
+    "apiKey":{
+      "type": ["object","string"],
+      "properties": {
+          "createSecret" :{
+              "type":"boolean"
+          }
+      },
+      "dependentRequired": {
+          "createSecret" : [
+              "apiKey"
           ]
       }
+    }
+},
+"required": [
+    "host",
+    "clusterName",
+    "cloudAccountId",
+    "apiKey"
+    
+]
   }
-}

@@ -30,9 +30,9 @@ The chart can be installed directly with Helm or any other common Kubernetes dep
 If installing with Helm directly, the following command will install the chart:
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-prometheus-agent \
-    --set cloudzero.api_key=<CLOUDZERO_API_KEY> \
-    --set cloudzero.cluster_name=<CLUSTER_NAME> \
-    --set cloudzero.cloud_account_id=<CLOUD_ACCOUNT_ID> \
+    --set cloudzero.apiKey=<CLOUDZERO_apiKey> \
+    --set cloudzero.clusterName=<clusterName> \
+    --set cloudzero.cloudAccountId=<cloudAccountId> \
 ```
 
 ### Secret Management
@@ -45,7 +45,7 @@ If using a Secret external to this chart for the API key, ensure the Secret is c
 
 ```yaml
 data:
-  value: <API_KEY>
+  value: <apiKey>
 ```
 ### Metric Exporters
 This chart uses metrics from the [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and [node-exporter](https://github.com/prometheus/node_exporter) projects as chart dependencies. By default, these subcharts are disabled so that the agent can scrape metrics from existing instances of `kube-state-metrics` and `node-exporter`. They can optionally be enabled with the settings:
@@ -78,11 +78,11 @@ See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cloudzero.cloud_account_id | string | `nil` | Account ID of the account the cluster is running in. |
-| cloudzero.cluster_name | string | `nil` | Name of the clusters. |
+| cloudzero.cloudAccountId | string | `nil` | Account ID of the account the cluster is running in. |
+| cloudzero.clusterName | string | `nil` | Name of the clusters. |
 | cloudzero.host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. |
-| cloudzero.createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `credentials.api_key` value. |
-| cloudzero.api_key | string | `nil` | The CloudZero API key to use to export metrics. Only used if `credentials.createSecret` is true |
+| cloudzero.createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `credentials.apiKey` value. |
+| cloudzero.apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `credentials.createSecret` is true |
 | cloudzero.secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if createSecret is false. |
 
 ## Requirements

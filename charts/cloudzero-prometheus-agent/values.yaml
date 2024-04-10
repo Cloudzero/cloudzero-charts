@@ -1,13 +1,14 @@
+# -- CloudZero host to send metrics to.
+host: api.cloudzero.com
+
 cloudzero:
-  # -- CloudZero host to send metrics to.
-  host: api.cloudzero.com
   # -- Account ID of the account the cluster is running in.
-  cloud_account_id: null
+  cloudAccountId: null
   # -- Name of the clusters.
-  cluster_name: null
+  clusterName: null
   # -- CloudZero API key. Required if createSecret is false.
-  api_key: null
-  # -- If true, a secret containing the CloudZero API key will be created using the `api_key` value.
+  apiKey: null
+  # -- If true, a secret containing the CloudZero API key will be created using the `apiKey` value.
   createSecret: true
   # -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
   secretName: null
