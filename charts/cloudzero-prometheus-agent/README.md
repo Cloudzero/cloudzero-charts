@@ -29,7 +29,7 @@ The chart can be installed directly with Helm or any other common Kubernetes dep
 
 If installing with Helm directly, the following command will install the chart:
 ```console
-helm install <RELEASE_NAME> cloudzero/cloudzero-prometheus-agent \
+helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set apiKey=<CLOUDZERO_apiKey> \
     --set clusterName=<clusterName> \
     --set cloudAccountId=<cloudAccountId> \
