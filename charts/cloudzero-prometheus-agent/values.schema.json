@@ -16,7 +16,7 @@
         ]
     },
     "apiKey":{
-      "type": ["object","string"],
+      "type": ["string"],
       "properties": {
           "createSecret" :{
               "type":"boolean"

@@ -30,9 +30,9 @@ The chart can be installed directly with Helm or any other common Kubernetes dep
 If installing with Helm directly, the following command will install the chart:
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-prometheus-agent \
-    --set cloudzero.apiKey=<CLOUDZERO_apiKey> \
-    --set cloudzero.clusterName=<clusterName> \
-    --set cloudzero.cloudAccountId=<cloudAccountId> \
+    --set apiKey=<CLOUDZERO_apiKey> \
+    --set clusterName=<clusterName> \
+    --set cloudAccountId=<cloudAccountId> \
 ```
 
 ### Secret Management
@@ -78,12 +78,12 @@ See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cloudzero.cloudAccountId | string | `nil` | Account ID of the account the cluster is running in. |
-| cloudzero.clusterName | string | `nil` | Name of the clusters. |
-| cloudzero.host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. |
-| cloudzero.createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `credentials.apiKey` value. |
-| cloudzero.apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `credentials.createSecret` is true |
-| cloudzero.secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if createSecret is false. |
+| cloudAccountId | string | `nil` | Account ID of the account the cluster is running in. |
+| clusterName | string | `nil` | Name of the clusters. |
+| host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. |
+| createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `apiKey` value. |
+| apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `createSecret` is true |
+| secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if createSecret is false. |
 
 ## Requirements
 
