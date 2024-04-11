@@ -32,8 +32,6 @@
 "required": [
     "host",
     "clusterName",
-    "cloudAccountId",
-    "apiKey"
-    
+    "cloudAccountId"
 ]
   }

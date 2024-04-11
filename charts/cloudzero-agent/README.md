@@ -30,9 +30,9 @@ The chart can be installed directly with Helm or any other common Kubernetes dep
 If installing with Helm directly, the following command will install the chart:
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set apiKey=<CLOUDZERO_apiKey> \
-    --set clusterName=<clusterName> \
-    --set cloudAccountId=<cloudAccountId> \
+    --set apiKey=<CLOUDZERO_APIKEY> \
+    --set clusterName=<CLUSTER_NAME> \
+    --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
 ```
 
 ### Secret Management
@@ -45,7 +45,7 @@ If using a Secret external to this chart for the API key, ensure the Secret is c
 
 ```yaml
 data:
-  value: <apiKey>
+  value: <API_KEY>
 ```
 ### Metric Exporters
 This chart uses metrics from the [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and [node-exporter](https://github.com/prometheus/node_exporter) projects as chart dependencies. By default, these subcharts are disabled so that the agent can scrape metrics from existing instances of `kube-state-metrics` and `node-exporter`. They can optionally be enabled with the settings:
