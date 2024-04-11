@@ -12,15 +12,9 @@ Create chart name and version as used by the chart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{/* Define the url to which metrics should be sent */}}
-{{- define "cloudzero-agent.remoteWriteUrl" -}}
-https://{{ .Values.global.cloudzeroHost }}/v1/container-metrics?cluster_name={{.Values.global.cluster_name}}&cloud_account_id={{.Values.global.cloud_account_id}}
-{{- end -}}
-
-
 {{/* Define the secret name which holds the CloudZero API key */}}
 {{ define "cloudzero-agent.secretName" -}}
-{{ .Values.credentials.secretName | default (printf "%s-api-key" .Release.Name) }}
+{{ .Values.secretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end}}
 
 {{ define "cloudzero-agent.configMapName" -}}

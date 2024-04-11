@@ -48,9 +48,7 @@ This is in addition to integration and load tests not managed in this repository
 
 We appreciate feedback and contribution to this repo! Before you get started, please see the following:
 
-- [Auth0's general contribution guidelines](https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md)
-- [Auth0's code of conduct guidelines](https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md)
-- [This repo's contribution guide](CONTRIBUTING.md)
+- [This repo's contribution guide](GENERAL-CONTRIBUTING.md)
 
 ## Support + Feedback
 
