@@ -14,19 +14,6 @@
             "string",
             "integer"
         ]
-    },
-    "apiKey":{
-      "type": ["string"],
-      "properties": {
-          "createSecret" :{
-              "type":"boolean"
-          }
-      },
-      "dependentRequired": {
-          "createSecret" : [
-              "apiKey"
-          ]
-      }
     }
 },
 "required": [
