@@ -81,9 +81,9 @@ See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-
 | cloudAccountId | string | `nil` | Account ID of the account the cluster is running in. |
 | clusterName | string | `nil` | Name of the clusters. |
 | host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. |
-| createSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `apiKey` value. |
-| apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `createSecret` is true |
-| secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if createSecret is false. |
+| useExistingSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `apiKey` value. |
+| apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `useExistingSecret` is true |
+| secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if useExistingSecret is false. |
 
 ## Requirements
 

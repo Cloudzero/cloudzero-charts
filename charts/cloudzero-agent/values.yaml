@@ -4,11 +4,11 @@ host: api.cloudzero.com
 cloudAccountId: null
 # -- Name of the clusters.
 clusterName: null
-# -- CloudZero API key. Required if createSecret is false.
+# -- CloudZero API key. Required if useExistingSecret is false.
 apiKey: null
 # -- If true, a secret containing the CloudZero API key will be created using the `apiKey` value.
-createSecret: false
-# -- The name of the secret that contains the CloudZero API key. Required if createSecret is false.
+useExistingSecret: false
+# -- The name of the secret that contains the CloudZero API key. Required if useExistingSecret is false.
 secretName: null
 
 
