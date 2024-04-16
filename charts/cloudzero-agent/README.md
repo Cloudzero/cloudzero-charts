@@ -30,7 +30,7 @@ The chart can be installed directly with Helm or any other common Kubernetes dep
 If installing with Helm directly, the following command will install the chart:
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set apiKey=<CLOUDZERO_APIKEY> \
+    --set secretName=<NAME_OF_SECRET> \
     --set clusterName=<CLUSTER_NAME> \
     --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
 ```
@@ -39,7 +39,7 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 
 The chart requires an CloudZero API key in order to send metric data to the CloudZero platform. Admins can retrieve API keys [here](https://app.cloudzero.com/organization/api-keys).
 
-The Deployment running Prometheus ingests the API key via a Secret; this Secret can be created by the chart (default), or an existing secret containing the API key can be specified.
+The Deployment running Prometheus ingests the API key via a Secret; this Secret can be supplied as an existing secret (default), or created by the chart. Both methods will require the API key retrieved from the CloudZero platform.
 
 If using a Secret external to this chart for the API key, ensure the Secret is created in the same namespace as the chart and that the Secret data follows the format:
 
@@ -76,14 +76,14 @@ See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-
 
 ## Values
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| cloudAccountId | string | `nil` | Account ID of the account the cluster is running in. |
-| clusterName | string | `nil` | Name of the clusters. |
-| host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. |
-| useExistingSecret | bool | `true` | If true, a secret containing the CloudZero API key will be created using the `apiKey` value. |
-| apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `useExistingSecret` is true |
-| secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if useExistingSecret is false. |
+| Key | Type | Default | Description                                                                                        |
+|-----|------|---------|----------------------------------------------------------------------------------------------------|
+| cloudAccountId | string | `nil` | Account ID of the account the cluster is running in.                                               |
+| clusterName | string | `nil` | Name of the clusters.                                                                              |
+| host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                 |
+| useExistingSecret | bool | `true` | If false, a secret containing the CloudZero API key will be created using the `apiKey` value.      |
+| apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `useExistingSecret` is false          |
+| secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if useExistingSecret is true. |
 
 ## Requirements
 

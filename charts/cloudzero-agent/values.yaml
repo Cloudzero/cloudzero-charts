@@ -7,7 +7,7 @@ clusterName: null
 # -- CloudZero API key. Required if useExistingSecret is false.
 apiKey: null
 # -- If true, a secret containing the CloudZero API key will be created using the `apiKey` value.
-useExistingSecret: false
+useExistingSecret: true
 # -- The name of the secret that contains the CloudZero API key. Required if useExistingSecret is false.
 secretName: null
 
