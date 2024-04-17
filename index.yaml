@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-04-16T17:21:53.23791-04:00"
+    created: "2024-04-17T15:21:52.315407-04:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -19,6 +19,6 @@ entries:
     name: cloudzero-agent
     type: application
     urls:
-    - https://github.com/Cloudzero/cloudzero-charts/cloudzero-agent-0.0.1.tgz
+    - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-0.0.1.tgz
     version: 0.0.1
-generated: "2024-04-16T17:21:53.235088-04:00"
+generated: "2024-04-17T15:21:52.313305-04:00"
