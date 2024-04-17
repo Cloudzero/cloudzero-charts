@@ -8,6 +8,7 @@ This repository contains helm charts for use by CloudZero users, which can be in
 
 ## Table of Contents
 
+- [Current Helm Charts](#current-helm-charts)
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Testing](#testing)
@@ -16,6 +17,10 @@ This repository contains helm charts for use by CloudZero users, which can be in
 - [Vulnerability Reporting](#vulnerability-reporting)
 - [What is CloudZero?](#what-is-cloudzero)
 - [License](#license)
+
+## Current Helm Charts
+
+- [cloudzero-agent](charts/cloudzero-agent/README.md) A chart for using Prometheus in agent mode to send cluster metrics to the CloudZero platform.
 
 ## Documentation
 

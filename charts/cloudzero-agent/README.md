@@ -8,7 +8,7 @@ A chart for using Prometheus in agent mode to send cluster metrics to the CloudZ
 
 ## Prerequisites
 
-- Kubernetes 1.19+
+- Kubernetes 1.23+
 - Helm 3+
 - A CloudZero API key
 
@@ -17,7 +17,7 @@ A chart for using Prometheus in agent mode to send cluster metrics to the CloudZ
 ### Get Helm Repository Info
 
 ```console
-helm repo add cloudzero cloudzero/cloudzero-prometheus-agent
+helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
 helm repo update
 ```
 
@@ -66,7 +66,7 @@ kube-state-metrics:
   extraArgs:
     - --metric-labels-allowlist=pods=[*]
 ```
-A subset of relevent pod labels can be included; as an example, exporting only pod labels with start with `foobar_` could be achieved with the following:
+A subset of relevant pod labels can be included; as an example, exporting only pod labels with start with `foobar_` could be achieved with the following:
 ```yaml
 kube-state-metrics:
   extraArgs:
@@ -76,18 +76,18 @@ See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-
 
 ## Values
 
-| Key | Type | Default | Description                                                                                        |
-|-----|------|---------|----------------------------------------------------------------------------------------------------|
-| cloudAccountId | string | `nil` | Account ID of the account the cluster is running in.                                               |
-| clusterName | string | `nil` | Name of the clusters.                                                                              |
-| host | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                 |
-| useExistingSecret | bool | `true` | If false, a secret containing the CloudZero API key will be created using the `apiKey` value.      |
-| apiKey | string | `nil` | The CloudZero API key to use to export metrics. Only used if `useExistingSecret` is false          |
-| secretName | string | `""` | The name of the secret that contains the CloudZero API key. Required if useExistingSecret is true. |
+| Key               | Type   | Default               | Description                                                                                        |
+|-------------------|--------|-----------------------|----------------------------------------------------------------------------------------------------|
+| cloudAccountId    | string | `nil`                 | Account ID of the account the cluster is running in.                                               |
+| clusterName       | string | `nil`                 | Name of the clusters.                                                                              |
+| host              | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                 |
+| useExistingSecret | bool   | `true`                | If false, a secret containing the CloudZero API key will be created using the `apiKey` value.      |
+| apiKey            | string | `nil`                 | The CloudZero API key to use to export metrics. Only used if `useExistingSecret` is false          |
+| secretName        | string | `""`                  | The name of the secret that contains the CloudZero API key. Required if useExistingSecret is true. |
 
 ## Requirements
 
-| Repository | Name | Version |
-|------------|------|---------|
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.15.* |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.24.* |
+| Repository                                         | Name                     | Version |
+|----------------------------------------------------|--------------------------|---------|
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics       | 5.15.*  |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.24.*  |
