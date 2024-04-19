@@ -30,7 +30,10 @@ The helm charts in this repository generally assume the use of Helm v3 for insta
 
 After the `helm` command is available, charts should be installable with the `install` or `upgrade` command:
 ```bash
-helm upgrade --install <release-name> cloudzero/<chart-name>
+helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent \
+    --set secretName=<NAME_OF_SECRET> \
+    --set clusterName=<CLUSTER_NAME> \
+    --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
 ```
 
 Installation can also be managed by deployment tools such as ArgoCD or Spinnaker if desired, but installation instructions in this repository assume the use of the Helm CLI.
