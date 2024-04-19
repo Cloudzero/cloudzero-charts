@@ -1,0 +1,93 @@
+# -- CloudZero host to send metrics to.
+host: api.cloudzero.com
+# -- Account ID of the account the cluster is running in.
+cloudAccountId: null
+# -- Name of the clusters.
+clusterName: null
+# -- CloudZero API key. Required if useExistingSecret is false.
+apiKey: null
+# -- If true, a secret containing the CloudZero API key will be created using the `apiKey` value.
+useExistingSecret: true
+# -- The name of the secret that contains the CloudZero API key. Required if useExistingSecret is false.
+secretName: null
+
+
+promethuesConfig:
+  configMapNameOverride: ''
+  configOverride: ''
+  metrics:
+  - container_cpu_usage_seconds_total
+  - container_memory_working_set_bytes
+  - container_network_receive_bytes_total
+  - container_network_transmit_bytes_total
+  - kube_node_info
+  - kube_node_status_capacity
+  - kube_pod_container_resource_limits
+  - kube_pod_container_resource_requests
+  - kube_pod_labels
+  - kube_pod_info
+  - node_cpu_seconds_total
+  - node_dmi_info
+
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+
+imagePullSecrets: []
+nodeSelector: {}
+server:
+  name: server
+  image:
+    repository: quay.io/prometheus/prometheus
+    # if not set appVersion field from Chart.yaml is used
+    tag: ""
+    # When digest is set to a non-empty value, images will be pulled by digest (regardless of tag value).
+    digest: ""
+    pullPolicy: IfNotPresent
+  resources: {}
+  deploymentAnnotations: {}
+  podAnnotations: {}
+  configMapOverrideName: configuration
+  args:
+  - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
+  - --web.enable-lifecycle
+  - --web.console.libraries=/etc/prometheus/console_libraries
+  - --web.console.templates=/etc/prometheus/consoles
+  - --enable-feature=agent
+  persistentVolume:
+    existingClaim: ""
+    enabled: false
+    mountPath: /data
+    subPath: ""
+    size: 8Gi
+    accessModes:
+    - ReadWriteOnce
+  emptyDir:
+    sizeLimit: 8Gi
+
+serviceAccounts:
+  server:
+    create: true
+    name: ""
+    annotations: {}
+
+rbac:
+  create: true
+
+commonMetaLabels: {}
+
+configmapReload:
+  reloadUrl: ""
+  env: []
+  prometheus:
+    enabled: true
+    image:
+      repository: quay.io/prometheus-operator/prometheus-config-reloader
+      tag: v0.70.0
+      digest: ""
+      pullPolicy: IfNotPresent
+
+    containerSecurityContext: {}
+    resources: {}
+
