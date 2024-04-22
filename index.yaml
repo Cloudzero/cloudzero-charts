@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-04-18T11:36:56.91954-04:00"
+    created: "2024-04-22T11:49:40.484172-04:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -19,11 +19,11 @@ entries:
     name: cloudzero-agent
     type: application
     urls:
-    - https://raw.githubusercontent.com/cloudzero/cloudzero-charts/gh-pages/cloudzero-agent-0.0.1.tgz
+    - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-0.0.1.tgz
     version: 0.0.1
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-04-18T11:36:56.921559-04:00"
+    created: "2024-04-22T11:49:40.486996-04:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -39,6 +39,6 @@ entries:
     name: cloudzero-agent
     type: application
     urls:
-    - https://raw.githubusercontent.com/cloudzero/cloudzero-charts/gh-pages/cloudzero-agent-0.0.1.tgz
+    - https://cloudzero.github.io/cloudzero-charts/.deploy/cloudzero-agent-0.0.1.tgz
     version: 0.0.1
-generated: "2024-04-18T11:36:56.91702-04:00"
+generated: "2024-04-22T11:49:40.481989-04:00"
