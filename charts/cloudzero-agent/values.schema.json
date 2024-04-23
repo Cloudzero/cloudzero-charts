@@ -7,7 +7,7 @@
     },
     "clusterName": {
         "type": "string",
-        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        "pattern": "^(?![0-9-])(?!.*--)[a-zA-Z0-9-]{1,63}(?<!-)$"
     },
     "cloudAccountId": {
         "type": [
