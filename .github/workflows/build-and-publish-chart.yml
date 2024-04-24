@@ -10,26 +10,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install Helm
       uses: azure/setup-helm@v3
-
 
     - name: Build Dependencies
       run: |
         helm dependency update charts/cloudzero-agent/
 
-    - name : Update Chart Version
+#    - name : Update Chart Version
+#      run: |
+#        VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
+#        CURRENT_VERSION=$(awk 'NR=='$VERSION_LINE' {print $2}' charts/cloudzero-agent/Chart.yaml)
+#        IFS='.' read -ra VER <<< "$CURRENT_VERSION"
+#        ((VER[2]++))  # Increment the minor version assuming version format is x.y.z
+#        NEW_VERSION="${VER[0]}.${VER[1]}.${VER[2]}"
+#        sed -i ''$VERSION_LINE's/.*/version: '$NEW_VERSION'/' charts/cloudzero-agent/Chart.yaml
+#        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+#        echo "AGENT_NAME=cloudzero-agent-$NEW_VERSION" >> $GITHUB_ENV
+
+    - name: Update Version
+      id: version
+      uses: flatherskevin/semver-action@v1
+      with:
+        incrementLevel: patch
+        source: tags
+
+    - name: Update Chart Version
       run: |
-        VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
-        CURRENT_VERSION=$(awk 'NR=='$VERSION_LINE' {print $2}' charts/cloudzero-agent/Chart.yaml)
-        IFS='.' read -ra VER <<< "$CURRENT_VERSION"
-        ((VER[2]++))  # Increment the minor version assuming version format is x.y.z
-        NEW_VERSION="${VER[0]}.${VER[1]}.${VER[2]}"
-        sed -i ''$VERSION_LINE's/.*/version: '$NEW_VERSION'/' charts/cloudzero-agent/Chart.yaml
-        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-        echo "AGENT_NAME=cloudzero-agent-$NEW_VERSION" >> $GITHUB_ENV
+        sed -i 's/version: .*/version: ${{ steps.version.outputs.nextVersion }}/' charts/cloudzero-agent/Chart.yaml
+        echo "NEW_VERSION=${{ steps.version.outputs.nextVersion }}" >> $GITHUB_ENV
+
+    - name: Package Chart
+      run: |
+        helm package charts/cloudzero-agent/ --destination .deploy
 
     - name: Commit updated Chart.yaml
       uses: EndBug/add-and-commit@v9
@@ -38,10 +53,6 @@ jobs:
         author_email: "actions@github.com"
         message: "Update Chart.yaml to version ${{ env.NEW_VERSION }}"
         path: "charts/cloudzero-agent/Chart.yaml"      
-
-    - name: Package Chart
-      run: |
-        helm package charts/cloudzero-agent/ --destination .deploy
 
     - name: Upload Chart as Artifact
       uses: actions/upload-artifact@v2
@@ -75,24 +86,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ env.NEW_VERSION }}
-        release_name: Release ${{ env.AGENT_NAME }}
-        body: 'Description of the release for ${{ env.AGENT_NAME }}'
-        draft: false
-        prerelease: false
-        latest: true
-        target_commitish: ${{ github.sha }}
+        name: ${{ steps.version.outputs.nextVersion }}
+        tag_name: ${{ steps.version.outputs.nextVersion }}
+        files: cloudzero-agent-${{ env.NEW_VERSION }}.tgz
+        make_latest: true
 
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.AGENT_NAME }}.tgz
-        asset_name: ${{ env.AGENT_NAME }}.tgz
-        asset_content_type: application/octet-stream
+
