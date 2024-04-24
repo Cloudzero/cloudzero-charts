@@ -3,7 +3,7 @@ name: build-and-publish-chart
 on:
   push:
     branches:
-      - CP-17269
+      - main
 
 jobs:
   build-and-publish-chart:
