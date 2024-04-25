@@ -19,17 +19,6 @@ jobs:
       run: |
         helm dependency update charts/cloudzero-agent/
 
-#    - name : Update Chart Version
-#      run: |
-#        VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
-#        CURRENT_VERSION=$(awk 'NR=='$VERSION_LINE' {print $2}' charts/cloudzero-agent/Chart.yaml)
-#        IFS='.' read -ra VER <<< "$CURRENT_VERSION"
-#        ((VER[2]++))  # Increment the minor version assuming version format is x.y.z
-#        NEW_VERSION="${VER[0]}.${VER[1]}.${VER[2]}"
-#        sed -i ''$VERSION_LINE's/.*/version: '$NEW_VERSION'/' charts/cloudzero-agent/Chart.yaml
-#        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-#        echo "AGENT_NAME=cloudzero-agent-$NEW_VERSION" >> $GITHUB_ENV
-
     - name: Update Version
       id: version
       uses: flatherskevin/semver-action@v1
