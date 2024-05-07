@@ -111,8 +111,26 @@ data:
         relabel_configs:
         - separator: ;
         - source_labels: [__name__]
-          regex: '^(container_cpu_usage_seconds_total|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_transmit_bytes_total|)$'
+          regex: "^({{ join "|" .Values.cAdvisorMetrics }})$"
           action: keep
+        - separator: ;
+          regex: __meta_kubernetes_node_label_(.+)
+          replacement: $1
+          action: labelmap
+        - separator: ;
+          regex: (.*)
+          target_label: __address__
+          replacement: kubernetes.default.svc:443
+          action: replace
+        - source_labels: [__meta_kubernetes_node_name]
+          separator: ;
+          regex: (.+)
+          target_label: __metrics_path__
+          replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+          action: replace
+        - source_labels: [__meta_kubernetes_node_name]
+          target_label: node
+          action: replace
         metric_relabel_configs:
         - action: labeldrop
           regex: instance
@@ -127,7 +145,7 @@ data:
           credentials_file: /etc/config/prometheus/secrets/value
         write_relabel_configs:
           - source_labels: [__name__]
-            regex: "^({{ join "|" .Values.promethuesConfig.metrics }})$"
+            regex: "^({{ include "chartname.combineMetrics" . }})$"
             action: keep
         metadata_config:
           send: false
