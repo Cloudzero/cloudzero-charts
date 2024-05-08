@@ -110,3 +110,12 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{ include "cloudzero-agent.server.fullname" . }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Combine metric lists
+*/}}
+{{- define "chartname.combineMetrics" -}}
+{{- $total := append .Values.kubeMetrics .Values.containerMetrics -}}
+{{- $result := join "|" $total -}}
+{{- $result -}}
+{{- end -}}
