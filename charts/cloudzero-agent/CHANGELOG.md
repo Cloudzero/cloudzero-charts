@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+- refactored `PVC.yaml` and updated `values.yaml` to match
 
 ### Added
 -  updated scrape configs to only scrape metrics that are needed

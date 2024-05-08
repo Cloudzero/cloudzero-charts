@@ -93,7 +93,7 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config/prometheus/configmaps/
-            - name: storage-volume
+            - name: cloudzero-agent-storage-volume
               mountPath: {{ .Values.server.persistentVolume.mountPath }}
               subPath: "{{ .Values.server.persistentVolume.subPath }}"
             - name: cloudzero-api-key
@@ -134,7 +134,7 @@ spec:
         - name: cloudzero-api-key
           secret:
             secretName: {{ include "cloudzero-agent.secretName" . }}
-        - name: storage-volume
+        - name: cloudzero-agent-storage-volume
         {{- if .Values.server.persistentVolume.enabled }}
           persistentVolumeClaim:
             claimName: {{ if .Values.server.persistentVolume.existingClaim }}{{ .Values.server.persistentVolume.existingClaim }}{{- else }}{{ template "cloudzero-agent.server.fullname" . }}{{- end }}

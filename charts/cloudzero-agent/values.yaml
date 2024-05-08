@@ -61,9 +61,11 @@ server:
     enabled: false
     mountPath: /data
     subPath: ""
+    storageClass: ""
     size: 8Gi
     accessModes:
     - ReadWriteOnce
+  # --Limit the size to 8Gi to lower impact on the cluster, and to provide a reasonable backup for the WAL
   emptyDir:
     sizeLimit: 8Gi
 
