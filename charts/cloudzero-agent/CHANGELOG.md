@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 -  updated scrape configs to only scrape metrics that are needed
 
+### Fixed
+- Updated `Exporting Pod Labels` README.md for clarity
+
 ## [0.0.2]
 
 ### Fixed

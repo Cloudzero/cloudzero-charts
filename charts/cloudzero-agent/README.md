@@ -73,7 +73,7 @@ kube-state-metrics:
   extraArgs:
     - --metric-labels-allowlist=pods=[*]
 ```
-A subset of relevant pod labels can be included; as an example, exporting only pod labels with start with `foobar_` could be achieved with the following:
+A subset of relevant pod labels can be included; as an example, exporting only pod labels that start with `foobar_` could be achieved with the following:
 ```yaml
 kube-state-metrics:
   extraArgs:
