@@ -9,9 +9,9 @@ apiKey: null
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: null
 
-# -- The following metrics are required for CloudZero to function.
-# -- Removal of these metrics will result in missing data in CloudZero.
-ksmMetrics:
+# -- The following lists of metrics are required for CloudZero to function.
+# -- Modifications made to these lists may cause issues with the processing of cluster data
+kubeMetrics:
   - kube_node_info
   - kube_node_status_capacity
   - kube_pod_container_resource_limits
@@ -20,7 +20,7 @@ ksmMetrics:
   - kube_pod_info
   - node_cpu_seconds_total
   - node_dmi_info
-cAdvisorMetrics:
+containerMetrics:
   - container_cpu_usage_seconds_total
   - container_memory_working_set_bytes
   - container_network_receive_bytes_total

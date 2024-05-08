@@ -111,7 +111,7 @@ data:
         relabel_configs:
         - separator: ;
         - source_labels: [__name__]
-          regex: "^({{ join "|" .Values.cAdvisorMetrics }})$"
+          regex: "^({{ join "|" .Values.containerMetrics }})$"
           action: keep
         - separator: ;
           regex: __meta_kubernetes_node_label_(.+)
