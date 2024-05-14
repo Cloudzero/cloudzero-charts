@@ -109,7 +109,6 @@ data:
         follow_redirects: true
         enable_http2: true
         relabel_configs:
-        - separator: ;
         - source_labels: [__name__]
           regex: "^({{ join "|" .Values.containerMetrics }})$"
           action: keep
