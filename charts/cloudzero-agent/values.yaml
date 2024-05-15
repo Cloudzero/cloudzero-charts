@@ -46,7 +46,12 @@ server:
     # When digest is set to a non-empty value, images will be pulled by digest (regardless of tag value).
     digest: ""
     pullPolicy: IfNotPresent
-  resources: {}
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory:  1024Mi
   deploymentAnnotations: {}
   podAnnotations: {}
   configMapOverrideName: configuration
