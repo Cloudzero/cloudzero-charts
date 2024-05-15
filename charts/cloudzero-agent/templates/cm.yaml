@@ -7,8 +7,8 @@ metadata:
   namespace: {{ include "cloudzero-agent.namespace" . }}
 data:
   prometheus.yml: |-
-  {{- if .Values.promethuesConfig.configOverride }}
-  {{ .Values.promethuesConfig.configOverride | nindent 4 }}
+  {{- if .Values.prometheusConfig.configOverride }}
+  {{ .Values.prometheusConfig.configOverride | nindent 4 }}
   {{- else }}
     global:
       scrape_interval: 60s
