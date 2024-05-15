@@ -18,7 +18,7 @@ Create chart name and version as used by the chart label.
 {{- end}}
 
 {{ define "cloudzero-agent.configMapName" -}}
-{{ .Values.promethuesConfig.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
+{{ .Values.prometheusConfig.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
 {{- end}}
 
 {{/*
