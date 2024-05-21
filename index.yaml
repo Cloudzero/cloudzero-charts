@@ -3,7 +3,27 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-05-01T20:17:54.872776886Z"
+    created: "2024-05-21T20:46:01.873394179Z"
+    dependencies:
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.24.*
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: 29d9fab435716738d0d5dbd8d4324bfbf5ce9e99fe3745f7207fe23158d735e4
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-0.0.5.tgz
+    version: 0.0.5
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2024-05-21T20:46:01.870893741Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -23,7 +43,7 @@ entries:
     version: 0.0.4
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-05-01T20:17:54.870210591Z"
+    created: "2024-05-21T20:46:01.868345373Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -43,7 +63,7 @@ entries:
     version: 0.0.3
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-05-01T20:17:54.866908833Z"
+    created: "2024-05-21T20:46:01.864393114Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -63,7 +83,7 @@ entries:
     version: 0.0.2
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-05-01T20:17:54.864192308Z"
+    created: "2024-05-21T20:46:01.861866618Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -81,4 +101,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-0.0.1.tgz
     version: 0.0.1
-generated: "2024-05-01T20:17:54.861386456Z"
+generated: "2024-05-21T20:46:01.859094247Z"
