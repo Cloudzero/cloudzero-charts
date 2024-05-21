@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+- added CPU and memory requests and limits to `deploy.yaml` and updated `values.yaml` with suggested values
+- refactored `PVC.yaml` and updated `values.yaml` to match
+- removed extra `seperator` in cm.yaml
+
+### Added
+-  updated scrape configs to only scrape metrics that are needed
+
+### Fixed
+- Updated `Exporting Pod Labels` README.md for clarity
+- Fixed typos in templates
 
 ## [0.0.2]
 
