@@ -7,7 +7,7 @@ This guide provides instructions on how to validate the deployment of the Helm c
 1. **Get the Pod Name**: After deploying the Helm chart, you need to identify the pod running the `env-validator`. Use the following command to list all pods in the namespace where you have deployed the chart:
 
     ```sh
-    kubectl -n kube-system get pods
+    kubectl -n cloudzero-agent get pods
     ```
 
 The output of this should be similar to as follows, with your specific helm release name (r1):
@@ -23,7 +23,7 @@ r1-cloudzero-agent-server-6dc588f9cb-qqqm9   0/2     Init:0/1      0          5s
 2. **Check Validation Results**: Once you have the pod name, you can check the validation results by viewing the logs of the `env-validator` container. Replace `<pod-name>` with the actual pod name obtained from the previous step:
 
     ```sh
-    kubectl -n kube-system logs -f -c env-validator <pod-name>
+    kubectl -n cloudzero-agent logs -f -c env-validator <pod-name>
     ```
 
 ### Example Output
@@ -31,7 +31,7 @@ r1-cloudzero-agent-server-6dc588f9cb-qqqm9   0/2     Init:0/1      0          5s
 The expected output of the `env-validator` will look something like the following. 
 
 ```plaintext
-$ kubectl -n kube-system logs -f -c env-validator r1-cloudzero-agent-server-6dc588f9cb-zfvr7
+$ kubectl -n cloudzero-agent logs -f -c env-validator r1-cloudzero-agent-server-6dc588f9cb-zfvr7
 Validation starting...
 Collecting requests==2.32.3 (from -r requirements.txt (line 1))
 Downloading requests-2.32.3-py3-none-any.whl.metadata (4.6 kB)
