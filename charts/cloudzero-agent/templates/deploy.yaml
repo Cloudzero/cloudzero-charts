@@ -30,6 +30,36 @@ spec:
       priorityClassName: "{{ .Values.server.priorityClassName }}"
 {{- end }}
       serviceAccountName: {{ template "cloudzero-agent.serviceAccountName.server" . }}
+      initContainers:
+        - name: env-validator
+          image: python:3.12-slim
+          workingDir: /app
+          # TODO: create container image, root required to install packages atm
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            runAsGroup: 0
+            fsGroup: 0
+          command: ["sh", "-c", "/app/script.sh"]
+          env:
+            - name: NAMESPACE
+              value: metadata.namespace
+            - name: KMS_EP_URL
+              value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics:8080/
+            - name: NODE_EXPORTER_EP_URL
+              value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
+            - name: CZ_HOST
+              value: {{ .Values.host }}
+          volumeMounts:
+            - name: validator-volume
+              mountPath: /app/script.sh
+              subPath: script.sh
+            - name: validator-requirements-volume
+              mountPath: /app/requirements.txt
+              subPath: requirements.txt
+            - name: validator-script-volume
+              mountPath: /app/validate.sh
+              subPath: validate.sh
       containers:
         {{- if .Values.configmapReload.prometheus.enabled }}
         - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-configmap-reload
@@ -138,6 +168,17 @@ spec:
         - name: cloudzero-api-key
           secret:
             secretName: {{ include "cloudzero-agent.secretName" . }}
+        - name: validator-volume
+          configMap:
+            name: validator
+            defaultMode: 0700
+        - name: validator-requirements-volume
+          configMap:
+            name: validator-requirements
+        - name: validator-script-volume
+          configMap:
+            name: validator-script
+            defaultMode: 0700
         - name: cloudzero-agent-storage-volume
         {{- if .Values.server.persistentVolume.enabled }}
           persistentVolumeClaim:
