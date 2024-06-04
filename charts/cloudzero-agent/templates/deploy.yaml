@@ -44,8 +44,10 @@ spec:
           env:
             - name: NAMESPACE
               value: metadata.namespace
-            - name: KMS_URL
-              value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics.svc.cluster.local:8080/
+            - name: KMS_EP_URL
+              value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics:8080/
+            - name: NODE_EXPORTER_EP_URL
+              value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
             - name: CZ_HOST
               value: {{ .Values.host }}
           volumeMounts:

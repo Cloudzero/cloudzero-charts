@@ -38,8 +38,9 @@ data:
     from typing import Tuple, Dict
 
     def check_service_availability(url: str, key: str) -> Tuple[str, str]:
-      MAX_RETRY = 6
-      RETRY_INTERVAL = 30
+      # only wait two minutes max
+      MAX_RETRY = 12
+      RETRY_INTERVAL = 10
 
       for _ in range(MAX_RETRY):
         try:
@@ -47,25 +48,29 @@ data:
           response.raise_for_status()
           return (key, 'success')
         except Exception as e:
-          print(f'{url} not ready', file=sys.stderr)
+          print(f'{url} not ready yet', file=sys.stderr)
           time.sleep(RETRY_INTERVAL)
 
       print(f'{key} not ready after {MAX_RETRY} retries', file=sys.stderr)
       return (key, 'failure')
 
-    def check_kube_state_metrics() -> Tuple[str, str]:
-      namespace: str = os.getenv('NAMESPACE', 'default')
-      url: str = os.getenv('KMS_URL', f'http://kube-state-metrics.{namespace}.svc.cluster.local:8080/')
-      return check_service_availability(url, 'has_kube_state_metrics')
-
     def check_external_connectivity() -> Tuple[str, str]:
       host: str = os.getenv('CZ_HOST', 'api.cloudzero.com')
       url: str = f'http://{host}'
-      return check_service_availability(url, 'external_connectivity')
+      return check_service_availability(url, 'external_connectivity_available')
+
+    def check_kube_state_metrics() -> Tuple[str, str]:
+      url: str = os.getenv('KMS_EP_URL', f'http://kube-state-metrics:8080/')
+      return check_service_availability(url, 'kube_state_metrics_available')
+
+    def check_prometheus_node_exporter() -> Tuple[str, str]:
+      url: str = os.getenv('NODE_EXPORTER_EP_URL', f'http://prometheus-node-exporter:9100/')
+      return check_service_availability(url, 'prometheus_node_exporter_available')
 
     validations = [
       check_external_connectivity, 
-      check_kube_state_metrics, 
+      check_kube_state_metrics,
+      check_prometheus_node_exporter,
     ]
 
     def run_validations() -> Dict[str, str]:
@@ -82,11 +87,11 @@ data:
           exit(1)
 
     def print_results(results: Dict[str, str]) -> None:
-      print('---------------------------------------------')
-      print ('{:<25} {:<10}'.format('CHECK', 'RESULT'))
+      print('-' * 60)
+      print('{:<50} {:<10}'.format('CHECK', 'RESULT'))
       for check, result in results.items():
-        print('{:<25} {:<10}'.format(check, result))
-      print('---------------------------------------------')
+        print('{:<50} {:<10}'.format(check, result))
+      print('-' * 60)
 
     def main():
       results = run_validations()
