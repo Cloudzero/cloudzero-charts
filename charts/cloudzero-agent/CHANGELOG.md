@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Removed duplicate `resources` in deployment
 - Moved `nodeSelector` to `server` block in values.yaml
+- Updated scrape configs to properly drop unused metrics
 
 ## [0.0.6]
 
