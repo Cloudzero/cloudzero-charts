@@ -113,9 +113,6 @@ data:
         follow_redirects: true
         enable_http2: true
         relabel_configs:
-        - source_labels: [__name__]
-          regex: "^({{ join "|" .Values.containerMetrics }})$"
-          action: keep
         - separator: ;
           regex: __meta_kubernetes_node_label_(.+)
           replacement: $1
@@ -137,6 +134,9 @@ data:
         metric_relabel_configs:
         - action: labeldrop
           regex: instance
+        - source_labels: [__name__]
+          regex: "^({{ join "|" .Values.containerMetrics }})$"
+          action: keep
         kubernetes_sd_configs:
         - role: node
           kubeconfig_file: ""
