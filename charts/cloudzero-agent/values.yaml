@@ -37,6 +37,18 @@ prometheus-node-exporter:
 
 imagePullSecrets: []
 nodeSelector: {}
+
+# IMPORTANT:
+# This will be different for the public chart
+# CI/CD must set the tag as part of the build
+validator:
+  name: env-validator
+  image: 
+    repository: ghcr.io/cloudzero/cloudzero-charts-internal/cloudzero-agent-validator
+    tag: latest
+    digest:
+    pullPolicy: Always
+
 server:
   name: server
   image:
