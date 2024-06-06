@@ -35,9 +35,7 @@ kube-state-metrics:
 prometheus-node-exporter:
   enabled: false
 
-imagePullSecrets:
-  - name: cz-ghcr-login-secret
-
+imagePullSecrets: []
 nodeSelector: {}
 
 # IMPORTANT:
