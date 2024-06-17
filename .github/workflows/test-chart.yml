@@ -24,10 +24,7 @@ jobs:
       - name: Detect chart changes
         id: list-changed
         run: |
-          GIT_HASH=$(git rev-parse --short "${{ env.GITHUB_SHA }}")
-          echo "GIT_HASH=$GIT_HASH"
           echo "GIT_BRANCH=${{ env.GITHUB_REF_NAME }}"
-          
           changed=$(ct list-changed --chart-dirs=charts/cloudzero-agent --target-branch ${{ env.GITHUB_REF_NAME }})
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
