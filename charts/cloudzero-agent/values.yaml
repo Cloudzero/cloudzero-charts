@@ -43,7 +43,7 @@ nodeSelector: {}
 # CI/CD must set the tag as part of the build
 validator:
   name: env-validator
-  image: 
+  image:
     repository: ghcr.io/cloudzero/cloudzero-charts-internal/cloudzero-agent-validator
     tag: latest
     digest:
@@ -63,7 +63,7 @@ server:
       memory: 512Mi
       cpu: 250m
     limits:
-      memory:  1024Mi
+      memory: 1024Mi
   deploymentAnnotations: {}
   podAnnotations: {}
   configMapOverrideName: configuration
@@ -110,4 +110,3 @@ configmapReload:
 
     containerSecurityContext: {}
     resources: {}
-
