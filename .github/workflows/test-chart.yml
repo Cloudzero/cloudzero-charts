@@ -13,22 +13,17 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           since_last_remote_commit: true
-          files_yaml: |
-            doc:
-              - '**.md'
-              - charts/**/docs/**
-            tests:
-              - charts/**/tests/**
-            src:
-              - charts/**/src/**
-            charts:
-              - '**.yaml'
-              - 'charts/**/**.yaml'
+          files: |
+            **.md
+            charts/**/docs/**
+            charts/**/tests/**
+            charts/**/src/**
+            charts/**/**.yaml
       
       - name: List all changed files
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
-          ALL_CHANGED_FILES: ${{ steps.changed-markdown-files.outputs.all_changed_files }}
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           for file in ${ALL_CHANGED_FILES}; do
             echo "$file was changed"
