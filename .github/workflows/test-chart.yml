@@ -21,16 +21,11 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.6.1
 
-      - name: Extract branch name
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-        id: extract_branch
-
       - name: Detect chart changes
         id: list-changed
         run: |
-          echo "GIT_BRANCH=${{ steps.extract_branch.outputs.branch }}"
-          changed=$(ct list-changed --chart-dirs=charts/cloudzero-agent --target-branch ${{ steps.extract_branch.outputs.branch }})
+          echo "GIT_BRANCH=$GITHUB_REF_NAME"
+          changed=$(ct list-changed --chart-dirs=charts/cloudzero-agent --target-branch $GITHUB_REF_NAME)
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
