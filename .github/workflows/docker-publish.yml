@@ -5,7 +5,6 @@ on: [push]
 env:
   # Source Directory
   SRC_DIR: charts/cloudzero-agent/src
-  DOCKERFILE: ${{ env.SRC_DIR }}/Dockerfile
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
@@ -77,7 +76,7 @@ jobs:
         with:
           push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/')) }}
           context: ${{ env.SRC_DIR }}
-          file: ${{ env.DOCKERFILE }}
+          file: ${{ env.SRC_DIR }}/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
