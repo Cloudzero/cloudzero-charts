@@ -90,6 +90,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
+          push: true
           context: ${{ env.SRC_DIR }}
           file: ${{ env.SRC_DIR }}/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
