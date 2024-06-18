@@ -43,16 +43,6 @@
 name: Reusable Docker Build and Publish Workflow
 
 on:
-  push:
-    # Only create "develop" branch tagged image
-    branches:
-      - develop
-    # Only create "version tag" tagged image
-    tags:
-      - "v*.*.*"
-  # create any PR image (tag is pr-<number>)
-  # these should be cleaned once merged using the docker-clean.yml
-  pull_request:
 
   # this workflow will provide outputs which can be used in other workflows 
   workflow_call:
