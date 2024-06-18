@@ -1,4 +1,46 @@
-name: Docker
+# Reusable Docker Build and Publish Workflow
+# 
+# This GitHub Actions workflow is designed to build and publish Docker images to a Docker registry. 
+# It can be reused by specifying the necessary inputs and secrets.
+#
+# Usage Example:
+#   jobs:
+#     build-image:
+#       uses: ./.github/workflows/docker-publish.yml
+#           secrets: inherit
+#           with:
+#             registry_name: ghcr.io
+#             repository_name: ${{ github.repository }}
+#             username: ${{ github.actor }}
+#             image_name: validator
+#             image_description: "CloudZero Agent Deployment Validation Image"
+#             dockerfile_path: charts/cloudzero-agent/src/Dockerfile
+#             docker_context: charts/cloudzero-agent/src
+#             platforms: "linux/amd64,linux/arm64"
+#             push: true
+#
+# Secrets:
+#   MUST use "secrets: inherit" flag in calling workflow
+#
+# Inputs:
+# - registry_name: Docker registry to push images to (default: ghcr.io)
+# - repository_name: Repository name to use for the image (e.g. cloudzero/cloudzero-agent)
+# - image_name: Optional image name to use for the image (e.g. validator) which is postfixed to the repository name
+# - image_description: Description to use for the image (default: "CloudZero Container")
+# - username: Username to use for logging into the registry
+# - dockerfile_path: Path to the Dockerfile to use for building the image with the repository
+# - docker_context: Path context to when building the image
+# - platforms: Platforms to build the image for (default: "linux/amd64,linux/arm64")
+#
+# Outputs:
+# - image_name: Generated fully qualified image reference
+# - image_tag: Tag generated for this build
+# - image_digest: Digest generated for this build
+#
+# Note: This workflow supports building and pushing images for the "develop" branch and version tags (e.g. v1.0.0).
+# PR images are also created with a "pr-" prefix and should be cleaned up using the docker-clean.yml workflow after merging.
+#
+name: Reusable Docker Build and Publish Workflow
 
 on:
   push:
@@ -12,14 +54,63 @@ on:
   # these should be cleaned once merged using the docker-clean.yml
   pull_request:
 
-env:
-  # Source Directory
-  SRC_DIR: charts/cloudzero-agent/src
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>/<image_name>
-  IMAGE_NAME: ${{ github.repository }}/cloudzero-agent-validator
+  # this workflow will provide outputs which can be used in other workflows 
+  workflow_call:
+    inputs:
+      registry_name:
+        required: false
+        type: string
+        default: ghcr.io
+        description: "Docker registry to push images to"
+      repository_name:
+        required: true
+        type: string
+        description: "Repository name to use for the image (e.g. cloudzero/cloudzero-agent)"
+      image_name:
+          required: false
+          type: string
+          description: "Optional image name to use for the image (e.g. validator) which is postfixed to the repository name"
+      image_description:
+        required: false
+        type: string
+        description: "Description to use for the image"
+        default: "CloudZero Container"
+      username:
+        required: true
+        type: string
+        description: "Username to use for logging into the registry"
+      dockerfile_path:
+        required: true
+        type: string
+        description: "Path to the Dockerfile to use for building the image with the repository"
+      docker_context:
+        required: true
+        type: string
+        description: "Path context to when building the image"
+      platforms:
+        required: false
+        type: string
+        description: "Platforms to build the image for"
+        default: "linux/amd64,linux/arm64"
+      push:
+        required: false
+        type: boolean
+        description: "Push the image to the registry"
+        default: true
+    outputs:
+      image_name:
+        description: "Generated fully qualified image reference"
+        value: ${{ jobs.build-publish-image.outputs.image_name }}
+      image_tag:
+        description: "tag generated for this build"
+        value: ${{ jobs.build-publish-image.outputs.image_tag }}
+      image_digest:
+        description: "digest generated for this build"
+        value: ${{ jobs.build-publish-image.outputs.image_digest }}
 
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ${{ inputs.registry_name || 'ghcr.io' }}
 jobs:
   build-publish-image:
     runs-on: ubuntu-latest
@@ -29,7 +120,11 @@ jobs:
       # This is used to complete the identity challenge
       # with sigstore/fulcio when running outside of PRs.
       id-token: write
-
+    outputs:
+      image_name: ${{ steps.image_name.outputs.image_name }}
+      image_tag: ${{ steps.meta.outputs.version }}
+      image_digest: ${{ steps.build-and-push.outputs.digest }}
+  
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,17 +141,36 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
 
+      - name: Format image name
+        id: image_name
+        run: |
+          IMAGE_NAME=${{ inputs.repository_name }}
+          # append optional image name
+          if [ -n "${{ inputs.image_name }}" ]; then
+            IMAGE_NAME="${IMAGE_NAME}/${{ inputs.image_name }}"
+          fi
+          echo "IMAGE_NAME=${IMAGE_NAME,,}" >>${GITHUB_ENV}
+          echo "image_name=${{ inputs.registry_name }}/${IMAGE_NAME,,}" >> $GITHUB_OUTPUT
+
+      - name: Validate credentials
+        id: cred_check
+        run: |
+          echo "username=${{ inputs.username }}" 
+          # if password is not set, alert the user
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "No password set for username: ${{ inputs.username }}."
+            echo "Please set a secret named GITHUB_TOKEN with the password."
+            exit 1
+          fi
+          echo "password=********"
+  
       # Login against a Docker registry except on PR
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          registry: ${{ inputs.registry_name }}
+          username: ${{ inputs.username }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: tolower IMAGE_NAME name
-        run: |
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >>${GITHUB_ENV}
 
       # Extract metadata (tags, labels) for Docker
       - name: Extract Docker metadata
@@ -81,7 +195,7 @@ jobs:
           # labels to add to the Docker image which are not picked up by default
           labels: |
             maintainer=CloudZero
-            org.opencontainers.image.description=CloudZero Agent Validator
+            org.opencontainers.image.description=${{ inputs.image_description }}
             org.opencontainers.image.vendor=CloudZero
 
       # Build and push Docker image with Buildx
@@ -91,10 +205,10 @@ jobs:
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           push: true
-          context: ${{ env.SRC_DIR }}
-          file: ${{ env.SRC_DIR }}/Dockerfile
+          context: ${{ inputs.docker_context }}
+          file: ${{ inputs.dockerfile_path }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms:  ${{ inputs.platforms }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
