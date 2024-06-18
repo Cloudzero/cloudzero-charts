@@ -23,9 +23,7 @@ jobs:
       - name: Delete image
         uses: bots-house/ghcr-delete-image-action@v1.1.0
         with:
-          # NOTE: at now only orgs is supported
           owner: cloudzero
           name: ${{ env.IMAGE_NAME }}
-          # NOTE: using Personal Access Token
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: pr-${{github.event.pull_request.number}}
