@@ -2,14 +2,32 @@ name: test-chart
 on: [push]
 
 jobs:
+  build-image:
+    uses: ./.github/workflows/docker-publish.yml
+    secrets: inherit
+    with:
+      registry_name: ghcr.io
+      repository_name: ${{ github.repository }}
+      username: ${{ github.actor }}
+      image_name: cloudzero-agent-validator
+      image_description: "CloudZero Agent Environment Validator Image"
+      dockerfile_path: charts/cloudzero-agent/src/Dockerfile
+      docker_context: charts/cloudzero-agent/src
+      platforms: "linux/amd64,linux/arm64"
+      push: true
+
   test-chart:
     runs-on: ubuntu-latest
+    needs: build-image
     env:  # Define environment variables here
       NAMESPACE: monitoring
       PROM_CHART_REPO: https://prometheus-community.github.io/helm-charts
       CLUSTER_NAME: cz-node-agent-ci
       CLOUD_ACCOUNT_ID: 00000000
       CZ_API_TOKEN: ${{ secrets.CZ_API_TOKEN || 'undefined' }}
+      IMAGE_NAME: ${{ needs.build-image.outputs.image_name || '' }}
+      IMAGE_TAG: ${{ needs.build-image.outputs.image_tag || 'latest' }}
+      IMAGE_DIGEST: ${{ needs.build-image.outputs.image_digest || '' }}
 
     steps:
       - name: Checkout
@@ -21,12 +39,13 @@ jobs:
         with:
           since_last_remote_commit: true
           files: |
+            **
             **.md
             charts/**/docs/**
             charts/**/tests/**
             charts/**/src/**
             charts/**/**.yaml
-      
+
       - name: List all changed files
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
@@ -76,6 +95,22 @@ jobs:
         run: |
           kubectl create secret -n $NAMESPACE generic api-token --from-literal=value=$CZ_API_TOKEN
 
+      - name: ensure image reference
+        id: image_ref
+        run: |
+          echo "using IMAGE_NAME=${IMAGE_NAME}"
+          echo "using IMAGE_TAG=${IMAGE_TAG}"
+          echo "using IMAGE_DIGEST=${IMAGE_DIGEST}"
+          if [ -z "${IMAGE_NAME}" ]; then
+            exit 1
+          fi
+          if [ -z "$IMAGE_TAG" ]; then
+            exit 1
+          fi
+          echo "using IMAGE_NAME=${IMAGE_NAME}"
+          echo "using IMAGE_TAG=${IMAGE_TAG}"
+          echo "using IMAGE_DIGEST=${IMAGE_DIGEST}"
+
       - name: Install the chart
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
@@ -87,6 +122,9 @@ jobs:
             --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
             --helm-extra-set-args "\
+              --set=validator.image.repository=${{ env.IMAGE_NAME }} \
+              --set=validator.image.tag=${{ env.IMAGE_TAG }} \
+              --set=validator.image.digest=${{ env.IMAGE_DIGEST }} \
               --set=existingSecretName=api-token \
               --set=clusterName=$CLUSTER_NAME \
               --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
