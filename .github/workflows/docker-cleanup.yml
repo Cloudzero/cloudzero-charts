@@ -5,8 +5,8 @@ on:
     types: [closed]
 
 env:
-  # github.repository as <account>/<repo>/<image_name>
-  IMAGE_NAME: ${{ github.repository }}/cloudzero-agent-validator
+  # only <repo>/<image_name>, cloudzero (owner) is preprended...
+  IMAGE_NAME: cloudzero-charts-internal/cloudzero-agent-validator
 
 jobs:
   purge-image:
