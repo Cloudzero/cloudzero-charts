@@ -2,10 +2,14 @@ name: Docker
 
 on:
   push:
+    # Only create "develop" branch tagged image
     branches:
-      - "**"
+      - develop
+    # Only create "version tag" tagged image
     tags:
       - "v*.*.*"
+  # create any PR image (tag is pr-<number>)
+  # these should be cleaned once merged using the docker-clean.yml
   pull_request:
 
 env:
@@ -62,8 +66,11 @@ jobs:
           # list of Docker images to use as base name for tags
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           # generate Docker tags based on the following events/attributes
+          # These rules below are tied to the `on` clause above
+          # when we are on branch develop, the ref branch name is used
+          # when the repository is tagged, we use the version to tag the images (and latest flavor is added)
+          # when on a PR, we only use pr-XXX as tag and that is later cleaned up after the PR is merged using docker-cleanup.yml
           tags: |
-            type=schedule
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
@@ -71,9 +78,6 @@ jobs:
             type=semver,pattern={{major}}
           flavor: |
             latest=${{ startsWith(github.ref, 'refs/tags/') }}
-
-      - name: Print envs
-        run: env|sort
 
       # Build and push Docker image with Buildx (don't push on PR)
       - name: Build and push Docker image
