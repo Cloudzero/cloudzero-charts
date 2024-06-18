@@ -78,6 +78,11 @@ jobs:
             type=semver,pattern={{major}}
           flavor: |
             latest=${{ startsWith(github.ref, 'refs/tags/') }}
+          # labels to add to the Docker image which are not picked up by default
+          labels: |
+            maintainer=CloudZero
+            org.opencontainers.image.description=CloudZero Agent Validator
+            org.opencontainers.image.vendor=CloudZero
 
       # Build and push Docker image with Buildx (don't push on PR)
       - name: Build and push Docker image
