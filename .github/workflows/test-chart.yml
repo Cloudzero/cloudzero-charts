@@ -1,5 +1,15 @@
 name: test-chart
-on: [push]
+on:
+  push:
+    # Only create "develop" branch tagged image
+    branches:
+      - develop
+    # Only create "version tag" tagged image
+    tags:
+      - "v*.*.*"
+  # create any PR image (tag is pr-<number>)
+  # these should be cleaned once merged using the docker-clean.yml
+  pull_request:
 
 jobs:
   build-image:
