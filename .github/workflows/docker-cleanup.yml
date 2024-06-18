@@ -1,0 +1,31 @@
+name: Cleanup PR Images
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  # github.repository as <account>/<repo>/<image_name>
+  IMAGE_NAME: ${{ github.repository }}/cloudzero-agent-validator
+
+jobs:
+  purge-image:
+    name: Delete image from ghcr.io
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
+    steps:
+      - name: tolower IMAGE_NAME name
+        run: |
+          echo "IMAGE_NAME=${IMAGE_NAME,,}" >>${GITHUB_ENV}
+
+      - name: Delete image
+        uses: bots-house/ghcr-delete-image-action@v1.1.0
+        with:
+          # NOTE: at now only orgs is supported
+          owner: cloudzero
+          name: ${{ env.IMAGE_NAME }}
+          # NOTE: using Personal Access Token
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: pr-${{github.event.pull_request.number}}
