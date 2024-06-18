@@ -13,7 +13,7 @@ env:
   SRC_DIR: charts/cloudzero-agent/src
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
+  # github.repository as <account>/<repo>/<image_name>
   IMAGE_NAME: ${{ github.repository }}/cloudzero-agent-validator
 
 jobs:
