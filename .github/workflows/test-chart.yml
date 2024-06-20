@@ -15,6 +15,12 @@ jobs:
   build-image:
     uses: ./.github/workflows/docker-publish.yml
     secrets: inherit
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
     with:
       registry_name: ghcr.io
       repository_name: ${{ github.repository }}
