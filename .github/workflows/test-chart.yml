@@ -11,6 +11,11 @@ on:
   # these should be cleaned once merged using the docker-clean.yml
   pull_request:
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 jobs:
   build-image:
     uses: ./.github/workflows/docker-publish.yml

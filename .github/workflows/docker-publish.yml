@@ -42,8 +42,12 @@
 #
 name: Reusable Docker Build and Publish Workflow
 
-on:
+permissions:
+  contents: read
+  packages: write
+  id-token: write
 
+on:
   # this workflow will provide outputs which can be used in other workflows 
   workflow_call:
     inputs:
