@@ -34,7 +34,7 @@ jobs:
       dockerfile_path: charts/cloudzero-agent/src/Dockerfile
       docker_context: charts/cloudzero-agent/src
       platforms: "linux/amd64,linux/arm64"
-      envPAT: ${{ env.ENV_PAT }}
+      envPAT: ${{ github.token }}
       push: true
 
   test-chart:
