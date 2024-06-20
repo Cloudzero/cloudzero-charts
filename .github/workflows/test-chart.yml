@@ -11,6 +11,10 @@ on:
   # these should be cleaned once merged using the docker-clean.yml
   pull_request:
 
+env:
+  ENV_PAT: ${{ secrets.GITHUB_TOKEN }}
+  CZ_API_TOKEN: ${{ secrets.CZ_API_TOKEN || 'undefined' }}
+
 jobs:
   build-image:
     uses: ./.github/workflows/docker-publish.yml
@@ -30,7 +34,7 @@ jobs:
       dockerfile_path: charts/cloudzero-agent/src/Dockerfile
       docker_context: charts/cloudzero-agent/src
       platforms: "linux/amd64,linux/arm64"
-      envPAT: ${{ secrets.GITHUB_TOKEN }}
+      envPAT: ${{ env.ENV_PAT }}
       push: true
 
   test-chart:
