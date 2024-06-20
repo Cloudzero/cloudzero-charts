@@ -43,14 +43,12 @@
 name: Reusable Docker Build and Publish Workflow
 
 on:
-
   # this workflow will provide outputs which can be used in other workflows 
   workflow_call:
-    inputs:
+    secrets:
       envPAT:
         required: true
-        type: string
-        description: "Github Access Token for the Docker registry"
+    inputs:
       registry_name:
         required: false
         type: string
@@ -151,9 +149,9 @@ jobs:
         run: |
           echo "username=${{ inputs.username }}" 
           # if password is not set, alert the user
-          if [ -z "${{ inputs.envPAT }}" ]; then
+          if [ -z "${{ secrets.envPAT }}" ]; then
             echo "No password set for username: ${{ inputs.username }}."
-            echo "Please set a secret named envPAT with the password."
+            echo "Please set a secret named GITHUB_TOKEN with the password."
             exit 1
           fi
           echo "password=********"
@@ -164,7 +162,7 @@ jobs:
         with:
           registry: ${{ inputs.registry_name }}
           username: ${{ inputs.username }}
-          password: ${{ inputs.envPAT }}
+          password: ${{ secrets.envPAT }}
 
       # Extract metadata (tags, labels) for Docker
       - name: Extract Docker metadata
