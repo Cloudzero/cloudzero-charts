@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     with:
       registry_name: ghcr.io
       repository_name: ${{ github.repository }}
