@@ -46,11 +46,11 @@ on:
 
   # this workflow will provide outputs which can be used in other workflows 
   workflow_call:
-    secrets:
-      envPAT:
-        description: "Github Access Token for the Docker registry"
-        required: true
     inputs:
+      envPAT:
+        required: true
+        type: string
+        description: "Github Access Token for the Docker registry"
       registry_name:
         required: false
         type: string
@@ -151,7 +151,7 @@ jobs:
         run: |
           echo "username=${{ inputs.username }}" 
           # if password is not set, alert the user
-          if [ -z "${{ secrets.envPAT }}" ]; then
+          if [ -z "${{ inputs.envPAT }}" ]; then
             echo "No password set for username: ${{ inputs.username }}."
             echo "Please set a secret named envPAT with the password."
             exit 1
@@ -164,7 +164,7 @@ jobs:
         with:
           registry: ${{ inputs.registry_name }}
           username: ${{ inputs.username }}
-          password: ${{ secrets.envPAT }}
+          password: ${{ inputs.envPAT }}
 
       # Extract metadata (tags, labels) for Docker
       - name: Extract Docker metadata
