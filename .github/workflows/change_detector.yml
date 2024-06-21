@@ -22,7 +22,6 @@ jobs:
         id: detect
         uses: tj-actions/changed-files@v44
         with:
-          since_last_remote_commit: true
           files: |
             **
             **.md
