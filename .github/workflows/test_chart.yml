@@ -84,7 +84,7 @@ jobs:
       # Checkout the repository code
       - name: Checkout
         if: needs.has_changes.outputs.any_changed == 'true'
-        id: install_ct
+        id: checkout_code
         uses: actions/checkout@v4
         
       - # Install buildx for multi-platform builds
