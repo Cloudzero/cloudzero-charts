@@ -216,8 +216,8 @@ jobs:
       - uses: iarekylew00t/regctl-installer@v1
         if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
 
-      # Login to the production registry
-      - name: Login to ${{ env.REGISTRY_PROD_ADDR }}
+      # Login to product docker registry
+      - name: Login to product docker registry
         if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | \
@@ -225,8 +225,9 @@ jobs:
               --user "${{ github.actor }}" \
               --pass-stdin
 
-      # Copy the image from the local registry to the production registry (retagging at the same time)
-      - name: Publish Image
+      # Copy the image from the local registry 
+      # to the production registry (retagging at the same time)
+      - name: Publish Image to Production
         if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         run: |
           regctl image copy \
