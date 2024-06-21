@@ -243,6 +243,7 @@ jobs:
         #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: prod_publish_image
         run: |
+          regctl registry set --tls=disabled ${{ env.REGISTRY_LOCAL_ADDR }}
           regctl image copy \
             ${{ env.REGISTRY_LOCAL_ADDR }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
             ${{ env.REGISTRY_PROD_ADDR }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
