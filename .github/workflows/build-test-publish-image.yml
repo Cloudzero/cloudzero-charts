@@ -24,7 +24,7 @@ env:
 jobs:
   # This job detects if there are any changes to allow condition testing in other jobs
   has_changes:
-    uses: ./.github/workflows/change_detector.yml
+    uses: ./.github/workflows/change-detector.yml
   
   # This job lints the chart
   test_chart_lint:
