@@ -27,7 +27,7 @@ jobs:
     uses: ./.github/workflows/change_detector.yml
   
   # This job lints the chart
-  lint-chart:
+  test_chart_lint:
     runs-on: ubuntu-latest
     needs: has_changes
     permissions:
@@ -70,7 +70,7 @@ jobs:
   # This job tests the chart on a KinD cluster
   # and if we are in the develop or tag branch, it will 
   # publish the image to the production registry
-  test-chart-install:
+  test_chart_install:
     runs-on: ubuntu-latest
     needs: has_changes
     permissions:
@@ -83,10 +83,14 @@ jobs:
       
       # Checkout the repository code
       - name: Checkout
+        if: needs.has_changes.outputs.any_changed == 'true'
+        id: install_ct
         uses: actions/checkout@v4
-
+        
       - # Install buildx for multi-platform builds
         name: Set up Docker Buildx
+        if: needs.has_changes.outputs.any_changed == 'true'
+        id: install_buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
         with:
           driver-opts: network=host
@@ -94,11 +98,13 @@ jobs:
       # Create a KinD cluster with a registry pod for testing (kind-registry:5000)
       - name: Kubernetes KinD Cluster
         if: needs.has_changes.outputs.any_changed == 'true'
+        id: install_kind
         uses: container-tools/kind-action@v1
 
       # Install helm on the host
       - name: Set up Helm
         if: needs.has_changes.outputs.any_changed == 'true'
+        id: install_helm
         uses: azure/setup-helm@v4.2.0
         with:
           version: v3.14.4
@@ -106,11 +112,13 @@ jobs:
       # Install chart-testing tool to make chart validation easier
       - name: Set up chart-testing
         if: needs.has_changes.outputs.any_changed == 'true'
+        id: install_ct
         uses: helm/chart-testing-action@v2.6.1
 
       # Sanity Check: Validate the k8s and Registry is Running
       - name: Validate the Registry is Running
         if: needs.has_changes.outputs.any_changed == 'true'
+        id: validate_kind_install
         run: |
           kubectl version
           kubectl cluster-info
@@ -156,7 +164,7 @@ jobs:
       # Build the image and push image to the local registry
       - name: Build and push Docker image
         if: needs.has_changes.outputs.any_changed == 'true'
-        id: build-and-push
+        id: build_image
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         env:
           PLATFORMS: "linux/amd64,linux/arm64"
@@ -175,6 +183,7 @@ jobs:
       # Install the chart using our temporary image
       - name: Install the chart
         if: needs.has_changes.outputs.any_changed == 'true'
+        id: test_chart_installation
         env:
           NAMESPACE: monitoring
           # Agent Chart settings (prom repo is to work around issue with chart-testing tool)
@@ -186,7 +195,7 @@ jobs:
           # use the test address for the image (k8s accesses via network alias)
           image_name="${{ env.REGISTRY_TEST_ADDR }}/${{ env.IMAGE_NAME }}"
           image_tag="${{ steps.meta.outputs.version }}"
-          image_digest="${{ steps.build-and-push.outputs.digest }}"
+          image_digest="${{ steps.build_image.outputs.digest }}"
           echo "using image_name=${image_name}"
           echo "using image_tag=${image_tag}"
           echo "using image_digest=${image_digest}"
@@ -195,7 +204,7 @@ jobs:
           kubectl create secret -n $NAMESPACE generic api-token --from-literal=value=$CZ_API_TOKEN
           cd charts/cloudzero-agent
           helm dependency update
-          ct install --debug --charts . \
+          ct uupgrade --install --charts . \
             --chart-repos=kube-state-metrics=$PROM_CHART_REPO \
             --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
@@ -213,12 +222,15 @@ jobs:
       # PRODUCTION ONLY STEPS BEYOND THIS POINT
       #
       # install regctl for registry management operations
-      - uses: iarekylew00t/regctl-installer@v1
+      - name: Install Regctl for registry management
         if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
+        id: install_regctl
+        uses: iarekylew00t/regctl-installer@v1
 
       # Login to product docker registry
-      - name: Login to product docker registry
+      - name: PROD STEP login to container registry
         if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
+        id: prod_registry_login
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | \
             regctl registry login ${{ env.REGISTRY_PROD_ADDR }} \
@@ -229,6 +241,7 @@ jobs:
       # to the production registry (retagging at the same time)
       - name: Publish Image to Production
         if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
+        id: prod_publish_image
         run: |
           regctl image copy \
             ${{ env.REGISTRY_LOCAL_ADDR }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
