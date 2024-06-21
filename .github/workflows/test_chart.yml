@@ -33,25 +33,21 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout
-        run: |
-          echo "any_changed=${{ needs.has_changes.outputs.any_changed }}"
-
-      - name: Checkout
+      - name: SETUP - Checkout
         if: needs.has_changes.outputs.any_changed == 'true'
         uses: actions/checkout@v4
 
-      - name: Set up Helm
+      - name: SETUP - Set up Helm
         if: needs.has_changes.outputs.any_changed == 'true'
         uses: azure/setup-helm@v4.2.0
         with:
           version: v3.14.4
 
-      - name: Set up chart-testing
+      - name: SETUP - Set up chart-testing
         if: needs.has_changes.outputs.any_changed == 'true'
         uses: helm/chart-testing-action@v2.6.1
 
-      - name: Lint the chart
+      - name: TEST - Lint the chart
         if: needs.has_changes.outputs.any_changed == 'true'
         env:
           # Agent Chart settings (prom repo is to work around issue with chart-testing tool)
@@ -80,15 +76,14 @@ jobs:
       # required for image signing
       id-token: write
     steps:
-      
       # Checkout the repository code
-      - name: Checkout
+      - name: SETUP - Checkout
         if: needs.has_changes.outputs.any_changed == 'true'
         id: checkout_code
         uses: actions/checkout@v4
         
       - # Install buildx for multi-platform builds
-        name: Set up Docker Buildx
+        name: SETUP - Docker Buildx
         if: needs.has_changes.outputs.any_changed == 'true'
         id: install_buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
@@ -96,13 +91,13 @@ jobs:
           driver-opts: network=host
 
       # Create a KinD cluster with a registry pod for testing (kind-registry:5000)
-      - name: Kubernetes KinD Cluster
+      - name: SETUP - Kubernetes KinD Cluster
         if: needs.has_changes.outputs.any_changed == 'true'
         id: install_kind
         uses: container-tools/kind-action@v1
 
       # Install helm on the host
-      - name: Set up Helm
+      - name: SETUP - Helm
         if: needs.has_changes.outputs.any_changed == 'true'
         id: install_helm
         uses: azure/setup-helm@v4.2.0
@@ -110,13 +105,13 @@ jobs:
           version: v3.14.4
 
       # Install chart-testing tool to make chart validation easier
-      - name: Set up chart-testing
+      - name: SETUP - chart-testing
         if: needs.has_changes.outputs.any_changed == 'true'
         id: install_ct
         uses: helm/chart-testing-action@v2.6.1
 
       # Sanity Check: Validate the k8s and Registry is Running
-      - name: Validate the Registry is Running
+      - name: SANITY CHECK - KinD and Registry are running
         if: needs.has_changes.outputs.any_changed == 'true'
         id: validate_kind_install
         run: |
@@ -129,7 +124,7 @@ jobs:
           docker push ${{ env.REGISTRY_LOCAL_ADDR }}/localbusybox
 
       # Format the image name to OCI compatable format
-      - name: Format image name (to lower)
+      - name: INPUT PREP - image name formatting
         if: needs.has_changes.outputs.any_changed == 'true'
         id: image_name
         run: |
@@ -137,7 +132,7 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >>${GITHUB_ENV}
 
       # Extract metadata (tags, labels) the docker image build
-      - name: Extract Docker metadata
+      - name: INPUT PREP - Extract Docker metadata from git repository
         if: needs.has_changes.outputs.any_changed == 'true'
         id: meta
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
@@ -162,7 +157,7 @@ jobs:
             image.name=${{ env.REGISTRY_PROD_ADDR }}/${{ env.IMAGE_NAME }}
 
       # Build the image and push image to the local registry
-      - name: Build and push Docker image
+      - name: TEST - Build image
         if: needs.has_changes.outputs.any_changed == 'true'
         id: build_image
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
@@ -181,7 +176,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       # Install the chart using our temporary image
-      - name: Install the chart
+      - name: TEST - Install the chart
         if: needs.has_changes.outputs.any_changed == 'true'
         id: test_chart_installation
         env:
@@ -222,13 +217,13 @@ jobs:
       # PRODUCTION ONLY STEPS BEYOND THIS POINT
       #
       # install regctl for registry management operations
-      - name: PRODUCTION - Install Regctl for registry management
+      - name: PRODUCTION STEP - Install Regctl for registry management
         #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: install_regctl
         uses: iarekylew00t/regctl-installer@v1
 
       # Login to product docker registry
-      - name: PRODUCTION - login to container registry
+      - name: PRODUCTION STEP - login to container registry
         #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: prod_registry_login
         run: |
@@ -239,7 +234,7 @@ jobs:
 
       # Copy the image from the local registry 
       # to the production registry (retagging at the same time)
-      - name: PRODUCTION - Publish Image to Production
+      - name: PRODUCTION STEP - Publish Image to Production
         #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: prod_publish_image
         run: |
