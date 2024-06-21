@@ -204,7 +204,7 @@ jobs:
           kubectl create secret -n $NAMESPACE generic api-token --from-literal=value=$CZ_API_TOKEN
           cd charts/cloudzero-agent
           helm dependency update
-          ct uupgrade --install --charts . \
+          ct upgrade --install --charts . \
             --chart-repos=kube-state-metrics=$PROM_CHART_REPO \
             --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
@@ -223,13 +223,13 @@ jobs:
       #
       # install regctl for registry management operations
       - name: Install Regctl for registry management
-        if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
+        #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: install_regctl
         uses: iarekylew00t/regctl-installer@v1
 
       # Login to product docker registry
       - name: PROD STEP login to container registry
-        if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
+        #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: prod_registry_login
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | \
@@ -240,7 +240,7 @@ jobs:
       # Copy the image from the local registry 
       # to the production registry (retagging at the same time)
       - name: Publish Image to Production
-        if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
+        #if : ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' }}
         id: prod_publish_image
         run: |
           regctl image copy \
