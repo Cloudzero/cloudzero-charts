@@ -70,7 +70,7 @@ jobs:
   # This job tests the chart on a KinD cluster
   # and if we are in the develop or tag branch, it will 
   # publish the image to the production registry
-  test-chart:
+  test-chart-install:
     runs-on: ubuntu-latest
     needs: has_changes
     permissions:
