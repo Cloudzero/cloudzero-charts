@@ -1,5 +1,5 @@
 # Use a Python image to create the virtual environment and install dependencies
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 
 # Create a directory for the application
 WORKDIR /app
