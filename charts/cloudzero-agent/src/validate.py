@@ -24,7 +24,6 @@ def check_service_availability(url: str, key: str) -> Tuple[str, str]:
     print(f"{key} not ready after {MAX_RETRY} retries", file=sys.stderr)
     return (key, "failure")
 
-
 def check_external_connectivity() -> Tuple[str, str]:
     host: str = os.getenv("CZ_HOST", "api.cloudzero.com")
     url: str = f"http://{host}"
