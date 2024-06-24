@@ -85,16 +85,14 @@ fmt: init-dev ## runs code formatter
 .PHONY: fmt-check
 fmt-check: fmt ## Check if the code is properly formatted
 	$(eval CHANGED := $(shell git status -s | grep "\.py" | wc -c))
-ifneq ($(CHANGED),0)
-	@exit 1
-endif
+	@[ $(CHANGED) -eq 0 ] || { echo "changed files"; exit 1; }
 
 .PHONY: lint
 lint: init-dev ## runs code linter
 	@$(PYTHON_ARGS) ruff check $(SRC_DIR) $(TEST_DIR)
 
 .PHONY: check
-check: lint test ## Run code linter and unit tests
+check: fmt-check lint test ## Run code linter and unit tests
 
 .PHONY: test
 test: check-python-version init-dev ## Run unit tests
