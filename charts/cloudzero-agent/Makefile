@@ -82,6 +82,14 @@ clean: ## Clean up dangling Docker images
 fmt: init-dev ## runs code formatter
 	@$(PYTHON_ARGS) black $(SRC_DIR)/*.py $(TEST_DIR)/*.py
 
+.PHONY: fmt-check
+fmt-check: ## Check if the code is properly formatted
+	if [ $$(git status -s | wc -c) -ne 0 ]; then \
+		echo "The following files are not properly formatted:"; \
+		git status -s; \
+		exit 1; \
+	fi
+
 .PHONY: lint
 lint: init-dev ## runs code linter
 	@$(PYTHON_ARGS) ruff check $(SRC_DIR) $(TEST_DIR)
