@@ -25,4 +25,4 @@ docs
 src
 tests
 *.png
-*.md
+*.drawio
