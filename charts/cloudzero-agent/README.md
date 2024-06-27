@@ -64,6 +64,54 @@ prometheus-node-exporter:
 ```
 This will deploy the required resources for metric scraping.
 
+### Custom Scrape Configs
+If the chart is running *without* the `kube-state-metrics` and `prometheus-node-exporter` exporters enabled (meaning, those two exporters must be deployed from some other source), then the scrape configs used by the underlying Prometheus agent may need to be adjusted.
+
+As an example, the out-of-the-box scrape config in this chart attempts to find the `kube-state-metrics` exporter via an annotation on a k8s `endpoints` resource deployed by the KSM subchart. If `kube-state-metrics` was instead deployed without any annotations, and was only available via a Service, we could add the following:
+
+custom-scrape-config.yaml
+```yaml
+prometheusConfig:
+  scrapeJobs:
+    kubeStateMetrics: # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
+      enabled: false
+    additionalScrapeJobs:
+    - job_name: custom-kube-state-metrics
+      honor_labels: true
+      honor_timestamps: true
+      scrape_interval: 1m
+      scrape_timeout: 10s
+      metrics_path: /metrics
+      static_configs:
+        - targets:
+          - 'cloudzero-agent-with-ui-kube-state-metrics.default.svc.cluster.local:8080'
+      relabel_configs:
+      - separator: ;
+        regex: __meta_kubernetes_service_label_(.+)
+        replacement: $1
+        action: labelmap
+      - source_labels: [__meta_kubernetes_namespace]
+        separator: ;
+        regex: (.*)
+        target_label: namespace
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_service_name]
+        separator: ;
+        regex: (.*)
+        target_label: service
+        replacement: $1
+        action: replace
+      kubernetes_sd_configs:
+      - role: service
+        kubeconfig_file: ""
+        follow_redirects: true
+        enable_http2: true
+
+```
+
+This file can then be included with the helm install with the `-f custom-scrape-config.yaml` flag.
+
 ### Exporting Pod Labels
 Pod labels can be exported as metrics for use in the CloudZero platform by using the `metric-labels-allowlist` CLI argument to the `kube-state-metrics` container. This is disabled by default due to the increase in cardinality that exporting all pod labels introduces.
 
