@@ -31,13 +31,13 @@ prometheusConfig:
   configMapAnnotations: {}
   configOverride: ''
   scrapeJobs:
-    -- Enables the kube-state-metrics scrape job.
+    # -- Enables the kube-state-metrics scrape job.
     kubeStateMetrics:
       enabled: true
-    -- Enables the cadvisor scrape job.
+    # -- Enables the cadvisor scrape job.
     cadvisor:
       enabled: true
-    -- Any items added to this list will be added to the Prometheus scrape configuration.
+    # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
 
