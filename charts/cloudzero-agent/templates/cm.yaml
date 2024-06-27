@@ -146,7 +146,7 @@ data:
           follow_redirects: true
           enable_http2: true
     {{- end }}
-    {{- if .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs }}
+    {{- if .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs -}}
     {{ toYaml .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs | toString | nindent 6 }}
     {{- end}}
     {{- end}}

@@ -65,7 +65,7 @@ prometheus-node-exporter:
 This will deploy the required resources for metric scraping.
 
 ### Custom Scrape Configs
-If the chart is running *without* the `kube-state-metrics` and `prometheus-node-exporter` exporters enabled (meaning, those two exporters must be deployed from some other source), then the scrape configs used by the underlying Prometheus agent may need to be adjusted.
+If the chart is running *without* the `kube-state-metrics` and `prometheus-node-exporter` exporters enabled (meaning, those two exporters are deployed from some other source outside of this chart), then the scrape configs used by the underlying Prometheus agent may need to be adjusted.
 
 As an example, the out-of-the-box scrape config in this chart attempts to find the `kube-state-metrics` exporter via an annotation on a k8s `endpoints` resource deployed by the KSM subchart. If `kube-state-metrics` was instead deployed without any annotations, and was only available via a Service, we could add the following:
 
@@ -84,7 +84,7 @@ prometheusConfig:
       metrics_path: /metrics
       static_configs:
         - targets:
-          - 'cloudzero-agent-with-ui-kube-state-metrics.default.svc.cluster.local:8080'
+          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
       relabel_configs:
       - separator: ;
         regex: __meta_kubernetes_service_label_(.+)
