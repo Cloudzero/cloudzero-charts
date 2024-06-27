@@ -77,6 +77,7 @@ spec:
         {{ toYaml .Values.server.args | nindent 12}}
           ports:
             - containerPort: 9090
+              name: http
           readinessProbe:
             httpGet:
               path: /-/ready

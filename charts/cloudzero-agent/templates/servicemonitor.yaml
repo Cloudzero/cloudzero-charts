@@ -1,0 +1,23 @@
+{{- if .Values.server.serviceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
+  name: {{ include "cloudzero-agent.configMapName" . }}
+  namespace: {{ include "cloudzero-agent.namespace" . }}
+  {{- if .Values.server.serviceMonitorAnnotations }}
+  annotations:
+    {{ toYaml .Values.server.serviceMonitorAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  endpoints:
+    - path: /metrics
+      port: http
+  namespaceSelector:
+    matchNames:
+      - {{ include "cloudzero-agent.namespace" . }}
+  selector:
+    matchLabels:
+    {{- include "cloudzero-agent.server.matchLabels" . | nindent 6 }}
+{{- end -}}
