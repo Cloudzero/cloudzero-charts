@@ -67,7 +67,7 @@ This will deploy the required resources for metric scraping.
 ### Custom Scrape Configs
 If the chart is running *without* the `kube-state-metrics` and `prometheus-node-exporter` exporters enabled (meaning, those two exporters are deployed from some other source outside of this chart), then the scrape configs used by the underlying Prometheus agent may need to be adjusted.
 
-As an example, the out-of-the-box scrape config in this chart attempts to find the `kube-state-metrics` exporter via an annotation on a k8s `endpoints` resource deployed by the KSM subchart. If `kube-state-metrics` was instead deployed without any annotations, and was only available via a Service with the address `my-kube-state-metrics-service.default.svc.cluster.local` on port 8080, we could add the following:
+As an example, the out-of-the-box scrape config in this chart attempts to find the `kube-state-metrics` and `node-exporter` exporters via an annotation on k8s Services deployed by the KSM ande node-exporter subcharts. If those subcharts were instead deployed without any annotations, and were only available via Services with the addresses `my-kube-state-metrics-service.default.svc.cluster.local:8080` and `my-node-exporter.default.svc.cluster.local:9100`, we could add the following:
 
 custom-scrape-config.yaml
 ```yaml
@@ -85,6 +85,7 @@ prometheusConfig:
       static_configs:
         - targets:
           - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
+          - 'my-node-exporter.default.svc.cluster.local:9100'
       relabel_configs:
       - separator: ;
         regex: __meta_kubernetes_service_label_(.+)
@@ -102,11 +103,17 @@ prometheusConfig:
         target_label: service
         replacement: $1
         action: replace
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        separator: ;
+        regex: (.*)
+        target_label: node
+        replacement: $1
+        action: replace
       kubernetes_sd_configs:
-      - role: service
-        kubeconfig_file: ""
-        follow_redirects: true
-        enable_http2: true
+        - role: endpoints
+          kubeconfig_file: ""
+          follow_redirects: true
+          enable_http2: true
 
 ```
 
