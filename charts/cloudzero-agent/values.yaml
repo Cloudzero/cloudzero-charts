@@ -60,8 +60,8 @@ validator:
   skipValidations: false
   name: env-validator
   image:
-    repository: ghcr.io/josephbarnett/cloudzero-charts/cloudzero-agent-validator
-    tag: test
+    repository: ghcr.io/Cloudzero/cloudzero-charts/cloudzero-agent-validator
+    tag: latest
     digest:
     pullPolicy: Always
 

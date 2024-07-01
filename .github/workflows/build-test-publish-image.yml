@@ -219,7 +219,7 @@ jobs:
             --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
             --helm-extra-set-args "\
-              --set=validator.skipValidations=${skip_validation} \
+              --set=validator.skipValidations=${{ env.SKIP_VALIDATIONS }} \
               --set=validator.image.repository=${image_name} \
               --set=validator.image.tag=${image_tag} \
               --set=validator.image.digest=${image_digest} \
