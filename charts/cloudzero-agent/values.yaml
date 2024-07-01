@@ -43,8 +43,12 @@ prometheusConfig:
 
 kube-state-metrics:
   enabled: false
+  dns_name: kube-state-metrics
+  port: 8080
 prometheus-node-exporter:
   enabled: false
+  dns_name: prometheus-node-exporter
+  port: 9100
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
 secretAnnotations: {}
@@ -58,6 +62,8 @@ validator:
     tag: latest
     digest:
     pullPolicy: Always
+    config:
+      skip_validations: false
 
 server:
   name: server
