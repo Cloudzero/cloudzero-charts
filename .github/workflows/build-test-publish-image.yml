@@ -219,16 +219,16 @@ jobs:
             --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
             --helm-extra-set-args "\
+              --set=validator.skipValidations=${skip_validation} \
               --set=validator.image.repository=${image_name} \
               --set=validator.image.tag=${image_tag} \
               --set=validator.image.digest=${image_digest} \
-              --set=validator.image.config.skip_validations=${skip_validation} \
               --set=existingSecretName=api-token \
               --set=clusterName=$CLUSTER_NAME \
               --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
               --set=region=$REGION \
-              --set=kube-state-metrics.enabled=true \
-              --set=prometheus-node-exporter.enabled=true"
+              --set=kubeStateMetrics.enabled=true \
+              --set=prometheusNodeExporter.enabled=true"
       
       ###########################################################################
       # PRODUCTION ONLY STEPS BEYOND THIS POINT
