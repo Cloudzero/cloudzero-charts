@@ -38,7 +38,7 @@ spec:
             - name: CZ_HOST
               value: {{ .Values.host }}
             - name: SKIP_VALIDATIONS
-              value: "{{ .Values.validator.skip_validations }}"
+              value: {{ .Values.validator.config.skip_validations }}
             - name: KMS_EP_URL
               {{- if index .Values "kube-state-metrics.dns_name" }}
               {{- if index .Values "kube-state-metrics.port" }}
