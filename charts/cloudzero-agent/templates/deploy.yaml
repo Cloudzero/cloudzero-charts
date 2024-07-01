@@ -38,29 +38,21 @@ spec:
             - name: CZ_HOST
               value: {{ .Values.host }}
             - name: SKIP_VALIDATIONS
-              value: {{ .Values.validator.image.config.skip_validations }}
+              value: "{{ .Values.validator.skipValidations }}"
             - name: KMS_EP_URL
-              {{- if index .Values "kube-state-metrics.dns_name" }}
-              {{- if index .Values "kube-state-metrics.port" }}
-              value: http://{{ index .Values "kube-state-metrics.dns_name" }}:{{ index .Values "kube-state-metrics.port" }}/
-              {{- else }}
-              value: http://{{ index .Values "kube-state-metrics.dns_name" }}:8080/
-              {{- end }}
+              {{- if .Values.kubeStateMetrics.serviceEndpoint }}
+              value: http://{{ .Values.kubeStateMetrics.serviceEndpoint }}/
               {{- else }}
               value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics:8080/
               {{- end }}
             - name: NODE_EXPORTER_EP_URL
-              {{- if index .Values "prometheus-node-exporter.dns_name" }}
-              {{- if index .Values "prometheus-node-exporter.port" }}
-              value: http://{{ index .Values "prometheus-node-exporter.dns_name" }}:{{ index .Values "prometheus-node-exporter.port" }}/
-              {{- else }}
-              value: http://{{ index .Values "prometheus-node-exporter.dns_name" }}:9100/
-              {{- end }}
+              {{- if .Values.prometheusNodeExporter.serviceEndpoint }}
+              value: http://{{ .Values.prometheusNodeExporter.serviceEndpoint }}/
               {{- else }}
               value: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
               {{- end }}
-            - name: SKIP_VALIDATIONS
-              value: "{{ .Values.validator.skip_validations }}"
+            - name: REGION
+              value: {{ .Values.region }}
           volumeMounts:
             - name: cloudzero-api-key
               mountPath: /etc/config/prometheus/secrets/
