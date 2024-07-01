@@ -61,6 +61,11 @@ spec:
               {{- end }}
             - name: SKIP_VALIDATIONS
               value: "{{ .Values.validator.skip_validations }}"
+          volumeMounts:
+            - name: cloudzero-api-key
+              mountPath: /etc/config/prometheus/secrets/
+              subPath: ""
+              readOnly: true
       containers:
         {{- if .Values.configmapReload.prometheus.enabled }}
         - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-configmap-reload
