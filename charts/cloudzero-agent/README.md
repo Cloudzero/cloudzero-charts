@@ -62,17 +62,15 @@ This chart relies on metrics from the [kube-state-metrics](https://github.com/ku
 By default, these subcharts are disabled to allow the agent to scrape metrics from existing instances of `kube-state-metrics` and `node-exporter`. If you have an existing deployment, you need to configure the cloudzero-agent to use the existing service endpoint addresses. You can set these addresses in the `values.yaml` file as follows by defining the relative `serviceEndpoint`:
 
 ```yaml
-kubeStateMetrics:
-  enabled: false
-  serviceEndpoint: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-prometheusNodeExporter:
-  enabled: false
-  serviceEndpoint: <node-exporter>.<example-namespace>.svc.cluster.local:9100
+validator:
+  serviceEndpoints:
+     kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
+     prometheusNodeExporter: <node-exporter>.<example-namespace>.svc.cluster.local:9100
 ```
 
 > **Note:** Replace `<example-namespace>` and the service names with the ones used in your deployments.
 
-Alternatively, you can deploy them automatically by enabling the following settings:
+Alternatively, if you do not have an existing kube-state-metrics and node-exporter, you can deploy them automatically by enabling the following settings. In this case you do not need to set the `validator.serviceEndpoints.*` values:
 
 ```yaml
 kubeStateMetrics:
