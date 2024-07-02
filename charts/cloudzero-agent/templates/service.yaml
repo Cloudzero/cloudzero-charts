@@ -1,0 +1,30 @@
+{{- if .Values.server.serviceMonitor.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
+  name: {{ include "cloudzero-agent.configMapName" . }}
+  namespace: {{ include "cloudzero-agent.namespace" . }}
+  {{- if .Values.server.serviceAnnotations }}
+  annotations:
+    {{ toYaml .Values.server.serviceAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: http
+      port: 9090
+      protocol: TCP
+      targetPort: http
+  selector:
+  {{- include "cloudzero-agent.server.matchLabels" . | nindent 4 }}
+  sessionAffinity: None
+  type: ClusterIP
+{{- end -}}
