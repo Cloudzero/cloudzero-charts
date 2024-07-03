@@ -85,7 +85,7 @@ This will deploy the necessary resources for metric scraping.
 
 Values can be be passed to the metrics exporter subcharts by adding values according to the values specification for [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) and [prometheus-node-exporter](https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml) in the `kube-state-metrics` and `prometheus-node-exporter` sections respectively.
 
-A common addition may be to pul the container images from custom image registries/repositories:
+A common addition may be to pull the container images from custom image registries/repositories:
 
 ```yaml
 kube-state-metrics:
