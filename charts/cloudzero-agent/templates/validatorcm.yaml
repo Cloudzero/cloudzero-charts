@@ -27,7 +27,7 @@ data:
     cloudzero:
       host:  https://{{ .Values.host }}
       credentials_file: /etc/config/prometheus/secrets/value
-      disable_telemetry: true
+      disable_telemetry: false
 
     prometheus:
       {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
