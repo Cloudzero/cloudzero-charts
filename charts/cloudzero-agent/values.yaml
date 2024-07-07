@@ -64,8 +64,8 @@ validator:
   skipValidations: false
   name: env-validator
   image:
-    repository: ghcr.io/josephbarnett/cloudzero-agent-validator/cloudzero-agent-validator
-    tag: 0.24.0
+    repository: ghcr.io/cloudzero/cloudzero-agent-validator/cloudzero-agent-validator
+    tag: 0.11.0
     digest:
     pullPolicy: Always
 
