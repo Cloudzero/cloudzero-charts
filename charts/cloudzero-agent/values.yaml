@@ -62,8 +62,8 @@ validator:
   skipValidations: false
   name: env-validator
   image:
-    repository: ghcr.io/cloudzero/cloudzero-charts/cloudzero-agent-validator
-    tag: latest
+    repository: ghcr.io/josephbarnett/cloudzero-agent-validator/cloudzero-agent-validator
+    tag: 0.24.0
     digest:
     pullPolicy: Always
 
@@ -83,6 +83,9 @@ server:
       cpu: 250m
     limits:
       memory: 1024Mi
+  env:
+    - name: FOO
+      value: "BAR"
   deploymentAnnotations: {}
   podAnnotations: {}
   configMapOverrideName: configuration
