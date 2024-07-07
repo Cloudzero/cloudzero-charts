@@ -85,9 +85,6 @@ server:
       cpu: 250m
     limits:
       memory: 1024Mi
-  env:
-    - name: FOO
-      value: "BAR"
   deploymentAnnotations: {}
   podAnnotations: {}
   configMapOverrideName: configuration
