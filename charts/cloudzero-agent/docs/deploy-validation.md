@@ -59,4 +59,4 @@ The Cloudlock Agent has the following requirements:
 4. It must be able to communicate with the Cloudzero API to send metrics.
 5. It must be configured to collect the correct metrics and labels to the Cloudzero API.
 
-Based on these 5 requirements, the checks have been designed to help identify problems quickly during a new deployment. Using the tool, and log output, it should be possible to confirm this information with Cloudzero support.
+Based on these 5 requirements, the checks have been designed to help identify problems quickly during a new deployment. Using the tool, and log output, it should be possible to confirm this information. If all else fails, reach out to support@cloudzero.com and provide the output, along with the output of `kubectl -n <namespace> describe all` for the deployment.
