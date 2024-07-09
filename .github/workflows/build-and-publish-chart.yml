@@ -3,7 +3,7 @@ name: build-and-publish-chart
 on:
   push:
     branches:
-      - main
+      - danm-test-main
 
 jobs:
   build-and-publish-chart:
@@ -53,7 +53,7 @@ jobs:
     - name: Checkout GH Pages
       uses: actions/checkout@v2
       with:
-        ref: gh-pages
+        ref: gh-pages-danm
 
     - name: Download Chart Artifact
       uses: actions/download-artifact@v2
@@ -72,16 +72,15 @@ jobs:
         author_email: ops@cloudzero.com
         message: 'Commit for ${{ env.NEW_VERSION }}'
         add: '*'
-        pull: '--rebase'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        name: ${{ steps.version.outputs.nextVersion }}
-        tag_name: ${{ steps.version.outputs.nextVersion }}
-        files: cloudzero-agent-${{ env.NEW_VERSION }}.tgz
-        make_latest: true
+    # - name: Create Release
+    #   uses: softprops/action-gh-release@v2
+    #   with:
+    #     name: ${{ steps.version.outputs.nextVersion }}
+    #     tag_name: ${{ steps.version.outputs.nextVersion }}
+    #     files: cloudzero-agent-${{ env.NEW_VERSION }}.tgz
+    #     make_latest: true
 
 
