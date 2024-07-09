@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cloudzero-agent
-description: A chart for using Prometheus in agent mode to send cluster metrics to the CloudZero platform.
+description: A chart for using Prometheus in agent mode to send cluster metrics to the CloudZero platform. TEST CHANGE
 type: application
 version: 0.0.10
 maintainers:
