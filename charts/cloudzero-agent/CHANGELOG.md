@@ -5,12 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.11]
+
+### Added
+- Moved validator to [dedicated repository](https://github.com/Cloudzero/cloudzero-agent-validator)
+- Added validator as pod lifecycle hook (PostStart, PreStop) to track pod up/down transitions used to monitor data loss
+
 ## [0.0.10]
 
 ### Added
 - Resource consumption is reduced by limiting ingestion of unneeded metrics and metric labels
-- Moved validator to [dedicated repository](https://github.com/Cloudzero/cloudzero-agent-validator)
-- Added validator as pod lifecycle hook (PostStart, PreStop) to track pod up/down transitions used to monitor data loss
 
 ## [0.0.9]
 
