@@ -134,3 +134,19 @@ Required metric labels
 {{- $result := join "|" $total -}}
 {{- $result -}}
 {{- end -}}
+
+{{/*
+If integer, even if converted to scientific notation, will return as a string representation of that integer
+Otherwise, since casting a string to an int will return 0, returns the original string
+
+Limitations: If yaml has converted the number to scientific notation, and the number has more than 17 characters,
+then it will have lost precision.. which means after the conversion it's a different number entirely
+*/}}
+{{- define "cloudzero-agent.intOrStringToString" -}}
+{{- $intValue := . | int -}}
+{{- if gt $intValue 0 -}}
+  {{- toString $intValue -}}
+{{- else -}}
+  {{- toString . -}}
+{{- end -}}
+{{- end -}}
