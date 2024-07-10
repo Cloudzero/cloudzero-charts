@@ -17,7 +17,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}   # checkout the correct branch name
+          ref: main
           fetch-depth: 0                # fetch the whole repo history
 
       - name: Set up Git
@@ -80,9 +80,10 @@ jobs:
           path: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
 
       - name: Checkout GH Pages
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: gh-pages
+          fetch-depth: 0                # fetch the whole repo history
 
       - name: Download Chart Artifact
         uses: actions/download-artifact@v2
@@ -94,15 +95,12 @@ jobs:
         run: |
           helm repo index --url https://cloudzero.github.io/cloudzero-charts .
 
-      - name: Commit and Push changes
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: Clouzero Bot
-          author_email: ops@cloudzero.com
-          message: 'Commit for ${{ env.NEW_VERSION }}'
-          add: '*'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and Push gh-pages changes
+        run: |
+          git add .
+          git commit -m "Commit for ${{ env.NEW_VERSION }}"
+          git push origin gh-pages
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
