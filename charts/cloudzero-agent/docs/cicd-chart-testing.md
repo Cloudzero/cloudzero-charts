@@ -17,8 +17,8 @@ act -l
 Here is an example output:
 
 ```bash
-Stage  Job ID                                        Job name                                      Workflow name             Workflow file                 Events           
-0      build-and-publish-chart  build-and-publish-chart  build-and-publish-chart  build-and-publish-chart.yml  push             
+Stage  Job ID                   Job name                 Workflow name            Workflow file                Events
+0      build-and-publish-chart  build-and-publish-chart  build-and-publish-chart  build-and-publish-chart.yml  push
 0      install                  install                  Test Chart               test-chart.yml               pull_request,push
 0      lint                     lint                     Test Chart               test-chart.yml               push,pull_request
 ```
