@@ -19,6 +19,11 @@ jobs:
           ref: ${{ github.head_ref }}   # checkout the correct branch name
           fetch-depth: 0                # fetch the whole repo history
 
+      - name: Set up Git
+        run: |
+          git config --local user.email "ops@cloudzero.com"
+          git config --local user.name "Automated CZ Release"
+
       - name: Fetch all branches
         run: git fetch --all
 
@@ -69,6 +74,8 @@ jobs:
 
       - name: Upload Chart as Artifact
         uses: actions/upload-artifact@v2
+        env:
+          ACTIONS_RUNTIME_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: agent-chart
           path: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
