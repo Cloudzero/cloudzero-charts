@@ -80,7 +80,7 @@ jobs:
         id: get_changes
         run: |
           FROM=$(git show-ref --abbrev=7 --tags | grep "${{steps.version.outputs.currentVersion }}" | cut -f1 -d' ')
-          TO=$(git show-ref --abbrev=7 --tags | grep "${{ steps.version.outputs.nextVersion }}" | cut -f1 -d' ')
+          TO=$(git rev-parse --short HEAD)
           CHANGES=$(git log ${FROM}..${TO} --oneline)
           echo "::set-output name=changes::${CHANGES}"
 
