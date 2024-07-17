@@ -66,7 +66,7 @@ Default values are specified in the chart's `values.yaml` file. If you need to c
 
 ##### Using the `--values` Flag
 
-You can use the `--values` flag in your Helm commands to override values in the chart with a new file. Specify the name of the file after the `--values` flag:
+You can use the `--values` (or short form `-f`) flag in your Helm commands to override values in the chart with a new file. Specify the name of the file after the `--values` flag:
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
@@ -142,38 +142,89 @@ prometheus-node-exporter:
 
 #### Passing Values to Subcharts
 
-Values can be passed to subcharts like `kube-state-metrics` and `prometheus-node-exporter` by adding entries in `values-override.yaml` as per their specifications.
+Values can be passed to subcharts like [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) and [prometheus-node-exporter](https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml) by adding entries in `values-override.yaml` as per their specifications.
+
+A common addition may be to pull the container images from custom image registries/repositories:
+
+`values-override.yaml`
+```yaml
+kube-state-metrics:
+  enabled: true
+  image:
+    registry: my-custom-registry.io
+    repository: my-custom-kube-state-metrics/kube-state-metrics
+
+prometheus-node-exporter:
+  enabled: true
+  image:
+    registry: my-custom-registry.io
+    repository: my-custom-prometheus/node-exporter
+```
 
 ### Custom Scrape Configs
 
 If running without the default exporters, adjust Prometheus scrape configs:
 
-`values-override.yaml modifying subchart values`
+`values-override.yaml`
 ```yaml
 prometheusConfig:
   scrapeJobs:
     kubeStateMetrics:
-      enabled: false
+      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
     additionalScrapeJobs:
     - job_name: custom-kube-state-metrics
+      honor_timestamps: true
+      scrape_interval: 1m
+      scrape_timeout: 10s
+      metrics_path: /metrics
       static_configs:
         - targets:
           - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
           - 'my-node-exporter.default.svc.cluster.local:9100'
       relabel_configs:
+      - separator: ;
+        regex: __meta_kubernetes_service_label_(.+)
+        replacement: $1
+        action: labelmap
+      - source_labels: [__meta_kubernetes_namespace]
+        separator: ;
+        regex: (.*)
+        target_label: namespace
+        replacement: $1
+        action: replace
       - source_labels: [__meta_kubernetes_service_name]
+        separator: ;
+        regex: (.*)
         target_label: service
+        replacement: $1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        separator: ;
+        regex: (.*)
+        target_label: node
+        replacement: $1
+        action: replace
+      kubernetes_sd_configs:
+        - role: endpoints
+          kubeconfig_file: ""
+          follow_redirects: true
+          enable_http2: true
 ```
 
 ### Exporting Pod Labels
 
 Pod labels can be exported as metrics using `kube-state-metrics`. Customize the labels to export in `values-override.yaml`:
 
+Note a subset of relevant pod labels can be included -- for example only exporting the pod labels named `foo` and `bar` -- can be achieved with the following:
+
 ```yaml
 kube-state-metrics:
   extraArgs:
     - --metric-labels-allowlist=pods=[foo,bar]
 ```
+
+> This is preferable to including all labels with `*` because the performance and memory impact is reduced. Regular expression matching is not currently supported. See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/developer/cli-arguments.md) for more details.
+
 
 ## Dependencies
 
