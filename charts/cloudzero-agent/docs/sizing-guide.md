@@ -61,41 +61,5 @@ server:
 
 This file only includes the overrides for the server resources size limit.
 
-#### Installation Instructions
-
-1. **Add the Helm Repository**
-
-    ```sh
-    helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
-    helm repo update
-    ```
-
-2. **Install Helm Chart**
-
-    The chart can be installed directly with Helm or any other common Kubernetes deployment tools.
-
-    **Install with Helm:**
-
-    ```sh
-    helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-        --set existingSecretName=<NAME_OF_SECRET> \
-        --set clusterName=<CLUSTER_NAME> \
-        --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
-        --set region=<REGION> \
-        -f values.yml \
-        -f values-override.yml
-    ```
-
-    **Upgrade an Existing Installation:**
-
-    ```sh
-    helm upgrade <RELEASE_NAME> cloudzero/cloudzero-agent \
-        --set existingSecretName=<NAME_OF_SECRET> \
-        --set clusterName=<CLUSTER_NAME> \
-        --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
-        --set region=<REGION> \
-        -f values.yml \
-        -f values-override.yml
-    ```
 
 By following these instructions, you can ensure your Prometheus agent is properly sized to handle your cluster's load, preventing potential memory issues and ensuring smooth operation.
