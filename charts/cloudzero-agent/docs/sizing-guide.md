@@ -16,7 +16,7 @@ It is recommended to consider the shape and size of your prometheus cluster when
 
 ![sizing formula](./assets/sizing-formula.png)
 
-> This guide uses a basic formula based on number of nodes in the cluster. Please note, your milage may vary if you have:
+> This guide uses a basic formula based on number of nodes in the cluster. Please note, your mileage may vary if you have:
 > 
 > * Very large machines, with a large number of pods
 > 
