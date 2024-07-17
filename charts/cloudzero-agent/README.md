@@ -1,8 +1,4 @@
-Here's the reviewed and clarified document:
-
----
-
-# cloudzero-agent
+# cloudzero agent helm chart
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE-OF-CONDUCT.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
