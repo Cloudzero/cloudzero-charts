@@ -37,6 +37,16 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set region=<REGION>
 ```
 
+Alternatively if you are updating an existing installation, you can upgrade the chart with:
+
+```console
+helm upgrade <RELEASE_NAME> cloudzero/cloudzero-agent \
+    --set existingSecretName=<NAME_OF_SECRET> \
+    --set clusterName=<CLUSTER_NAME> \
+    --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
+    --set region=<REGION>
+```
+
 ### Mandatory Values
 
 There are several mandatory values that must be specified for the chart to install properly. Below are the required settings along with strategies for providing custom values during installation:
