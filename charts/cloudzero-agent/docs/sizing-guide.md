@@ -30,7 +30,6 @@ Create a `values-override.yml` file or edit the default `value.yml` file with th
 
 ```yaml
 server:
-  name: server
   resources:
     requests:
       memory: 512Mi
