@@ -16,29 +16,27 @@ It is recommended to consider the shape and size of your prometheus cluster when
 
 ![sizing formula](./assets/sizing-formula.png)
 
-> This guide uses a simple formula based on number of nodes, however your milage may vary if you have:
+> This guide uses a basic formula based on number of nodes in the cluster. Please note, your milage may vary if you have:
 > 
 > * Very large machines, with a large number of pods
 > 
-> * High churn pods or jobs. Each pod started will trigger allocation of a time seriese based metrics cache in the agent. If it restarts, a new cache is created. The cache will resize in memory for the look back period to handle remote write failures (2 hours).
+> * High churn pods or jobs. Each pod started triggers allocation of a memory for that pods metrics cache in the agent's memory. If the pod restarts, a new cache is created for the new pod instance. [More details on the cache can be found in the prometheus documentation.](https://prometheus.io/docs/practices/remote_write/). This cache is maintained for 2 hours to handle failure recovery of remote writes.
 > 
 
 
 #### Sample values.yaml Configuration
 
-Modify or create a `values.yaml` file with the following content to configure the resource limits and requests for your Prometheus agent deployment. Replace `<NUMBER_OF_NODES>` with the actual number of nodes in your cluster:
+Create a `values-override.yml` file or edit the default `value.yml` file with the following content to configure the resource limits and requests for your Prometheus agent deployment. Replace `<CALCULATED_MEMORY_LIMIT>` with the actual number of nodes in your cluster:
 
 ```yaml
 server:
   name: server
-  ...
   resources:
     requests:
       memory: 512Mi
       cpu: 250m
     limits:
       memory: "<CALCULATED_MEMORY_LIMIT>"
-  ...
 ```
 
 When using Helm, you can provide specific values in a separate `values-override.yml` file to override the defaults specified in the original `values.yml`. This approach allows you to override only the necessary values rather than providing the entire block.
