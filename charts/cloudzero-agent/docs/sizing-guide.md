@@ -24,7 +24,7 @@ It is recommended to consider the shape and size of your prometheus cluster when
 > 
 
 
-#### Sample values.yaml Configuration
+#### Sample values-override.yml Configuration
 
 Create a `values-override.yml` file or edit the default `value.yml` file with the following content to configure the resource limits and requests for your Prometheus agent deployment. Replace `<CALCULATED_MEMORY_LIMIT>` with the actual number of nodes in your cluster:
 
