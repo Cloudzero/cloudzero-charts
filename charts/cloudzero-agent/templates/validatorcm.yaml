@@ -26,7 +26,7 @@ data:
 
     cloudzero:
       host:  https://{{ .Values.host }}
-      credentials_file: {{ include "cloudzero-agent.secretFilePath" . }}{{ include "cloudzero-agent.secretFileName" . }}
+      credentials_file: {{ include "cloudzero-agent.secretFileFullPath" . }}
       disable_telemetry: false
 
     prometheus:
