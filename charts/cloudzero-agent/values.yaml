@@ -95,7 +95,7 @@ server:
   # -- The agent will use this file path on the container filesystem to get the CZ API key.
   containerSecretFilePath: /etc/config/prometheus/secrets/
   # -- The agent will look for a file with this name to get the CZ API key.
-  containerSecretFileName: cz-api-key
+  containerSecretFileName: value
   persistentVolume:
     existingClaim: ""
     enabled: false
