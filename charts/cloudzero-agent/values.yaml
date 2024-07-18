@@ -11,7 +11,6 @@ apiKey: null
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: null
 
-
 # -- The following lists of metrics are required for CloudZero to function.
 # -- Modifications made to these lists may cause issues with the processing of cluster data
 kubeMetrics:
@@ -44,7 +43,6 @@ prometheusConfig:
       enabled: true
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
-
 
 kube-state-metrics:
   enabled: false
@@ -94,9 +92,9 @@ server:
   - --web.console.libraries=/etc/prometheus/console_libraries
   - --web.console.templates=/etc/prometheus/consoles
   - --enable-feature=agent
-  # -- If set, the agent will use this file path on the container filesystem to get the CZ API key.
+  # -- The agent will use this file path on the container filesystem to get the CZ API key.
   containerSecretFilePath: /etc/config/prometheus/secrets/
-  # -- If set, the agent will look for a file with this name to get the CZ API key.
+  # -- The agent will look for a file with this name to get the CZ API key.
   containerSecretFileName: cz-api-key
   persistentVolume:
     existingClaim: ""
