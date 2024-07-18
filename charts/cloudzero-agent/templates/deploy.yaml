@@ -39,10 +39,12 @@ spec:
             - -c
             - cp -r /app /checks/bin/ && cloudzero-agent-validator d pre-start -f /checks/config/validator.yml
           volumeMounts:
+          {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
               mountPath: {{ include "cloudzero-agent.secretFilePath" . }}
               subPath: ""
               readOnly: true
+          {{- end }}
             - name: lifecycle-volume
               mountPath: /checks/bin/
             - name: validator-config-volume
