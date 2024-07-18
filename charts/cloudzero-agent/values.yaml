@@ -11,7 +11,7 @@ apiKey: null
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: null
 # -- If set, the agent will use this file path on the container filesystem to get the CZ API key.
-existingSecretFilePath: null
+containerSecretFilePathOverride: null
 # -- If set, the agent will look for a file with this name to get the CZ API key.
 containerSecretFileNameOverride: null
 
