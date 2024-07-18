@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
 {{- if .Values.server.deploymentAnnotations }}
   annotations:
-    {{ toYaml .Values.server.deploymentAnnotations | nindent 4 }}
+    {{- toYaml .Values.server.deploymentAnnotations | nindent 4 }}
 {{- end }}
   labels:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
