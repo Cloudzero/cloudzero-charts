@@ -20,7 +20,7 @@ data:
       location: ./cloudzero-agent-validator.log
 
     deployment:
-      account_id: {{ .Values.cloudAccountId }}
+      account_id: "{{ include "cleanString" .Values.cloudAccountId }}"
       cluster_name: {{ .Values.clusterName }}
       region: {{ .Values.region }}
 
