@@ -2,12 +2,13 @@
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE-OF-CONDUCT.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-![GitHub release](https://img.shields.io/github/release/cloudzero/template-cloudzero-open-source.svg)
+![GitHub release](https://img.shields.io/github/release/Cloudzero/cloudzero-charts.svg)
 
 This repository contains helm charts for use by CloudZero users, which can be installed into any cloud-hosted Kubernetes cluster.
 
 ## Table of Contents
 
+- [Current Helm Charts](#current-helm-charts)
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Testing](#testing)
@@ -16,6 +17,10 @@ This repository contains helm charts for use by CloudZero users, which can be in
 - [Vulnerability Reporting](#vulnerability-reporting)
 - [What is CloudZero?](#what-is-cloudzero)
 - [License](#license)
+
+## Current Helm Charts
+
+- [cloudzero-agent](charts/cloudzero-agent/README.md) A chart for using Prometheus in agent mode to send cluster metrics to the CloudZero platform.
 
 ## Documentation
 
@@ -30,10 +35,7 @@ The helm charts in this repository generally assume the use of Helm v3 for insta
 
 After the `helm` command is available, charts should be installable with the `install` or `upgrade` command:
 ```bash
-helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set secretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set cloudAccountId=<CLOUD_ACCOUNT_ID> \
+helm upgrade --install <release-name> cloudzero/<chart-name>
 ```
 
 Installation can also be managed by deployment tools such as ArgoCD or Spinnaker if desired, but installation instructions in this repository assume the use of the Helm CLI.
@@ -51,7 +53,7 @@ This is in addition to integration and load tests not managed in this repository
 
 We appreciate feedback and contribution to this repo! Before you get started, please see the following:
 
-- [This repo's contribution guide](GENERAL-CONTRIBUTING.md)
+- [This repo's contribution guide](CONTRIBUTING.md)
 
 ## Support + Feedback
 
