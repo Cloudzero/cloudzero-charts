@@ -85,6 +85,7 @@ jobs:
           git push origin main
           COMMIT_HASH=$(git rev-parse HEAD)
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
+        continue-on-error: true
 
       # Step 6: Generate Change Log
       - name: Generate Change Log
@@ -112,6 +113,7 @@ jobs:
           git add README.md charts/cloudzero-agent/docs charts/cloudzero-agent/README.md
           git commit -m "Commit for ${{ env.NEW_VERSION }}"
           git push origin gh-pages
+        continue-on-error: true
 
       # Step 8: Create GitHub Release
       - name: Create Release
