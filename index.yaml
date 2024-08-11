@@ -22,7 +22,7 @@ entries:
     name: cloudzero-agent
     type: application
     urls:
-    - https://cloudzero.github.io/cloudzero-charts/.deploy/cloudzero-agent-0.0.24.tgz
+    - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-0.0.24.tgz
     version: 0.0.24
   - apiVersion: v2
     appVersion: v2.50.1
