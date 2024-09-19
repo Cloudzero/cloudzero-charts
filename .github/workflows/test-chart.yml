@@ -43,10 +43,22 @@ jobs:
         run: |
           cd charts/cloudzero-agent
           helm dependency update
-          ct lint --debug --charts . \
+          ct install --charts . \
             --chart-repos=kube-state-metrics=$PROM_CHART_REPO \
             --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
-            --helm-lint-extra-args "--set=existingSecretName=api-token,clusterName=$CLUSTER_NAME,cloudAccountId=$CLOUD_ACCOUNT_ID,region=$REGION"
+            --namespace $NAMESPACE \
+            --helm-extra-set-args "\
+              --set=existingSecretName=api-token \
+              --set=clusterName=$CLUSTER_NAME \
+              --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
+              --set=region=$REGION \
+              --set=kube-state-metrics.enabled=true \
+              --set=prometheus-node-exporter.enabled=true \
+              --set=prometheusConfig.globalScrapeInterval=120s \
+              --set=prometheusConfig.scrapeJobs.kubeStateMetrics.enabled=true \
+              --set=prometheusConfig.scrapeJobs.kubeStateMetrics.scrapeInterval=120s \
+              --set=prometheusConfig.scrapeJobs.cadvisor.enabled=true \
+              --set=prometheusConfig.scrapeJobs.cadvisor.scrapeInterval=120s"
 
   # This job tests the chart on a KinD cluster
   # and if we are in the develop or tag branch, it will 
