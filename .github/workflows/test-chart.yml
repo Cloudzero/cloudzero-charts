@@ -13,6 +13,7 @@ on:
 
 env:
   SKIP_VALIDATIONS: false
+  DEFAULT_KIND_CLUSTER_NAME: chart-testing
 
 jobs:  
   # This job lints the chart
@@ -45,7 +46,6 @@ jobs:
           helm dependency update
           ct lint --debug --charts . \
             --chart-repos=kube-state-metrics=$PROM_CHART_REPO \
-            --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --helm-lint-extra-args "--set=existingSecretName=api-token,clusterName=$CLUSTER_NAME,cloudAccountId=$CLOUD_ACCOUNT_ID,region=$REGION"
 
   # This job tests the chart on a KinD cluster
@@ -90,6 +90,11 @@ jobs:
           kubectl cluster-info
           kubectl describe nodes
 
+      - name: SETUP - Extract kubeconfig
+        run: |
+          kind get kubeconfig --name ${{ env.DEFAULT_KIND_CLUSTER_NAME }} > kubeconfig.yaml
+          echo "KUBECONFIG=$(pwd)/kubeconfig.yaml" >> $GITHUB_ENV
+
       # PRs from a fork don't have access to the secrets
       # don't fail in this case, skip validate
       - name: INPUT PREP - Skip validation
@@ -112,6 +117,7 @@ jobs:
           CLOUD_ACCOUNT_ID: '00000000'
           CZ_API_TOKEN: ${{ secrets.CZ_API_TOKEN || 'fake-api-token' }}
           REGION: 'us-east-1'
+          KUBECONFIG: ${{ env.KUBECONFIG }}
         run: |  
           kubectl create namespace $NAMESPACE
           kubectl create secret -n $NAMESPACE generic api-token --from-literal=value=$CZ_API_TOKEN
@@ -119,7 +125,6 @@ jobs:
           helm dependency update
           ct install --charts . \
             --chart-repos=kube-state-metrics=$PROM_CHART_REPO \
-            --chart-repos=prometheus-node-exporter=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
             --helm-extra-set-args "\
               --set=existingSecretName=api-token \
@@ -127,4 +132,3 @@ jobs:
               --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
               --set=region=$REGION \
               --set=kube-state-metrics.enabled=true \
-              --set=prometheus-node-exporter.enabled=true"
