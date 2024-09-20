@@ -48,11 +48,11 @@ prometheusConfig:
     additionalScrapeJobs: []
 
 kube-state-metrics:
-  enabled: false
+  enabled: true
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
 prometheus-node-exporter:
-  enabled: false
+  enabled: true
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
 secretAnnotations: {}
