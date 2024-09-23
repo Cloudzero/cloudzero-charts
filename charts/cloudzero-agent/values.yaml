@@ -20,7 +20,6 @@ kubeMetrics:
   - kube_pod_container_resource_requests
   - kube_pod_labels
   - kube_pod_info
-  - node_dmi_info
 containerMetrics:
   - container_cpu_usage_seconds_total
   - container_memory_working_set_bytes
@@ -51,8 +50,6 @@ kube-state-metrics:
   enabled: true
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
-prometheus-node-exporter:
-  enabled: true
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
 secretAnnotations: {}
@@ -62,7 +59,6 @@ imagePullSecrets: []
 validator:
   serviceEndpoints:
     kubeStateMetrics:
-    prometheusNodeExporter:
   # -- Flag to skip validator failure if unable to connect to the CloudZero API.
   name: env-validator
   image:

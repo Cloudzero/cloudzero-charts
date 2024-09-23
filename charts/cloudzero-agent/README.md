@@ -121,15 +121,14 @@ Please see the [sizing guide](./docs/sizing-guide.md) in the docs directory.
 
 ### Metric Exporters
 
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and [node-exporter](https://github.com/prometheus/node_exporter) projects as subcharts.
+This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) as a subchart.
 
-By default, these subcharts are disabled to allow scraping from existing instances. Configure the `cloudzero-agent` to use existing service endpoint addresses in `values.yaml`:
+By default, this subchart is enabled to allow scraping from existing instances. Configure the `cloudzero-agent` to use existing service endpoint addresses in `values.yaml`:
 
 ```yaml
 validator:
   serviceEndpoints:
      kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-     prometheusNodeExporter: <node-exporter>.<example-namespace>.svc.cluster.local:9100
 ```
 
 Alternatively, deploy them automatically by enabling settings in `values-override.yaml`:
@@ -137,13 +136,11 @@ Alternatively, deploy them automatically by enabling settings in `values-overrid
 ```yaml
 kube-state-metrics:
   enabled: true
-prometheus-node-exporter:
-  enabled: true
 ```
 
 #### Passing Values to Subcharts
 
-Values can be passed to subcharts like [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) and [prometheus-node-exporter](https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml) by adding entries in `values-override.yaml` as per their specifications.
+Values can be passed to a subchart like [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) by adding entries in `values-override.yaml` as per their specifications.
 
 A common addition may be to pull the container images from custom image registries/repositories:
 
@@ -154,12 +151,6 @@ kube-state-metrics:
   image:
     registry: my-custom-registry.io
     repository: my-custom-kube-state-metrics/kube-state-metrics
-
-prometheus-node-exporter:
-  enabled: true
-  image:
-    registry: my-custom-registry.io
-    repository: my-custom-prometheus/node-exporter
 ```
 
 ### Custom Scrape Configs
@@ -181,7 +172,6 @@ prometheusConfig:
       static_configs:
         - targets:
           - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-          - 'my-node-exporter.default.svc.cluster.local:9100'
       relabel_configs:
       - separator: ;
         regex: __meta_kubernetes_service_label_(.+)
@@ -230,7 +220,6 @@ kube-state-metrics:
 | Repository                                         | Name                     | Version |
 |----------------------------------------------------|--------------------------|---------|
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics       | 5.15.*  |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.24.*  |
 
 ## Useful References
 
