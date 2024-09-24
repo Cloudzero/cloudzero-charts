@@ -38,14 +38,15 @@ spec:
             - /bin/sh
             - -c
             - >
-              cp -r /app /checks/bin/ && cloudzero-agent-validator d pre-start -f /checks/config/validator.yml
-              && cloudzero-agent-validator config generate \
+              cp -r /app /checks/bin/ && cloudzero-agent-validator config generate \
                 --account {{ .Values.cloudAccountId }} \
                 --cluster {{ .Values.clusterName }} \
                 --region {{ .Values.region }} \
+                --host {{ .Values.host }} \
                 --namespace {{ include "cloudzero-agent.namespace" . }} \
                 --pod {{ template "cloudzero-agent.server.fullname" . }} \
-                --configmap {{ template "cloudzero-agent.configMapName" . }}
+                --configmap {{ template "cloudzero-agent.configMapName" . }} \
+                && cloudzero-agent-validator d pre-start -f /checks/config/validator.yml
           volumeMounts:
           {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
