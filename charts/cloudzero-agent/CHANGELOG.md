@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0]
 - Remove Node Exporter dependencies.
-- Dynamically populate service endpoints for Node Exporter.
+- Dynamically populate service endpoints for Kube State Metrics.
 
 ## [0.0.21]
 
