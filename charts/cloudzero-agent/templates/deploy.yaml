@@ -46,6 +46,7 @@ spec:
                 --namespace {{ include "cloudzero-agent.namespace" . }} \
                 --pod {{ template "cloudzero-agent.server.fullname" . }} \
                 --configmap {{ template "cloudzero-agent.configMapName" . }} \
+                --secret-path {{ include "cloudzero-agent.secretFileFullPath" . }} \
                 && cloudzero-agent-validator d pre-start -f /checks/config/validator.yml
           volumeMounts:
           {{- if or .Values.existingSecretName .Values.apiKey }}
