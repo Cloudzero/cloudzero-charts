@@ -47,7 +47,7 @@ prometheusConfig:
     additionalScrapeJobs: []
 
 kube-state-metrics:
-  enabled: false
+  enabled: true
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
 
