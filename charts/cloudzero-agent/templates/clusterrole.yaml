@@ -21,6 +21,7 @@ rules:
       - list
       - watch
       - update
+      - create
   - apiGroups:
       - "extensions"
       - "networking.k8s.io"
