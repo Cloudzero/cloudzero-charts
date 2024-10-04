@@ -81,6 +81,8 @@ server:
     digest: ""
     pullPolicy: IfNotPresent
   nodeSelector: {}
+  serviceMonitor:
+    enabled: false
   resources:
     requests:
       memory: 512Mi
