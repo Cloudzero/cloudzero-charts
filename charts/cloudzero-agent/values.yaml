@@ -47,7 +47,7 @@ prometheusConfig:
     additionalScrapeJobs: []
 
 kube-state-metrics:
-  enabled: true
+  enabled: false
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
 
@@ -57,9 +57,6 @@ imagePullSecrets: []
 
 # environment validator image allows for CI to use a different image in testing
 validator:
-  serviceEndpoints:
-    kubeStateMetrics:
-  # -- Flag to skip validator failure if unable to connect to the CloudZero API.
   name: env-validator
   image:
     repository: ghcr.io/cloudzero/cloudzero-agent-validator/cloudzero-agent-validator
