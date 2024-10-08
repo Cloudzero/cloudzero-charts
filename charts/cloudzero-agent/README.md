@@ -121,22 +121,20 @@ Please see the [sizing guide](./docs/sizing-guide.md) in the docs directory.
 
 ### Metric Exporters
 
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) as a subchart.
+This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). The `cloudzero-agent` can use an existing `kube-state-metrics` exporter, and will automatically search the cluster for a `kube-state-metrics` Kubernetes Service to use.
 
-By default, this subchart is enabled to allow scraping from existing instances. Configure the `cloudzero-agent` to use existing service endpoint addresses in `values.yaml`:
-
-```yaml
-validator:
-  serviceEndpoints:
-     kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-```
-
-Alternatively, deploy them automatically by enabling settings in `values-override.yaml`:
-
+If making use of an existing `kube-state-metrics` is not preferable, deploy `kube-state-metrics` as a subchart of the `clouzero-agent` chart by enabling settings in `values-override.yaml`:
 ```yaml
 kube-state-metrics:
   enabled: true
 ```
+The following metrics must be available from `kube-state-metrics`:
+  - kube_node_info
+  - kube_node_status_capacity
+  - kube_pod_container_resource_limits
+  - kube_pod_container_resource_requests
+  - kube_pod_labels
+  - kube_pod_info
 
 #### Passing Values to Subcharts
 
@@ -151,50 +149,6 @@ kube-state-metrics:
   image:
     registry: my-custom-registry.io
     repository: my-custom-kube-state-metrics/kube-state-metrics
-```
-
-### Custom Scrape Configs
-
-If running without the default exporters, adjust Prometheus scrape configs:
-
-`values-override.yaml`
-```yaml
-prometheusConfig:
-  scrapeJobs:
-    kubeStateMetrics:
-      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
-    additionalScrapeJobs:
-    - job_name: custom-kube-state-metrics
-      honor_timestamps: true
-      scrape_interval: 1m
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      static_configs:
-        - targets:
-          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-      relabel_configs:
-      - separator: ;
-        regex: __meta_kubernetes_service_label_(.+)
-        replacement: $1
-        action: labelmap
-      - source_labels: [__meta_kubernetes_namespace]
-        separator: ;
-        regex: (.*)
-        target_label: namespace
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_service_name]
-        separator: ;
-        regex: (.*)
-        target_label: service
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        separator: ;
-        regex: (.*)
-        target_label: node
-        replacement: $1
-        action: replace
 ```
 
 ### Exporting Pod Labels
