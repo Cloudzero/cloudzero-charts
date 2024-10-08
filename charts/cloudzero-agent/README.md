@@ -130,29 +130,24 @@ Please see the [sizing guide](./docs/sizing-guide.md) in the docs directory.
 
 ### Metric Exporters
 
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and [node-exporter](https://github.com/prometheus/node_exporter) projects as subcharts.
+This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). The `cloudzero-agent` can use an existing `kube-state-metrics` exporter, and will automatically search the cluster for a `kube-state-metrics` Kubernetes Service to use.
 
-By default, these subcharts are disabled to allow scraping from existing instances. Configure the `cloudzero-agent` to use existing service endpoint addresses in `values.yaml`:
-
-```yaml
-validator:
-  serviceEndpoints:
-     kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-     prometheusNodeExporter: <node-exporter>.<example-namespace>.svc.cluster.local:9100
-```
-
-Alternatively, deploy them automatically by enabling settings in `values-override.yaml`:
-
+If making use of an existing `kube-state-metrics` is not preferable, deploy `kube-state-metrics` as a subchart of the `clouzero-agent` chart by enabling settings in `values-override.yaml`:
 ```yaml
 kube-state-metrics:
   enabled: true
-prometheus-node-exporter:
-  enabled: true
 ```
+The following metrics must be available from `kube-state-metrics`:
+  - kube_node_info
+  - kube_node_status_capacity
+  - kube_pod_container_resource_limits
+  - kube_pod_container_resource_requests
+  - kube_pod_labels
+  - kube_pod_info
 
 #### Passing Values to Subcharts
 
-Values can be passed to subcharts like [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) and [prometheus-node-exporter](https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml) by adding entries in `values-override.yaml` as per their specifications.
+Values can be passed to a subchart like [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) by adding entries in `values-override.yaml` as per their specifications.
 
 A common addition may be to pull the container images from custom image registries/repositories:
 
@@ -163,57 +158,6 @@ kube-state-metrics:
   image:
     registry: my-custom-registry.io
     repository: my-custom-kube-state-metrics/kube-state-metrics
-
-prometheus-node-exporter:
-  enabled: true
-  image:
-    registry: my-custom-registry.io
-    repository: my-custom-prometheus/node-exporter
-```
-
-### Custom Scrape Configs
-
-If running without the default exporters, adjust Prometheus scrape configs:
-
-`values-override.yaml`
-```yaml
-prometheusConfig:
-  scrapeJobs:
-    kubeStateMetrics:
-      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
-    additionalScrapeJobs:
-    - job_name: custom-kube-state-metrics
-      honor_timestamps: true
-      scrape_interval: 1m
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      static_configs:
-        - targets:
-          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-          - 'my-node-exporter.default.svc.cluster.local:9100'
-      relabel_configs:
-      - separator: ;
-        regex: __meta_kubernetes_service_label_(.+)
-        replacement: $1
-        action: labelmap
-      - source_labels: [__meta_kubernetes_namespace]
-        separator: ;
-        regex: (.*)
-        target_label: namespace
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_service_name]
-        separator: ;
-        regex: (.*)
-        target_label: service
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        separator: ;
-        regex: (.*)
-        target_label: node
-        replacement: $1
-        action: replace
 ```
 
 ### Exporting Pod Labels
@@ -227,6 +171,7 @@ kube-state-metrics:
   extraArgs:
      - --metric-labels-allowlist=pods=[foo,bar]
 ```
+If the `cloudzero-agent` is depending on an existing `kube-state-metrics` deployment, the above argument would need to be passed to it.
 
 > This is preferable to including all labels with `*` because the performance and memory impact is reduced. Regular expression matching is not currently supported. See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/developer/cli-arguments.md) for more details.
 
@@ -239,7 +184,6 @@ kube-state-metrics:
 | Repository                                         | Name                     | Version |
 |----------------------------------------------------|--------------------------|---------|
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics       | 5.15.*  |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.24.*  |
 
 ## Enabling Release Notifications
 

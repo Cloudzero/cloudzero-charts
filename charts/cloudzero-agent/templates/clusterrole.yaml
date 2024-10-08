@@ -15,10 +15,13 @@ rules:
       - nodes/metrics
       - services
       - pods
+      - configmaps
     verbs:
       - get
       - list
       - watch
+      - update
+      - create
   - apiGroups:
       - "extensions"
       - "networking.k8s.io"
