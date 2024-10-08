@@ -184,6 +184,7 @@ kube-state-metrics:
   extraArgs:
      - --metric-labels-allowlist=pods=[foo,bar]
 ```
+If the `cloudzero-agent` is depending on an existing `kube-state-metrics` deployment, the above argument would need to be passed to it.
 
 > This is preferable to including all labels with `*` because the performance and memory impact is reduced. Regular expression matching is not currently supported. See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/developer/cli-arguments.md) for more details.
 
