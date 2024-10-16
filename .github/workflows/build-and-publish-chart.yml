@@ -8,6 +8,10 @@ on:
         description: 'Version to use for the release'
         required: false
         default: ''
+      release_type:
+        description: 'Type of release (beta or stable)'
+        required: true
+        default: 'stable'
 
 jobs:
   build-and-publish-chart:
@@ -49,7 +53,6 @@ jobs:
 
       - name: Build Dependencies
         run: helm dependency update charts/cloudzero-agent/
-
 
       # Step 4: Determine Version
       - name: Get Github Tag Version
@@ -142,7 +145,7 @@ jobs:
           name: ${{ env.NEW_VERSION }}
           tag_name: ${{ env.NEW_VERSION }}
           files: cloudzero-agent-${{ env.NEW_VERSION }}.tgz
-          make_latest: true
+          make_latest: ${{ github.event.inputs.release_type != 'beta' }}
           target_commitish: ${{ env.COMMIT_HASH }}
           body: |
             ## Installation Instructions
