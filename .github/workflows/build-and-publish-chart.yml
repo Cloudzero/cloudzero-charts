@@ -12,6 +12,10 @@ on:
         description: 'Type of release (beta or stable)'
         required: true
         default: 'stable'
+      merge_changes:
+        description: 'Whether to merge changes to main and develop branches'
+        required: true
+        default: 'false'
 
 jobs:
   build-and-publish-chart:
@@ -27,7 +31,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.inputs.merge_changes == 'true' && 'main' || github.head_ref }}
           fetch-depth: 0
 
       - name: Set up Git
@@ -38,8 +42,9 @@ jobs:
       - name: Fetch All Branches
         run: git fetch --all
 
-      # Step 2: Prepare Branches
+      # Step 2: Prepare Branches (only if merging changes)
       - name: Prepare Branches
+        if: ${{ github.event.inputs.merge_changes == 'true' }}
         run: |
           git checkout develop
           git pull --rebase origin develop
@@ -65,6 +70,9 @@ jobs:
       - name: Determine Chart Version
         run: |
           NEW_VERSION=${{ github.event.inputs.version || steps.version.outputs.nextVersion }}
+          if [ "${{ github.event.inputs.release_type }}" == "beta" ]; then
+            NEW_VERSION="${NEW_VERSION}-beta"
+          fi
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Update Chart Version
@@ -85,7 +93,7 @@ jobs:
         run: |
           git add .
           git commit -m "Update Chart.yaml to version ${{ env.NEW_VERSION }}"
-          git push origin main
+          git push origin ${{ github.event.inputs.merge_changes == 'true' && 'main' || github.head_ref }}
           COMMIT_HASH=$(git rev-parse HEAD)
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
         continue-on-error: true
@@ -155,4 +163,3 @@ jobs:
             ## Release ${{ env.NEW_VERSION }} Changes
 
             ${{ steps.get_changes.outputs.changes }}
-
