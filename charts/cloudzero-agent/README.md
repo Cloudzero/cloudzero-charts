@@ -258,7 +258,7 @@ To receive a notification when a new version of the chart is [released](https://
 I've deployed the chart, but I don't see Kubernetes data in CloudZero.
 
 ## Resolution
-This can happen for a number of reasons; see the below for solutions to the most common problems
+This can happen for a number of reasons; see below for solutions to the most common problems
 
 ### Ensure kube-state-metrics is deployed correctly
 
