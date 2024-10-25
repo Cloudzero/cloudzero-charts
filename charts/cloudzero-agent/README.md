@@ -111,11 +111,11 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 
 ### Metric Exporters
 
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). There are two installation options for providing the `kube-state-metrics` metrics to the cloudzero-agent. If you don't know which option is right for you, use the second option:
+This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). There are two installation options for providing the `kube-state-metrics` metrics to the cloudzero-agent. If you don't know which option is right for you, use the second option.
 
 #### Option 1 (default): Use existing kube-state-metrics
 
-Using an existing `kube-state-metrics` export may be desirable because if an existing deployment exists, the cost of running the exporter is not duplicated. By default, the `cloudzero-agent` will attempt to find an existing `kube-state-metrics` K8s Service by searching for a K8s Service with the annotation `prometheus.io/scrape: "true"`. If an existing `kube-state-metrics` Service exists but does not have that annotation and you do not wish to add it, see the **Custom Scrape Configs** section below.
+Using an existing `kube-state-metrics` exporter may be desirable for minimizing cost. By default, the `cloudzero-agent` will attempt to find an existing `kube-state-metrics` K8s Service by searching for a K8s Service with the annotation `prometheus.io/scrape: "true"`. If an existing `kube-state-metrics` Service exists but does not have that annotation and you do not wish to add it, see the **Custom Scrape Configs** section below.
 
 In addition to the above, the existing `kube-state-metrics` Service address should be added in `values-override.yaml` as shown below so that the `cloudzero-agent` can validate the connection:
 
