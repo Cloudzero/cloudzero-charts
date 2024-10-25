@@ -270,13 +270,13 @@ This can happen for a number of reasons; see below for solutions to the most com
   ```
   If the above command does not return any services, install a `kube-state-metrics` exporter, or use **Option 2** in the **Metric Exporters** section.
   
-3. If opting for **Option 2**, ensure that `kube-state-metrics.enabled=true` is set.
+3. If opting for **Option 2**, ensure that `kube-state-metrics.enabled=true` is set as an annotation on the Service.
 4. Ensure the cloudzero-agent pod can find the `kube-state-metrics` Service.
    Run the following command:
    ```
    kubectl get services -A -o jsonpath='{range .items[?(@.metadata.annotations.prometheus\.io/scrape=="true")]}{.metadata.name}{" in "}{.metadata.namespace}{"\n"}{end}'
    ```
-   If this does not return a `kube-state-metrics` Service, then either annotate the existing Service found in Step 2 with `prometheus.io/scrape: "true"`, or following the instruction in the **Custom Scrape Configs** section above.
+   If this does not return a `kube-state-metrics` Service, then either annotate the existing Service found in Step 2 with `prometheus.io/scrape: "true"`, or following the instructions in the **Custom Scrape Configs** section above.
 5. Ensure connectivity between the `cloudzero-agent` pod and the `kube-state-metrics` Service.
   ```
   SERVER_POD=$(kubectl get pod -l app.kubernetes.io/name=cloudzero-agent -o jsonpath='{.items[0].metadata.name}')
