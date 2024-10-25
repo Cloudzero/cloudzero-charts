@@ -128,7 +128,7 @@ validator:
 
 #### Option 2: Use kube-state-metrics subchart
 
-Alternatively, deploy `kube-state-metrics` subchart that comes packaged with this chart. This is done by enabling settings in `values-override.yaml` as shown:
+Alternatively, deploy the `kube-state-metrics` subchart that comes packaged with this chart. This is done by enabling settings in `values-override.yaml` as shown:
 
 ```yaml
 kube-state-metrics:
