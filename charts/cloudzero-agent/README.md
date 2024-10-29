@@ -41,6 +41,18 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set region=<REGION> \
     # optionally deploy kube-state-metrics if it doesn't exist in the cluster already
     --set kube-state-metrics.enabled=<true|false>
+    # optionally specify the version if not using latest
+    --version 0.0.28-beta
+```
+
+```console
+helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
+    --set existingSecretName=<NAME_OF_SECRET> \
+    --set clusterName=<CLUSTER_NAME> \
+    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
+    --set region=<REGION> \
+    # optionally deploy kube-state-metrics if it doesn't exist in the cluster already
+    --set kube-state-metrics.enabled=<true|false>
 ```
 
 ### Update Helm Chart
