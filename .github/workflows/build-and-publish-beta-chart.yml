@@ -62,20 +62,25 @@ jobs:
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
 
-      # Step 4: Package and Commit Chart
+      # Step 4: Update README Badge
+      - name: Update README Badge
+        run: |
+          sed -i 's|https://img.shields.io/badge/release-[^)]*|https://img.shields.io/badge/release--${{ env.NEW_VERSION }}-blue|' README.md
+
+      # Step 5: Package and Commit Chart
       - name: Package Chart
         run: helm package charts/cloudzero-agent/ --destination .deploy
 
-      - name: Commit updated Chart.yaml
+      - name: Commit updated Chart.yaml and README.md
         run: |
           git add .
-          git commit -m "Update Chart.yaml to version ${{ env.NEW_VERSION }}"
+          git commit -m "Update Chart.yaml to version ${{ env.NEW_VERSION }} and README.md badge"
           git push origin ${{ github.event.inputs.branch }}
           COMMIT_HASH=$(git rev-parse HEAD)
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
         continue-on-error: true
 
-      # Step 7: Handle Artifacts and Update Pages
+      # Step 6: Handle Artifacts and Update Pages
       - name: Upload Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -90,7 +95,7 @@ jobs:
       - name: Update Index
         run: helm repo index --url https://cloudzero.github.io/cloudzero-charts .
 
-      # Step 5: Create GitHub Release
+      # Step 7: Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
