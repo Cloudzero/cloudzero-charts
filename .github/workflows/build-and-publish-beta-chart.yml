@@ -13,7 +13,7 @@ on:
         required: true
 
 jobs:
-  build-and-publish-chart:
+  build-and-publish-beta-chart:
     permissions:
       contents: 'write'
       packages: 'write'
@@ -75,6 +75,21 @@ jobs:
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
         continue-on-error: true
 
+      # Step 7: Handle Artifacts and Update Pages
+      - name: Upload Chart as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-chart
+          path: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
+
+      - name: Move release Tarball
+        run: |
+          cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./
+          rm -fr .deploy
+
+      - name: Update Index
+        run: helm repo index --url https://cloudzero.github.io/cloudzero-charts .
+
       # Step 5: Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -86,9 +101,9 @@ jobs:
           target_commitish: ${{ env.COMMIT_HASH }}
           body: |
             ## Installation Instructions
-
+      
             [Please follow the Installation Instructions provided in this releases README](https://github.com/Cloudzero/cloudzero-charts/blob/${{ env.NEW_VERSION }}/charts/cloudzero-agent/README.md).
-
+      
             ## Release ${{ env.NEW_VERSION }} Changes
-
+      
             ${{ steps.get_changes.outputs.changes }}
