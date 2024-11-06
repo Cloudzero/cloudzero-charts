@@ -49,6 +49,7 @@ prometheusConfig:
 
 kube-state-metrics:
   enabled: false
+  fullnameOverride: "cloudzero-state-metrics"
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
 prometheus-node-exporter:
