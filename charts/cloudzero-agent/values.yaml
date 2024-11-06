@@ -52,6 +52,9 @@ kube-state-metrics:
   fullnameOverride: "cloudzero-state-metrics"
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
+  podAnnotations:
+    # Ensure the CloudZero KSM pods are not scraped by other scrape jobs
+    prometheus.io/scrape: "false"
 prometheus-node-exporter:
   enabled: false
 
