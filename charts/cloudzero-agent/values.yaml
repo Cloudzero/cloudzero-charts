@@ -55,6 +55,7 @@ kube-state-metrics:
   podAnnotations:
     # Ensure the CloudZero KSM pods are not scraped by other scrape jobs
     prometheus.io/scrape: "false"
+
 prometheus-node-exporter:
   enabled: false
 
