@@ -132,7 +132,7 @@ You will also need to disable the CloudZero KSM:
 
 ``` yaml
 kube-state-metrics:
-    enabled: false
+  enabled: false
 ```
 
 ### Secret Management
