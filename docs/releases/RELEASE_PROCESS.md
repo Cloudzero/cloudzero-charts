@@ -81,7 +81,7 @@ Effective release notes provide clear and concise information about the changes 
 ### Pro-Tip
 
 - **Review Changes:** Examine the GitHub diff between the previous and current release to identify all changes.
-- **Commit Messages:** Use commit titles to outline the changes and categorize them appropriately.
+- **Commit Messages:** Use commit titles to outline the changes and categorize them appropriately. Include a link to the relevant commit where possible.
 
 ### Release Notes Structure
 
