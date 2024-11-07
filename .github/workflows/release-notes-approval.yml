@@ -1,7 +1,9 @@
 name: Release Notes Approval
 
+# Trigger the workflow on pull request events affecting the docs/releases directory
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     paths:
       - 'docs/releases/**'
 
@@ -11,5 +13,8 @@ jobs:
     environment: release-notes
 
     steps:
-      - name: Print Approval
-        run: echo "approved"
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Approve Release Notes
+        run: echo "Release notes approved."
