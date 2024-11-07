@@ -14,6 +14,7 @@ on:
 
 jobs:
   build-and-publish-beta-chart:
+    environment: release
     permissions:
       contents: 'write'
       packages: 'write'
@@ -68,18 +69,6 @@ jobs:
             echo "Release notes for ${{ env.NEW_VERSION }} are missing. Please create a release notes file at charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md"
             exit 1
           fi
-
-      - name: Product Management Approval
-        uses: trstringer/manual-approval@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          approvers: cloudzero/product-management
-          minimum-approvals: 1
-          issue-title: "Releasing ${{ env.NEW_VERSION }}"
-          issue-body: "Please approve or deny the release notes in charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md"
-          exclude-workflow-initiator-as-approver: false
-          additional-approved-words: ''
-          additional-denied-words: ''
 
       # Step 4: Package and Commit Chart
       - name: Package Chart

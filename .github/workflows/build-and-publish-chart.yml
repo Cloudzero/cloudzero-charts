@@ -11,6 +11,7 @@ on:
 
 jobs:
   build-and-publish-chart:
+    environment: release
     permissions:
       contents: 'write'
       packages: 'write'
@@ -71,20 +72,6 @@ jobs:
             echo "Release notes for ${{ env.NEW_VERSION }} are missing. Please create a release notes file at charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md"
             exit 1
           fi
-
-      # - name: Generate token
-      #   id: generate_token
-      #   uses: tibdex/github-app-token@v1
-      #   with:
-      #     app_id: ${{ secrets.APP_ID }}
-      #     private_key: ${{ secrets.APP_PRIVATE_KEY }}
-
-      # - name: Wait for Product Management Approval
-      #   uses: trstringer/manual-approval@v1
-      #   with:
-      #     secret: ${{ steps.generate_token.outputs.token }}
-      #     approvers: cloudzero/product-management
-      #     minimum-approvals: 1
 
       - name: Build Dependencies
         run: helm dependency update charts/cloudzero-agent/
