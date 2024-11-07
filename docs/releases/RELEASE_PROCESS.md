@@ -11,6 +11,8 @@ This guide outlines the steps and best practices for managing releases in the re
 5. **Obtain External Approvals**
 6. **Publish Release**
 
+---
+
 ## Step-by-Step Process
 
 ### 1. Create a New Release Document
@@ -69,6 +71,8 @@ This guide outlines the steps and best practices for managing releases in the re
 
 - Once the manual release workflow is approved and completed, the release will be published.
 - Stakeholders will be notified upon successful publication.
+
+---
 
 ## Creating Release Notes
 
@@ -139,6 +143,8 @@ Use the following sections to organize your release notes:
   - Documentation updates.
 - **Note:** Aim to keep this section empty by categorizing changes appropriately.
 
+---
+
 ### Release Notes Template
 
 Copy and paste the following template to create your release notes. Replace placeholders with relevant information.
@@ -190,6 +196,8 @@ Copy and paste the following template to create your release notes. Replace plac
 * **docs(CHANGELOG):** Add changelog documentation. [e2c7435](https://github.com/cloudzero/cloudzero-charts/commit/e2c7435)
 ```
 
+---
+
 ## Best Practices
 
 - **Consistency:** Maintain a consistent format and structure across all release notes.
@@ -199,6 +207,8 @@ Copy and paste the following template to create your release notes. Replace plac
 - **Review:** Ensure all sections are thoroughly reviewed by relevant teams before publishing.
 - **Highlight External Approvals:** Clearly indicate when external approvals are required and obtained.
 
+---
+
 ## Roles and Responsibilities
 
 - **Developer:** Drafts the release notes using the provided template.
@@ -206,6 +216,8 @@ Copy and paste the following template to create your release notes. Replace plac
 - **Documentation Team:** Ensures that the release notes are well-documented and user-friendly.
 - **Stakeholders:** Review and provide external approval for the release through the Manual Release workflow.
 - **Release Manager:** Oversees the release process, ensuring all steps, including external approvals, are completed.
+
+---
 
 ## External Approvals
 
@@ -215,7 +227,7 @@ External approvals are a critical part of the release process to ensure that all
 
 1. **Initiate Approval:**
    - After triggering the Manual Release workflow, stakeholders receive a notification to review the release.
-   
+
 2. **Review Process:**
    - Stakeholders evaluate the functionality, documentation, and overall readiness of the release.
    - Any feedback or required changes are communicated back to the release manager or developer.
@@ -228,6 +240,8 @@ External approvals are a critical part of the release process to ensure that all
    - If a stakeholder rejects the release, the release manager must address the feedback and possibly iterate on the release notes or code before resubmitting for approval.
 
 **Note:** The release cannot be published until all required external approvals are obtained.
+
+---
 
 ## FAQs
 
