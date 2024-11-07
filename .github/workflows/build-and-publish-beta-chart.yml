@@ -62,6 +62,25 @@ jobs:
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
 
+      - name: Validate Release Notes are Present
+        run: |
+          if [ ! -f "charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md" ]; then
+            echo "Release notes for ${{ env.NEW_VERSION }} are missing. Please create a release notes file at charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md"
+            exit 1
+          fi
+
+      - name: Product Management Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          approvers: cloudzero/product-management
+          minimum-approvals: 1
+          issue-title: "Releasing ${{ env.NEW_VERSION }}"
+          issue-body: "Please approve or deny the release notes in charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md"
+          exclude-workflow-initiator-as-approver: false
+          additional-approved-words: ''
+          additional-denied-words: ''
+
       # Step 4: Package and Commit Chart
       - name: Package Chart
         run: helm package charts/cloudzero-agent/ --destination .deploy
@@ -126,11 +145,4 @@ jobs:
           files: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
           make_latest: false
           target_commitish: ${{ env.COMMIT_HASH }}
-          body: |
-            ## Installation Instructions
-      
-            [Please follow the Installation Instructions provided in this releases README](https://github.com/Cloudzero/cloudzero-charts/blob/${{ env.NEW_VERSION }}/charts/cloudzero-agent/README.md).
-      
-            ## Release ${{ env.NEW_VERSION }} Changes
-      
-            ${{ steps.get_changes.outputs.changes }}
+          body_path: ${{ github.workspace }}/charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md
