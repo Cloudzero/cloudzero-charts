@@ -1,0 +1,15 @@
+name: Release Notes Approval
+
+on:
+  push:
+    paths:
+      - 'docs/releases/**'
+
+jobs:
+  release-approval:
+    runs-on: ubuntu-latest
+    environment: release-notes
+
+    steps:
+      - name: Print Approval
+        run: echo "approved"
