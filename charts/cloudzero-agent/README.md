@@ -63,21 +63,18 @@ existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
 tags:
   # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
   enabled: true
-  server:
-    serverConfig:
-      filters:
-        labels:
-          # -- This value MUST be set to either true or false. The installation will fail otherwise
-          enabled: true
-          # -- This value MUST be set to a list of regular expressions which wil lbe used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
-          patterns:
-            - '^foo' # -- match all labels whose key starts with "foo"
-            - 'bar$' # -- match all labels whose key ends with "bar"
-        annotations:
-          # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
-          enabled: false
-          patterns:
-            - '.*'
+  labels:
+    # -- This value MUST be set to either true or false. The installation will fail otherwise
+    enabled: true
+    # -- This value MUST be set to a list of regular expressions which wil lbe used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
+    patterns:
+      - '^foo' # -- match all labels whose key starts with "foo"
+      - 'bar$' # -- match all labels whose key ends with "bar"
+  annotations:
+    # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
+    enabled: false
+    patterns:
+      - '.*'
 ```
 
 4. Install the helm chart using the completed configuration file:
@@ -110,12 +107,12 @@ There are several mandatory values that must be specified for the chart to insta
 | apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
 | existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
-| tags.server.serverConfig.filters.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
-| tags.server.serverConfig.filters.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
+| tags.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
+| tags.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
 
 #### Overriding Default Values
 
-Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` file for your customizations.
+Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` based on the `configuration.example.yaml`  file for your customizations.
 
 ##### Using the `--values` Flag
 

@@ -1,7 +1,3 @@
-{{- define "cloudzero-agent.toSubchartValues" -}}
-{{ .Values.cloudAccountId | quote }}
-{{- end -}}
-
 {{/*
 Expand the name of the chart.
 */}}
