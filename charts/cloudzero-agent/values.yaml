@@ -99,7 +99,6 @@ server:
       memory: 1024Mi
   deploymentAnnotations: {}
   podAnnotations: {}
-  # configMapOverrideName: configuration
   args:
   - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
   - --web.enable-lifecycle

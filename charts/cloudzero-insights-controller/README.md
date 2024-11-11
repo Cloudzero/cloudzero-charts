@@ -10,9 +10,12 @@ A Helm chart for a validating admission webhook to send cluster metrics to the C
 
 This Validating Admission Webhook monitors and intercepts `CREATE` and `UPDATE` operations on the following Kubernetes resources:
 
-- `Deployment`
 - `Pod`
+- `Deployment`
 - `StatefulSet`
+- `Daemonset`
+- `Job`
+- `CronJob`
 - `Node`
 - `Namespace`
 
