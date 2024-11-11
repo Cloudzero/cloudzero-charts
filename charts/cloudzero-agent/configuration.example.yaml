@@ -1,0 +1,26 @@
+# -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
+cloudAccountId: null
+# -- Name of the clusters.
+clusterName: null
+# -- Region the cluster is running in.
+region: null
+# -- CloudZero API key. Required if useExistingSecret is false.
+apiKey: null
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+existingSecretName: null
+
+# label and annotation configuration:
+tags:
+  # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
+  enabled: true
+  labels:
+    # -- This value MUST be set to either true or false. The installation will fail otherwise
+    enabled: null
+    # -- This value MUST be set to a list of regular expressions which wil lbe used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
+    patterns:
+      # - '.*' # -- This option enables gathering ALL labels from the above resources. Use with caution, as the number of labels can be large.
+  annotations:
+    # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
+    enabled: false
+    patterns:
+      - '.*'

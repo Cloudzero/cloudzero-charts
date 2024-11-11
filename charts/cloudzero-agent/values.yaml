@@ -47,10 +47,31 @@ prometheusConfig:
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
+tags:
+  labels:
+    enabled:
+    patterns:
+      # - '.*'
+  annotations:
+    enabled: false
+    patterns:
+      - '.*'
+  enabled: true
+  server:
+    serverConfig:
+      containerSecretFileName: cz-api-key
+      # filters:
+        # labels:
+        #   enabled: true
+        #   patterns:
+        #     - '.*'
+        # annotations:
+        #   enabled: false
+        #   patterns:
+        #     - '.*'
+
 kube-state-metrics:
   enabled: false
-  extraArgs:
-    - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
 prometheus-node-exporter:
   enabled: false
 
@@ -89,7 +110,7 @@ server:
       memory: 1024Mi
   deploymentAnnotations: {}
   podAnnotations: {}
-  configMapOverrideName: configuration
+  # configMapOverrideName: configuration
   args:
   - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
   - --web.enable-lifecycle
@@ -112,6 +133,30 @@ server:
   # --Limit the size to 8Gi to lower impact on the cluster, and to provide a reasonable backup for the WAL
   emptyDir:
     sizeLimit: 8Gi
+
+
+
+# insights-controller:
+#   enabled: true
+#   existingSecretName: cloudzero-agent-with-ui-api-key-existing
+#   host: dev-api.cloudzero.com
+#   region: us-east-1
+#   clusterName: danm
+#   cloudAccountId: '975482786146'
+#   server:
+#     serverConfig:
+#       containerSecretFileName: cz-api-key
+#       filters:
+#         labels:
+#           enabled: true
+#           patterns:
+#             - '.*'
+#         annotations:
+#           enabled: false
+#           patterns:
+#             - '.*'
+#     image:
+#       tag: "dev-cb5864d46dfd29833e786213b2cc4762dc68651c"
 
 serviceAccounts:
   server:
@@ -137,3 +182,11 @@ configmapReload:
 
     containerSecurityContext: {}
     resources: {}
+
+# -- Values that we need for this chart, and may want to share with child charts. It is unlikely that these need to be modified
+global:
+  # -- General configuration for CloudZero components
+  configMapOverrideName: configuration
+  foo: "{{ .Values.host }}-worked"
+  cloudzeroConfigMapName: '{{ include "cloudzero-agent.configMapName" . }}'
+  cloudzeroSecretName: '{{ include "cloudzero-agent.secretName" . }}'

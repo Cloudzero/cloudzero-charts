@@ -1,3 +1,7 @@
+{{- define "cloudzero-agent.toSubchartValues" -}}
+{{ .Values.cloudAccountId | quote }}
+{{- end -}}
+
 {{/*
 Expand the name of the chart.
 */}}
@@ -23,7 +27,11 @@ Create chart name and version as used by the chart label.
 {{- end}}
 
 {{ define "cloudzero-agent.configMapName" -}}
-{{ .Values.prometheusConfig.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
+{{ .Values.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
+{{- end}}
+
+{{ define "cloudzero-agent.cloudzeroConfigMapName" -}}
+{{ .Values.cloudzeroConfigMapNameOverride | default (printf "%s-cloudzero-configuration" .Release.Name) }}
 {{- end}}
 
 {{ define "cloudzero-agent.validatorConfigMapName" -}}

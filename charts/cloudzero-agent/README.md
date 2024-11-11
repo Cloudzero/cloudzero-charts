@@ -31,16 +31,58 @@ _See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentati
 
 The chart can be installed directly with Helm or any other common Kubernetes deployment tools.
 
-If installing with Helm directly, the following command will install the chart:
+If installing with Helm directly, execute the following steps:
 
+1. Ensure that the most recent chart version is available:
+```console
+helm repo update
+```
+
+2. Ensure that required CRDs are installed for certifiacte management. If you have more specific requirements around managing TLS certificates, see the **Certificate Management** secion below.
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
-    --set region=<REGION> \
-    # optionally deploy kube-state-metrics if it doesn't exist in the cluster already
-    --set kube-state-metrics.enabled=<true|false>
+    --set tags.webhook.issuer.enabled=false \
+    --set tags.webhook.certificate.enabled=false \
+    --set tags.cert-manager.installCRDs=true
+```
+
+3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:
+```yaml
+# -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
+cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
+# -- Name of the clusters.
+clusterName: YOUR_CLUSTER_NAME
+# -- Region the cluster is running in.
+region: YOUR_CLOUD_REGION
+# -- CloudZero API key. Required if useExistingSecret is false.
+apiKey: YOUR_CLOUDZERO_API_KEY
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
+
+# label and annotation configuration:
+tags:
+  # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
+  enabled: true
+  server:
+    serverConfig:
+      filters:
+        labels:
+          # -- This value MUST be set to either true or false. The installation will fail otherwise
+          enabled: true
+          # -- This value MUST be set to a list of regular expressions which wil lbe used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
+          patterns:
+            - '^foo' # -- match all labels whose key starts with "foo"
+            - 'bar$' # -- match all labels whose key ends with "bar"
+        annotations:
+          # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
+          enabled: false
+          patterns:
+            - '.*'
+```
+
+4. Install the helm chart using the completed configuration file:
+```console
+helm install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
 ```
 
 ### Update Helm Chart
@@ -53,12 +95,7 @@ helm repo update
 Next, upgrade the installation to the latest chart version:
 
 ```console
-helm upgrade <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
-    --set region=<REGION> \
-    --set kube-state-metrics.enabled=<true|false>
+helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
 ```
 
 ### Mandatory Values
@@ -73,6 +110,8 @@ There are several mandatory values that must be specified for the chart to insta
 | apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
 | existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
+| tags.server.serverConfig.filters.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
+| tags.server.serverConfig.filters.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
 
 #### Overriding Default Values
 
