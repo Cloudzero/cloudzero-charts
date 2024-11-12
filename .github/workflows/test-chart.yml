@@ -134,5 +134,8 @@ jobs:
               --set=region=$REGION \
               --set=kube-state-metrics.enabled=true \
               --set=prometheus-node-exporter.enabled=true \
-              --set=labels.enabled=false"
+              --set=tags.enabled=true \
+              --set=tags.labels.enabled=true \
+              --set=tags.labels.patterns[0] = '.*' \
+              "
               
