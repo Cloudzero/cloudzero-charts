@@ -1,0 +1,27 @@
+apiVersion: v1
+entries:
+  cloudzero-agent:
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2024-11-12T12:24:50.910038-03:00"
+    dependencies:
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.24.*
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: 326d0b845985572be8b3253ffb2ac19c78c5395a6155e703089e6eb714bc86ba
+    maintainers:
+    - email: support@cloudzero.com
+      name: CloudZero
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-agent-0.0.29-beta.tgz
+    version: 0.0.29-beta
+generated: "2024-11-12T12:24:50.908541-03:00"
