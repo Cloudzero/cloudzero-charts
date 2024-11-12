@@ -66,7 +66,7 @@ tags:
   labels:
     # -- This value MUST be set to either true or false. The installation will fail otherwise
     enabled: true
-    # -- This value MUST be set to a list of regular expressions which wil lbe used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
+    # -- This value MUST be set to a list of regular expressions which will be used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
     patterns:
       - '^foo' # -- match all labels whose key starts with "foo"
       - 'bar$' # -- match all labels whose key ends with "bar"
