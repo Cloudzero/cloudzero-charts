@@ -133,4 +133,6 @@ jobs:
               --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
               --set=region=$REGION \
               --set=kube-state-metrics.enabled=true \
-              --set=prometheus-node-exporter.enabled=true"
+              --set=prometheus-node-exporter.enabled=true \
+              --set=labels.enabled=false"
+              
