@@ -76,15 +76,13 @@ jobs:
       - name: Build Insights Controller Dependencies
         run: helm dependency update charts/cloudzero-insights-controller/
 
-      # Step 5: Package Agent
-      - name: Package Chart Agent
+      - name: Package Insights Controller Chart
         run: helm package charts/cloudzero-insights-controller/ --destination .deploy
 
-      - name: Build Dependencies
+      - name: Build Cloudzero Agent Dependencies
         run: helm dependency update charts/cloudzero-agent/
 
-      # Step 5: Package Agent
-      - name: Package Chart Agent
+      - name: Package Cloudzero Agent Chart
         run: helm package charts/cloudzero-agent/ --destination .deploy
 
       - name: Get Main Changelog Beginning Hash
@@ -111,13 +109,13 @@ jobs:
           echo "::set-output name=changes::${CHANGES}"
 
       # Step 7: Handle Artifacts and Update Pages
-      - name: Upload Chart as Artifact
+      - name: Upload Insight Controller Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: agent-chart
           path: .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz
 
-      - name: Upload Chart as Artifact
+      - name: Upload Cloudzero Agent Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: agent-chart

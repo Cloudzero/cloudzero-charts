@@ -42,8 +42,17 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
 
-      - name: Build Dependencies
+      - name: Build Insights Controller Dependencies
+        run: helm dependency update charts/cloudzero-insights-controller/
+
+      - name: Package Insights Controller Chart
+        run: helm package charts/cloudzero-insights-controller/ --destination .deploy
+
+      - name: Build Cloudzero Agent Dependencies
         run: helm dependency update charts/cloudzero-agent/
+
+      - name: Package Cloudzero Agent Chart
+        run: helm package charts/cloudzero-agent/ --destination .deploy
 
       # Step 3: Determine Version
       - name: Get Github Tag Version
@@ -84,7 +93,13 @@ jobs:
         continue-on-error: true
 
       # Step 7: Handle Artifacts and Update Pages
-      - name: Upload Chart as Artifact
+      - name: Upload Insight Controller Chart as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-chart
+          path: .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz
+
+      - name: Upload Cloudzero Agent Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: agent-chart
@@ -97,6 +112,7 @@ jobs:
 
       - name: Move release Tarball
         run: |
+          cp .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz ./
           cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./
           rm -fr .deploy
 
@@ -106,7 +122,7 @@ jobs:
       - name: Save Index in GH Pages
         run: |
           # copy the new chart and index.yaml
-          git add cloudzero-agent-${{ env.NEW_VERSION }}.tgz index.yaml 
+          git add cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz cloudzero-agent-${{ env.NEW_VERSION }}.tgz index.yaml 
           git commit -m "Updating ${{ env.NEW_VERSION }} Index"
           git push origin gh-pages
         continue-on-error: true
