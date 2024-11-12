@@ -117,7 +117,8 @@ jobs:
           CLOUD_ACCOUNT_ID: '00000000'
           CZ_API_TOKEN: ${{ secrets.CZ_API_TOKEN || 'fake-api-token' }}
           REGION: 'us-east-1'
-        run: |  
+        run: |
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.crds.yaml
           kubectl create namespace $NAMESPACE
           kubectl create secret -n $NAMESPACE generic api-token --from-literal=value=$CZ_API_TOKEN
           cd charts/cloudzero-agent
