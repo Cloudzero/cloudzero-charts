@@ -106,40 +106,6 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     -f values-override.yaml
 ```
 
-### Metric Exporters
-
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). There are two installation options for providing the `kube-state-metrics` metrics to the cloudzero-agent. If you don't know which option is right for you, use the first option.
-
-#### Option 1: Use kube-state-metrics subchart (default)
-
-By default, the `kube-state-metrics` subchart comes packaged and deployed with this chart. In this option, no additional configuration is required in the `validator` field.
-The default port for the CloudZero `kube-state-metrics` is `8080`. In the case that you have an existing service using this port, you can set the desired port in the `values-override.yaml` as shown below:
-
-``` yaml
-kube-state-metrics:
-  service:
-    port: 8080
-```
-
-#### Option 2: Use existing kube-state-metrics
-
-Using an existing `kube-state-metrics` exporter may be desirable for minimizing cost. The `cloudzero-agent` will attempt to find an existing `kube-state-metrics` K8s Service by searching for a K8s Service with the annotation `prometheus.io/scrape: "true"`. If an existing `kube-state-metrics` Service exists but does not have that annotation and you do not wish to add it, see the **Custom Scrape Configs** section below.
-
-In addition to the above, the existing `kube-state-metrics` Service address should be added in `values-override.yaml` as shown below so that the `cloudzero-agent` can validate the connection:
-
-```yaml
-validator:
-  serviceEndpoints:
-     kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-```
-
-You will also need to disable the CloudZero KSM:
-
-``` yaml
-kube-state-metrics:
-  enabled: false
-```
-
 ### Secret Management
 
 The chart requires a CloudZero API key to send metric data. Admins can retrieve API keys [here](https://app.cloudzero.com/organization/api-keys).
