@@ -113,12 +113,12 @@ This chart depends on metrics from [kube-state-metrics](https://github.com/kuber
 #### Option 1: Use kube-state-metrics subchart (default)
 
 By default, the `kube-state-metrics` subchart comes packaged and deployed with this chart. In this option, no additional configuration is required in the `validator` field.
-The default port for the CloudZero `kube-state-metrics` is `8081`. In the case that you have an existing service using this port, you can set the desired port in the `values-override.yaml` as shown below:
+The default port for the CloudZero `kube-state-metrics` is `8080`. In the case that you have an existing service using this port, you can set the desired port in the `values-override.yaml` as shown below:
 
 ``` yaml
 kube-state-metrics:
   service:
-    port: 8081
+    port: 8080
 ```
 
 #### Option 2: Use existing kube-state-metrics
