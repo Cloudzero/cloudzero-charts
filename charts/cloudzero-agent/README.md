@@ -38,7 +38,7 @@ If installing with Helm directly, execute the following steps:
 helm repo update
 ```
 
-2. Ensure that required CRDs are installed for certifiacte management. If you have more specific requirements around managing TLS certificates, see the **Certificate Management** secion below.
+2. Ensure that required CRDs are installed for certifiacte management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](https://github.com/Cloudzero/cloudzero-charts/tree/develop/charts/cloudzero-insights-controller#deployment-configurations-and-certificate-management) section in the `cloudzero-insights-controller` subchart.
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set tags.webhook.issuer.enabled=false \
@@ -59,7 +59,7 @@ apiKey: YOUR_CLOUDZERO_API_KEY
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
 
-# label and annotation configuration:
+# label and annotation configuration (referred together as 'tags'). See the below 'Labels and Annotations' section for more details.
 tags:
   # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
   enabled: true
@@ -144,6 +144,25 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set server.resources.limits.memory=2048Mi \
     -f values-override.yaml
 ```
+
+### Labels and Annotations
+
+This chart allows the exporting of labels and annotations from the following resources:
+- `Pod`
+- `Deployment`
+- `StatefulSet`
+- `Daemonset`
+- `Job`
+- `CronJob`
+- `Node`
+- `Namespace`
+
+Additional Notes:
+- By default, only labels from pods and namespaces are exported. To enabled more resources, see the `webhooks.configurations` section of the `values.yaml` file.
+- Labels and annotations exports are managed by a subchart, `cloudzero-insights-controller`, which is also maintained in this repository.
+- To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the Explorer page. For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
+- Annotations are not exported by default; see the `tags.annotations.enabled` setting to enable. To disambiguate annotations from labels, an `annotation` prefix is prepended to the annotation key; i.e., an `foo: bar` annotation on a namespace would be represented in the Explorer as `node:annotation:foo: bar`
+- For both labels and annotations, the `enabled` flag applies across all resource types; i.e., setting `true` for `tags.labels.enabled` enabels label exporting for labels on pods, nodes, deployments, statefulsets, namespaces, daemonets, jobs, and cronjobs. Specific resources can be disabled by altering the `webhooks.configurations` configuration.
 
 ### Metric Exporters
 
