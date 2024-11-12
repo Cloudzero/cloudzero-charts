@@ -136,6 +136,6 @@ jobs:
               --set=prometheus-node-exporter.enabled=true \
               --set=tags.enabled=true \
               --set=tags.labels.enabled=true \
-              --set=tags.labels.patterns[0] = '.*' \
+              --set=tags.labels.patterns[0]='.*' \
               "
               
