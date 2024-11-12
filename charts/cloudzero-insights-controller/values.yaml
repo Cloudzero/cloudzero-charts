@@ -68,30 +68,31 @@ webhook:
     enabled: true
   caBundle: '' # by default, this is empty, and the value is populated by cert-manager's ca-injector if cert-manager is used
   configurations:
-    deployments:
-      path: /validate/deployment
-      apiGroups: [ "apps" ]
-    statefulsets:
-      path: /validate/statefulset
-      apiGroups: [ "apps" ]
     pods:
       path: /validate/pod
       apiGroups: [ '""' ]
     namespaces:
       path: /validate/namespace
       apiGroups: [ '""' ]
-    nodes:
-      path: /validate/node
-      apiGroups: [ '""' ]
-    jobs:
-      path: /validate/job
-      apiGroups: [ "batch" ]
-    cronjobs:
-      path: /validate/cronjob
-      apiGroups: [ "batch" ]
-    daemonsets:
-      path: /validate/daemonset
-      apiGroups: [ "apps" ]
+  # -- Uncomment the following to enable exporting labels/annotations for the following resources
+    # deployments:
+    #   path: /validate/deployment
+    #   apiGroups: [ "apps" ]
+    # statefulsets:
+    #   path: /validate/statefulset
+    #   apiGroups: [ "apps" ]
+    # nodes:
+    #   path: /validate/node
+    #   apiGroups: [ '""' ]
+    # jobs:
+    #   path: /validate/job
+    #   apiGroups: [ "batch" ]
+    # cronjobs:
+    #   path: /validate/cronjob
+    #   apiGroups: [ "batch" ]
+    # daemonsets:
+    #   path: /validate/daemonset
+    #   apiGroups: [ "apps" ]
 
 serviceAccount:
   create: true
