@@ -11,7 +11,7 @@ apiKey: null
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: null
 
-replicaCount: 1
+replicaCount: 3
 
 nameOverride: ""
 fullnameOverride: ""
