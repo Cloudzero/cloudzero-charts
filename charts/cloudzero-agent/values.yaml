@@ -48,9 +48,17 @@ prometheusConfig:
     additionalScrapeJobs: []
 
 kube-state-metrics:
-  enabled: false
+  enabled: true
+  fullnameOverride: "cloudzero-state-metrics"
   extraArgs:
     - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
+  # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicity defined
+  # by the Validators config file.
+  prometheusScrape: false
+  # Set a default port other than 8080 to avoid collisions with any existing KSM services.
+  service:
+    port: 8080
+
 prometheus-node-exporter:
   enabled: false
 
