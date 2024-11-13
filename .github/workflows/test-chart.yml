@@ -129,7 +129,7 @@ jobs:
             --chart-repos=cloudzero-insights-controller=$CZ_CHART_BETA_REPO \
             --namespace $NAMESPACE \
             --helm-extra-set-args "\
-              --set=existingSecretName=api-token \
+              --set=global.existingSecretName=api-token \
               --set=clusterName=$CLUSTER_NAME \
               --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
               --set=region=$REGION \
@@ -139,4 +139,3 @@ jobs:
               --set=tags.labels.enabled=true \
               --set=tags.labels.patterns[0]='.*' \
               "
-              
