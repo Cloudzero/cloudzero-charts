@@ -62,8 +62,14 @@ tags:
 
 kube-state-metrics:
   enabled: false
-prometheus-node-exporter:
-  enabled: false
+  enabled: true
+  fullnameOverride: "cloudzero-state-metrics"
+  # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicity defined
+  # by the Validators config file.
+  prometheusScrape: false
+  # Set a default port other than 8080 to avoid collisions with any existing KSM services.
+  service:
+    port: 8080
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
 secretAnnotations: {}
