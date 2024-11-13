@@ -178,7 +178,7 @@ Example of creating a secret:
 kubectl create secret -n example-namespace generic example-secret-name --from-literal=value=<example-api-key-value>
 ```
 
-The secret can then be used with `existingSecretName`.
+The secret can then be used with `global.existingSecretName`.
 
 ### Memory Sizing
 
@@ -199,68 +199,6 @@ kube-state-metrics:
     repository: my-custom-kube-state-metrics/kube-state-metrics
 ```
 
-### Custom Scrape Configs
-
-If running without the default `kube-state-metrics` exporter subchart and your existing `kube-state-metrics` deployment does not have the required `prometheus.io/scrape: "true"`, adjust the Prometheus scrape configs as shown:
-
-`values-override.yaml`
-```yaml
-prometheusConfig:
-  scrapeJobs:
-    kubeStateMetrics:
-      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
-    additionalScrapeJobs:
-    - job_name: custom-kube-state-metrics
-      honor_timestamps: true
-      scrape_interval: 1m
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      static_configs:
-        - targets:
-          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-      relabel_configs:
-      - separator: ;
-        regex: __meta_kubernetes_service_label_(.+)
-        replacement: $1
-        action: labelmap
-      - source_labels: [__meta_kubernetes_namespace]
-        separator: ;
-        regex: (.*)
-        target_label: namespace
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_service_name]
-        separator: ;
-        regex: (.*)
-        target_label: service
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        separator: ;
-        regex: (.*)
-        target_label: node
-        replacement: $1
-        action: replace
-```
-
-### Exporting Pod Labels
-
-Pod labels can be exported as metrics using kube-state-metrics. To customize the labels for export, modify the values-override.yaml file as shown below:
-
-**Example: Exporting only the pod labels named foo and bar:**
-
-```yaml
-kube-state-metrics:
-  extraArgs:
-     - --metric-labels-allowlist=pods=[foo,bar]
-```
-
-> This is preferable to including all labels with `*` because the performance and memory impact is reduced. Regular expression matching is not currently supported. See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/developer/cli-arguments.md) for more details.
-
-⚠️ Important: If you are running an existing `kube-state-metrics` instance, ensure that the labels you want to use are whitelisted. kube-state-metrics version 2.x and above will **_not_** export the `kube_pod_labels` metrics unless they are explicitly allowed. This prevents the use of those labels for cost allocation and other purposes. Make sure you have configured the labels at the appropriate level using the --metric-labels-allowlist parameter:
-
-> eg:  `- --metric-labels-allowlist=namespaces=[*],pods=[*],deployments=[app.kubernetes.io/*,k8s.*]`
-
 ## Dependencies
 
 | Repository                                         | Name                     | Version |
@@ -275,47 +213,6 @@ To receive a notification when a new version of the chart is [released](https://
 2. Select **Watch > Custom**.
 3. Check the **Releases** box.
 4. Select **Apply**.
-
-
-## Troubleshooting
-
-### Issue
-I've deployed the chart, but I don't see Kubernetes data in CloudZero.
-
-## Resolution
-This can happen for a number of reasons; see below for solutions to the most common problems
-
-### Ensure kube-state-metrics is deployed correctly
-
-1. Review the **Metric Exporters** section.
-2. If opting for **Option 1**
-  - Is kube-state-metrics installed?
-  ```bash
-  kubectl get services --all-namespaces | grep kube-state-metrics
-  ```
-  If the above command does not return any services, install a `kube-state-metrics` exporter, or use **Option 2** in the **Metric Exporters** section.
-  
-3. If opting for **Option 2**, ensure that `kube-state-metrics.enabled=true` is set as an annotation on the Service.
-4. Ensure the cloudzero-agent pod can find the `kube-state-metrics` Service.
-   Run the following command:
-   ```
-   kubectl get services -A -o jsonpath='{range .items[?(@.metadata.annotations.prometheus\.io/scrape=="true")]}{.metadata.name}{" in "}{.metadata.namespace}{"\n"}{end}'
-   ```
-   If this does not return a `kube-state-metrics` Service, then either annotate the existing Service found in Step 2 with `prometheus.io/scrape: "true"`, or following the instructions in the **Custom Scrape Configs** section above.
-5. Ensure connectivity between the `cloudzero-agent` pod and the `kube-state-metrics` Service.
-  ```
-  SERVER_POD=$(kubectl get pod -l app.kubernetes.io/name=cloudzero-agent -o jsonpath='{.items[0].metadata.name}')
-  kubectl exec -it -n <NAMESPACE> $SERVER_POD -- wget -qO- <KSM_SERVICE_NAME>.<KSM_NAMESPACE>.svc.cluster.local:8080/metrics
-  ```
-  The request should return a 200 response with a list of metrics prefixed with `kube_`, i.e., `kube_pod_info`. If not, ensure that the `kube-state-metrics` deployment is configured correctly.
-
-### Issue
-I have Kubernetes data in CloudZero, but I don't see Kubernetes labels as Dimensions.
-
-## Resolution
-Note that
-1. Only labels on Pods are currently supported, and
-2. Labels are "opt-in"; see the **Exporting Pod Labels** section for details.
 
 ## Useful References
 
