@@ -43,6 +43,7 @@ spec:
             - -config
             - "{{ include "insights-controller.serverConfigurationMountPath" . }}/server-config.yaml"
             {{-  if (include "insights-controller.cloudzeroConfigMapName" .) }}
+            - -config
             - "{{include "insights-controller.cloudzeroConfigurationMountPath" . }}/cloudzero-config.yaml"
             {{- end }}
           ports:

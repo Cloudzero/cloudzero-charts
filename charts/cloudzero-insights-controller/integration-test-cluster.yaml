@@ -1,0 +1,18 @@
+cloudAccountId: "975482786146"
+clusterName: container-ingest-integration-test
+host: dev-api.cloudzero.com
+kube-state-metrics:
+  enabled: true
+region: us-east-1
+tags:
+  enabled: true
+  labels:
+    enabled: true
+    # -- This value MUST be set to a list of regular expressions which wil lbe used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
+    patterns:
+      - '^kubernetes\.io\/metadata\.name' # -- This option enables gathering ALL labels from the above resources. Use with caution, as the number of labels can be large.
+  annotations:
+    # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
+    enabled: true
+    patterns:
+      - '^foo$'

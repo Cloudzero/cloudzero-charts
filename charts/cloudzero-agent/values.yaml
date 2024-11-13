@@ -158,4 +158,4 @@ configmapReload:
 global:
   # -- General configuration for CloudZero components
   configMapOverrideName: configuration
-  cloudzeroConfigMapName: '{{ include "cloudzero-agent.configMapName" . }}'
+  cloudzeroConfigMapName: '{{ include "cloudzero-agent.cloudzeroConfigMapName" . }}'

@@ -72,6 +72,11 @@ jobs:
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
 
+      - name: Update Chart Version for insights-controller
+        run: |
+          VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-insights-controller/Chart.yaml)
+          sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-insights-controller/Chart.yaml
+
       - name: Validate Release Notes are Present
         run: |
           if [ ! -f "docs/releases/${{ env.NEW_VERSION }}.md" ]; then
