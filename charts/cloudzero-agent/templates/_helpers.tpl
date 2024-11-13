@@ -14,7 +14,7 @@ Create chart name and version as used by the chart label.
 
 {{/* Define the secret name which holds the CloudZero API key */}}
 {{ define "cloudzero-agent.secretName" -}}
-{{ .Values.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
+{{ .Values.global.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end}}
 
 {{/* Define the path and filename on the container filesystem which holds the CloudZero API key */}}

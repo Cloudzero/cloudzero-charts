@@ -6,10 +6,12 @@ cloudAccountId: null
 clusterName: null
 # -- Region the cluster is running in.
 region: null
-# -- CloudZero API key. Required if useExistingSecret is false.
-apiKey: null
-# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
-existingSecretName: null
+
+global:
+  # -- CloudZero API key. Required if useExistingSecret is false.
+  apiKey: null
+  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+  existingSecretName: null
 
 # -- The following lists of metrics are required for CloudZero to function.
 # -- Modifications made to these lists may cause issues with the processing of cluster data
@@ -150,6 +152,4 @@ configmapReload:
 global:
   # -- General configuration for CloudZero components
   configMapOverrideName: configuration
-  foo: "{{ .Values.host }}-worked"
   cloudzeroConfigMapName: '{{ include "cloudzero-agent.configMapName" . }}'
-  cloudzeroSecretName: '{{ include "cloudzero-agent.secretName" . }}'

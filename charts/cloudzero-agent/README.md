@@ -54,10 +54,11 @@ cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
 clusterName: YOUR_CLUSTER_NAME
 # -- Region the cluster is running in.
 region: YOUR_CLOUD_REGION
-# -- CloudZero API key. Required if useExistingSecret is false.
-apiKey: YOUR_CLOUDZERO_API_KEY
-# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
-existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
+global:
+  # -- CloudZero API key. Required if useExistingSecret is false.
+  apiKey: YOUR_CLOUDZERO_API_KEY
+  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+  existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
 
 # label and annotation configuration (referred together as 'tags'). See the below 'Labels and Annotations' section for more details.
 tags:
@@ -104,8 +105,8 @@ There are several mandatory values that must be specified for the chart to insta
 | cloudAccountId    | string | `nil`                 | Account ID in AWS or Subscription ID in Azure or Project Number in GCP where the cluster is running. Must be a string due to Helm limitations.  |
 | clusterName       | string | `nil`                 | Name of the cluster. Must be RFC 1123 compliant.                                                                         |
 | host              | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                                      |
-| apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
-| existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
+| global.apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
+| global.existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
 | tags.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
 | tags.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
@@ -120,10 +121,6 @@ You can use the `--values` (or short form `-f`) flag in your Helm commands to ov
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
-    --set region=<REGION> \
     -f values-override.yaml
 ```
 
@@ -137,7 +134,7 @@ You can use the `--set` flag in Helm commands to directly set or override specif
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
+    --set global.existingSecretName=<NAME_OF_SECRET> \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \

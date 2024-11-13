@@ -131,10 +131,10 @@ Name for the certificate secret
 Name for the cloudzero API key secret name
 */}}
 {{- define "insights-controller.cloudzeroSecretName" -}}
-{{- if and .Values.global .Values.global.cloudzeroSecretName }}
-{{- tpl .Values.global.cloudzeroSecretName . }}
+{{- if and .Values.global .Values.global.existingSecretName }}
+{{- .Values.global.existingSecretName }}
 {{- else}}
-{{- .Values.existingSecretName }}
+{{- .Values.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end }}
 {{- end }}
 
