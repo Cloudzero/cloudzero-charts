@@ -3,7 +3,31 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-14T01:18:57.101895+01:00"
+    created: "2024-11-14T15:54:19.840152+01:00"
+    dependencies:
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    - alias: tags
+      condition: cloudzero-insights-controller.enabled
+      name: cloudzero-insights-controller
+      repository: https://cloudzero.github.io/cloudzero-charts/beta
+      version: 0.0.1
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: ad12886690524d13917aa9dec4f03e9e50a8b638f38cd6b353dac3c48e01190d
+    maintainers:
+    - email: support@cloudzero.com
+      name: CloudZero
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-agent-1.0.0-beta.tgz
+    version: 1.0.0-beta
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2024-11-14T15:54:19.834606+01:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -27,7 +51,7 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-14T01:18:57.105679+01:00"
+    created: "2024-11-14T15:54:19.842989+01:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -42,4 +66,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2024-11-14T01:18:57.099998+01:00"
+generated: "2024-11-14T15:54:19.832665+01:00"
