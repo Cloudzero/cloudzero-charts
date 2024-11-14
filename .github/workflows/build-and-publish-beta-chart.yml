@@ -86,7 +86,9 @@ jobs:
 
       # Step 4: Package and Commit Chart
       - name: Package Chart
-        run: helm package charts/cloudzero-agent/ --destination .deploy
+        run: |
+          helm package charts/cloudzero-agent/ --destination .deploy
+          helm package charts/cloudzero-insights-controller/ --destination .deploy
 
       - name: Commit updated Chart.yaml
         run: |
