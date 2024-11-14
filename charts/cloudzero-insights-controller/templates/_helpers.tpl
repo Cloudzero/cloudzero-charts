@@ -142,9 +142,7 @@ Name for the cloudzero API key secret name
 Name for the cloudzero specific configuration file
 */}}
 {{- define "insights-controller.cloudzeroConfigMapName" -}}
-{{- if and .Values.global .Values.global.cloudzeroConfigMapName }}
-{{- tpl .Values.global.cloudzeroConfigMapName . }}
-{{- end }}
+{{ .Values.cloudzeroConfigMapNameOverride | default (printf "%s-cloudzero-configuration" .Release.Name) }}
 {{- end }}
 
 {{/*

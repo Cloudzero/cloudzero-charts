@@ -61,7 +61,6 @@ tags:
       - '.*'
 
 kube-state-metrics:
-  enabled: false
   enabled: true
   fullnameOverride: "cloudzero-state-metrics"
   # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicity defined
@@ -153,9 +152,3 @@ configmapReload:
 
     containerSecurityContext: {}
     resources: {}
-
-# -- Values that we need for this chart, and may want to share with child charts. It is unlikely that these need to be modified
-global:
-  # -- General configuration for CloudZero components
-  configMapOverrideName: configuration
-  cloudzeroConfigMapName: '{{ include "cloudzero-agent.cloudzeroConfigMapName" . }}'
