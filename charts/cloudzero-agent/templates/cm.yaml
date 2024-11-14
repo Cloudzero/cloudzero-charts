@@ -65,7 +65,7 @@ data:
           action: labelkeep
         static_configs:
         - targets:
-            - {{ printf "%s-kube-state-metrics.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.kube_state_metrics.service.port) }}
+            - {{ printf "%s-kube-state-metrics.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.cadvisor.enabled }}
       - job_name: cloudzero-nodes-cadvisor # container_* metrics

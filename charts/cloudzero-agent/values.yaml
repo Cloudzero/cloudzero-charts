@@ -47,7 +47,7 @@ prometheusConfig:
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
-kube_state_metrics:
+kubeStateMetrics:
   enabled: true
   fullnameOverride: "cloudzero-state-metrics"
   extraArgs:
