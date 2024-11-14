@@ -35,7 +35,7 @@ data:
         enable_http2: true
         static_configs:
           - targets:
-            - {{ printf "%s.%s.svc.cluster.local:%d" .Values.kube_state_metrics.fullnameOverride .Release.Namespace .Values.kube_state_metrics.service.port }}
+            - {{ printf "%s.%s.svc.cluster.local:%d" .Values.kube_state_metrics.fullnameOverride .Release.Namespace (int .Values.kube_state_metrics.service.port) }}
         relabel_configs:
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
           separator: ;
