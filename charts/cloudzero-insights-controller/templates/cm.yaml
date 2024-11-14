@@ -60,5 +60,5 @@ data:
       labels:
         {{- .Values.labels | toYaml | nindent 8 }}
       annotations:
-        {{- .Values.labels | toYaml | nindent 8 }}
+        {{- .Values.annotations | toYaml | nindent 8 }}
       
