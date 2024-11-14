@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-14T16:11:32.227029+01:00"
+    created: "2024-11-14T16:19:20.993794+01:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -27,7 +27,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-14T16:11:32.222558+01:00"
+    created: "2024-11-14T16:19:20.989595+01:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -51,7 +51,24 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-14T16:11:32.229688+01:00"
+    created: "2024-11-14T16:19:21.000082+01:00"
+    dependencies:
+    - alias: cert-manager
+      condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: v1.15.3
+    description: Provides telemetry to the CloudZero platform to enabling complex
+      cost allocation and analysis.
+    digest: 45c546d12131870e8f73f3102125f2b6912216ccd30d3118b99df059212debc2
+    name: cloudzero-insights-controller
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-1.0.0-beta.tgz
+    version: 1.0.0-beta
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-11-14T16:19:20.996628+01:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -66,4 +83,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2024-11-14T16:11:32.219069+01:00"
+generated: "2024-11-14T16:19:20.986976+01:00"
