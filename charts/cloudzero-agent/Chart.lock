@@ -2,8 +2,8 @@ dependencies:
 - name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
   version: 5.15.3
-- name: prometheus-node-exporter
-  repository: https://prometheus-community.github.io/helm-charts
-  version: 4.24.0
-digest: sha256:827a33fa07fde17be0bf808e0beba3ca7b23c9fc1960580b2ba6d0ecc0b57a3f
-generated: "2024-03-20T11:42:44.034766-04:00"
+- name: cloudzero-insights-controller
+  repository: https://cloudzero.github.io/cloudzero-charts/beta
+  version: 0.0.1
+digest: sha256:87c19ba797e44296e4ac2433e17f24b73bcda8c9ee8b4286bc31c0d7fd0f0224
+generated: "2024-11-13T12:34:06.381064+01:00"

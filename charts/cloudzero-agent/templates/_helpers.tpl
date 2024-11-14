@@ -14,7 +14,7 @@ Create chart name and version as used by the chart label.
 
 {{/* Define the secret name which holds the CloudZero API key */}}
 {{ define "cloudzero-agent.secretName" -}}
-{{ .Values.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
+{{ .Values.global.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end}}
 
 {{/* Define the path and filename on the container filesystem which holds the CloudZero API key */}}
@@ -23,7 +23,11 @@ Create chart name and version as used by the chart label.
 {{- end}}
 
 {{ define "cloudzero-agent.configMapName" -}}
-{{ .Values.prometheusConfig.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
+{{ .Values.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
+{{- end}}
+
+{{ define "cloudzero-agent.cloudzeroConfigMapName" -}}
+{{ .Values.cloudzeroConfigMapNameOverride | default (printf "%s-cloudzero-configuration" .Release.Name) }}
 {{- end}}
 
 {{ define "cloudzero-agent.validatorConfigMapName" -}}

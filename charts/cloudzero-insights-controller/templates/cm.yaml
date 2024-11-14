@@ -1,0 +1,64 @@
+{{- if not (and .Values.labels.enabled .Values.labels.patterns) }}
+{{- $msg := "\n\nThe required field(s) 'labels.enabled' and/or 'labels.patterns' is not set! See the README.md for more information." }}
+{{- $enabledMsg:=""}}
+{{- $patternMsg:=""}}
+{{- if not .Values.labels.enabled  }}
+{{- $enabledMsg = "Ensure that 'labels.enabled' is a boolean (true or false). Set 'true' to enable exporting labels."}}
+{{- end }}
+{{- if not .Values.labels.patterns }}
+{{- $patternMsg = "The required field 'labels.patterns' is not set or set incorrectly. It must be an array of regular expressions that match label keys to be exported."}}
+{{- end }}
+{{- fail (printf "\n %s \n %s \n %s" $msg $enabledMsg $patternMsg) }}
+{{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "insights-controller.labels" . | nindent 4 }}
+  name: {{ include "insights-controller.configMapName" . }}
+  namespace: {{ .Release.Namespace }}
+  {{- with .Values.server.configMap.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  server-config.yaml: |-
+    {{- if .Values.cloudAccountId }}
+    cloud_account_id: {{ .Values.cloudAccountId }}
+    {{- end }}
+    {{- if .Values.region }}
+    region: {{ .Values.region }}
+    {{- end }}
+    {{- if .Values.clusterName }}
+    cluster_name: {{ .Values.clusterName }}
+    {{- end }}
+    {{- if .Values.host }}
+    host: {{ .Values.host }}
+    {{- end }}
+    remote_write:
+      send_interval: 1m
+      max_bytes_per_send: 10000000
+      send_timeout: 10s
+    k8s_client:
+      timeout: 30s
+    database:
+      retention_time: 24h
+      cleanup_interval: 3h
+    {{- with .Values.server.tls }}
+    certificate:
+      key: {{ .mountPath }}/tls.key
+      cert: {{ .mountPath }}/tls.crt
+    {{- end }}
+    api_key_path: {{ .Values.server.serverConfig.containerSecretFilePath }}/{{ .Values.server.serverConfig.containerSecretFileName }}
+    server:
+      port: {{ .Values.server.serverConfig.port }}
+      read_timeout: {{ .Values.server.serverConfig.read_timeout }}
+      write_timeout: {{ .Values.server.serverConfig.write_timeout }}
+      idle_timeout: {{ .Values.server.serverConfig.idle_timeout }}
+    filters:
+      labels:
+        {{- .Values.labels | toYaml | nindent 8 }}
+      annotations:
+        {{- .Values.labels | toYaml | nindent 8 }}
+      

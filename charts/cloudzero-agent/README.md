@@ -31,16 +31,56 @@ _See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentati
 
 The chart can be installed directly with Helm or any other common Kubernetes deployment tools.
 
-If installing with Helm directly, the following command will install the chart:
+If installing with Helm directly, execute the following steps:
 
+1. Ensure that the most recent chart version is available:
+```console
+helm repo update
+```
+
+2. Ensure that required CRDs are installed for certifiacte management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](https://github.com/Cloudzero/cloudzero-charts/tree/develop/charts/cloudzero-insights-controller#deployment-configurations-and-certificate-management) section in the `cloudzero-insights-controller` subchart.
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
-    --set region=<REGION> \
-    # optionally deploy kube-state-metrics if it doesn't exist in the cluster already
-    --set kube-state-metrics.enabled=<true|false>
+    --set tags.webhook.issuer.enabled=false \
+    --set tags.webhook.certificate.enabled=false \
+    --set tags.cert-manager.installCRDs=true
+```
+
+3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:
+```yaml
+# -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
+cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
+# -- Name of the clusters.
+clusterName: YOUR_CLUSTER_NAME
+# -- Region the cluster is running in.
+region: YOUR_CLOUD_REGION
+global:
+  # -- CloudZero API key. Required if useExistingSecret is false.
+  apiKey: YOUR_CLOUDZERO_API_KEY
+  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+  existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
+
+# label and annotation configuration (referred together as 'tags'). See the below 'Labels and Annotations' section for more details.
+tags:
+  # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
+  enabled: true
+  labels:
+    # -- This value MUST be set to either true or false. The installation will fail otherwise
+    enabled: true
+    # -- This value MUST be set to a list of regular expressions which will be used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
+    patterns:
+      - '^foo' # -- match all labels whose key starts with "foo"
+      - 'bar$' # -- match all labels whose key ends with "bar"
+  annotations:
+    # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
+    enabled: false
+    patterns:
+      - '.*'
+```
+
+4. Install the helm chart using the completed configuration file:
+```console
+helm install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
 ```
 
 ### Update Helm Chart
@@ -53,12 +93,7 @@ helm repo update
 Next, upgrade the installation to the latest chart version:
 
 ```console
-helm upgrade <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
-    --set region=<REGION> \
-    --set kube-state-metrics.enabled=<true|false>
+helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
 ```
 
 ### Mandatory Values
@@ -70,13 +105,15 @@ There are several mandatory values that must be specified for the chart to insta
 | cloudAccountId    | string | `nil`                 | Account ID in AWS or Subscription ID in Azure or Project Number in GCP where the cluster is running. Must be a string due to Helm limitations.  |
 | clusterName       | string | `nil`                 | Name of the cluster. Must be RFC 1123 compliant.                                                                         |
 | host              | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                                      |
-| apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
-| existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
+| global.apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
+| global.existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
+| tags.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
+| tags.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
 
 #### Overriding Default Values
 
-Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` file for your customizations.
+Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` based on the `configuration.example.yaml`  file for your customizations.
 
 ##### Using the `--values` Flag
 
@@ -84,10 +121,6 @@ You can use the `--values` (or short form `-f`) flag in your Helm commands to ov
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
-    --set clusterName=<CLUSTER_NAME> \
-    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
-    --set region=<REGION> \
     -f values-override.yaml
 ```
 
@@ -101,7 +134,7 @@ You can use the `--set` flag in Helm commands to directly set or override specif
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
+    --set global.existingSecretName=<NAME_OF_SECRET> \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \
@@ -109,32 +142,24 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     -f values-override.yaml
 ```
 
-### Metric Exporters
+### Labels and Annotations
 
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). There are two installation options for providing the `kube-state-metrics` metrics to the cloudzero-agent. If you don't know which option is right for you, use the second option.
+This chart allows the exporting of labels and annotations from the following resources:
+- `Pod`
+- `Deployment`
+- `StatefulSet`
+- `Daemonset`
+- `Job`
+- `CronJob`
+- `Node`
+- `Namespace`
 
-#### Option 1 (default): Use existing kube-state-metrics
-
-Using an existing `kube-state-metrics` exporter may be desirable for minimizing cost. By default, the `cloudzero-agent` will attempt to find an existing `kube-state-metrics` K8s Service by searching for a K8s Service with the annotation `prometheus.io/scrape: "true"`. If an existing `kube-state-metrics` Service exists but does not have that annotation and you do not wish to add it, see the **Custom Scrape Configs** section below.
-
-In addition to the above, the existing `kube-state-metrics` Service address should be added in `values-override.yaml` as shown below so that the `cloudzero-agent` can validate the connection:
-
-```yaml
-validator:
-  serviceEndpoints:
-     kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-```
-
-
-#### Option 2: Use kube-state-metrics subchart
-
-Alternatively, deploy the `kube-state-metrics` subchart that comes packaged with this chart. This is done by enabling settings in `values-override.yaml` as shown:
-
-```yaml
-kube-state-metrics:
-  enabled: true
-```
-In this option, no additional configuration is required in the `validator` field.
+Additional Notes:
+- By default, only labels from pods and namespaces are exported. To enabled more resources, see the `webhooks.configurations` section of the `values.yaml` file.
+- Labels and annotations exports are managed by a subchart, `cloudzero-insights-controller`, which is also maintained in this repository.
+- To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the Explorer page. For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
+- Annotations are not exported by default; see the `tags.annotations.enabled` setting to enable. To disambiguate annotations from labels, an `annotation` prefix is prepended to the annotation key; i.e., an `foo: bar` annotation on a namespace would be represented in the Explorer as `node:annotation:foo: bar`
+- For both labels and annotations, the `enabled` flag applies across all resource types; i.e., setting `true` for `tags.labels.enabled` enabels label exporting for labels on pods, nodes, deployments, statefulsets, namespaces, daemonets, jobs, and cronjobs. Specific resources can be disabled by altering the `webhooks.configurations` configuration.
 
 ### Secret Management
 
@@ -153,7 +178,7 @@ Example of creating a secret:
 kubectl create secret -n example-namespace generic example-secret-name --from-literal=value=<example-api-key-value>
 ```
 
-The secret can then be used with `existingSecretName`.
+The secret can then be used with `global.existingSecretName`.
 
 ### Memory Sizing
 
@@ -174,68 +199,6 @@ kube-state-metrics:
     repository: my-custom-kube-state-metrics/kube-state-metrics
 ```
 
-### Custom Scrape Configs
-
-If running without the default `kube-state-metrics` exporter subchart and your existing `kube-state-metrics` deployment does not have the required `prometheus.io/scrape: "true"`, adjust the Prometheus scrape configs as shown:
-
-`values-override.yaml`
-```yaml
-prometheusConfig:
-  scrapeJobs:
-    kubeStateMetrics:
-      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
-    additionalScrapeJobs:
-    - job_name: custom-kube-state-metrics
-      honor_timestamps: true
-      scrape_interval: 1m
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      static_configs:
-        - targets:
-          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-      relabel_configs:
-      - separator: ;
-        regex: __meta_kubernetes_service_label_(.+)
-        replacement: $1
-        action: labelmap
-      - source_labels: [__meta_kubernetes_namespace]
-        separator: ;
-        regex: (.*)
-        target_label: namespace
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_service_name]
-        separator: ;
-        regex: (.*)
-        target_label: service
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        separator: ;
-        regex: (.*)
-        target_label: node
-        replacement: $1
-        action: replace
-```
-
-### Exporting Pod Labels
-
-Pod labels can be exported as metrics using kube-state-metrics. To customize the labels for export, modify the values-override.yaml file as shown below:
-
-**Example: Exporting only the pod labels named foo and bar:**
-
-```yaml
-kube-state-metrics:
-  extraArgs:
-     - --metric-labels-allowlist=pods=[foo,bar]
-```
-
-> This is preferable to including all labels with `*` because the performance and memory impact is reduced. Regular expression matching is not currently supported. See the `kube-state-metrics` [documentation](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/developer/cli-arguments.md) for more details.
-
-⚠️ Important: If you are running an existing `kube-state-metrics` instance, ensure that the labels you want to use are whitelisted. kube-state-metrics version 2.x and above will **_not_** export the `kube_pod_labels` metrics unless they are explicitly allowed. This prevents the use of those labels for cost allocation and other purposes. Make sure you have configured the labels at the appropriate level using the --metric-labels-allowlist parameter:
-
-> eg:  `- --metric-labels-allowlist=namespaces=[*],pods=[*],deployments=[app.kubernetes.io/*,k8s.*]`
-
 ## Dependencies
 
 | Repository                                         | Name                     | Version |
@@ -250,47 +213,6 @@ To receive a notification when a new version of the chart is [released](https://
 2. Select **Watch > Custom**.
 3. Check the **Releases** box.
 4. Select **Apply**.
-
-
-## Troubleshooting
-
-### Issue
-I've deployed the chart, but I don't see Kubernetes data in CloudZero.
-
-## Resolution
-This can happen for a number of reasons; see below for solutions to the most common problems
-
-### Ensure kube-state-metrics is deployed correctly
-
-1. Review the **Metric Exporters** section.
-2. If opting for **Option 1**
-  - Is kube-state-metrics installed?
-  ```bash
-  kubectl get services --all-namespaces | grep kube-state-metrics
-  ```
-  If the above command does not return any services, install a `kube-state-metrics` exporter, or use **Option 2** in the **Metric Exporters** section.
-  
-3. If opting for **Option 2**, ensure that `kube-state-metrics.enabled=true` is set as an annotation on the Service.
-4. Ensure the cloudzero-agent pod can find the `kube-state-metrics` Service.
-   Run the following command:
-   ```
-   kubectl get services -A -o jsonpath='{range .items[?(@.metadata.annotations.prometheus\.io/scrape=="true")]}{.metadata.name}{" in "}{.metadata.namespace}{"\n"}{end}'
-   ```
-   If this does not return a `kube-state-metrics` Service, then either annotate the existing Service found in Step 2 with `prometheus.io/scrape: "true"`, or following the instructions in the **Custom Scrape Configs** section above.
-5. Ensure connectivity between the `cloudzero-agent` pod and the `kube-state-metrics` Service.
-  ```
-  SERVER_POD=$(kubectl get pod -l app.kubernetes.io/name=cloudzero-agent -o jsonpath='{.items[0].metadata.name}')
-  kubectl exec -it -n <NAMESPACE> $SERVER_POD -- wget -qO- <KSM_SERVICE_NAME>.<KSM_NAMESPACE>.svc.cluster.local:8080/metrics
-  ```
-  The request should return a 200 response with a list of metrics prefixed with `kube_`, i.e., `kube_pod_info`. If not, ensure that the `kube-state-metrics` deployment is configured correctly.
-
-### Issue
-I have Kubernetes data in CloudZero, but I don't see Kubernetes labels as Dimensions.
-
-## Resolution
-Note that
-1. Only labels on Pods are currently supported, and
-2. Labels are "opt-in"; see the **Exporting Pod Labels** section for details.
 
 ## Useful References
 

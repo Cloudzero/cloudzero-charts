@@ -1,0 +1,27 @@
+{{- if .Values.initJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "insights-controller.initJobName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "insights-controller.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: {{ include "insights-controller.initJobName" . }}
+      labels:
+        {{- include "insights-controller.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: start-scrape
+          image: {{ .Values.initJob.image.repository }}:{{ .Values.initJob.image.tag }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              until curl -X POST -k https://{{ include "insights-controller.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.service.port }}/scrape; do
+                echo "Waiting for service..."
+                sleep 5
+              done
+{{- end }}

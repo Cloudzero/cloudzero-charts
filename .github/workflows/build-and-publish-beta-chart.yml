@@ -42,8 +42,17 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
 
-      - name: Build Dependencies
+      - name: Build Insights Controller Dependencies
+        run: helm dependency update charts/cloudzero-insights-controller/
+
+      - name: Package Insights Controller Chart
+        run: helm package charts/cloudzero-insights-controller/ --destination .deploy
+
+      - name: Build Cloudzero Agent Dependencies
         run: helm dependency update charts/cloudzero-agent/
+
+      - name: Package Cloudzero Agent Chart
+        run: helm package charts/cloudzero-agent/ --destination .deploy
 
       # Step 3: Determine Version
       - name: Get Github Tag Version
@@ -62,6 +71,11 @@ jobs:
         run: |
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
+
+      - name: Update Chart Version for insights-controller
+        run: |
+          VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-insights-controller/Chart.yaml)
+          sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-insights-controller/Chart.yaml
 
       - name: Validate Release Notes are Present
         run: |
@@ -84,7 +98,13 @@ jobs:
         continue-on-error: true
 
       # Step 7: Handle Artifacts and Update Pages
-      - name: Upload Chart as Artifact
+      - name: Upload Insight Controller Chart as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-chart
+          path: .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz
+
+      - name: Upload Cloudzero Agent Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: agent-chart
@@ -97,6 +117,7 @@ jobs:
 
       - name: Move release Tarball
         run: |
+          cp .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz ./beta/
           cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./beta/
           rm -fr .deploy
 

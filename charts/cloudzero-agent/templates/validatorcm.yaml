@@ -33,7 +33,7 @@ data:
       {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
       kube_state_metrics_service_endpoint: http://{{ .Values.validator.serviceEndpoints.kubeStateMetrics }}/
       {{- else }}
-      kube_state_metrics_service_endpoint: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics:8080/
+      kube_state_metrics_service_endpoint: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}state-metrics:8080/
       {{- end }}
       {{- if .Values.validator.serviceEndpoints.prometheusNodeExporter }}
       prometheus_node_exporter_service_endpoint: http://{{ .Values.validator.serviceEndpoints.prometheusNodeExporter }}/

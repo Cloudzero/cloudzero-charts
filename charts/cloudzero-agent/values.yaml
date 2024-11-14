@@ -6,10 +6,12 @@ cloudAccountId: null
 clusterName: null
 # -- Region the cluster is running in.
 region: null
-# -- CloudZero API key. Required if useExistingSecret is false.
-apiKey: null
-# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
-existingSecretName: null
+
+global:
+  # -- CloudZero API key. Required if useExistingSecret is false.
+  apiKey: null
+  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+  existingSecretName: null
 
 # -- The following lists of metrics are required for CloudZero to function.
 # -- Modifications made to these lists may cause issues with the processing of cluster data
@@ -47,12 +49,26 @@ prometheusConfig:
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
+tags:
+  enabled: true
+  labels:
+    enabled:
+    patterns:
+      # - '.*'
+  annotations:
+    enabled: false
+    patterns:
+      - '.*'
+
 kube-state-metrics:
-  enabled: false
-  extraArgs:
-    - --metric-labels-allowlist=pods=[app.kubernetes.io/component]
-prometheus-node-exporter:
-  enabled: false
+  enabled: true
+  fullnameOverride: "cloudzero-state-metrics"
+  # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicity defined
+  # by the Validators config file.
+  prometheusScrape: false
+  # Set a default port other than 8080 to avoid collisions with any existing KSM services.
+  service:
+    port: 8080
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
 secretAnnotations: {}
@@ -89,7 +105,6 @@ server:
       memory: 1024Mi
   deploymentAnnotations: {}
   podAnnotations: {}
-  configMapOverrideName: configuration
   args:
   - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
   - --web.enable-lifecycle
