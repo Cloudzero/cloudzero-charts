@@ -108,10 +108,12 @@ jobs:
           full_path=$(pwd)/charts/cloudzero-insights-controller
           awk -v dir="$full_path" '
             /name: cloudzero-insights-controller/ {flag=1}
-            flag && /repository:/ {sub(/repository: .*/, "repository: file:///" dir); flag=0}
+            flag && /repository:/ {sub(/repository: .*/, "repository: file://" dir); flag=0}
             {print}
-          ' charts/cloudzero-insights-controller/Chart.yaml > temp.yaml && mv temp.yaml charts/cloudzero-insights-controller/Chart.yaml
-          cat charts/cloudzero-insights-controller/Chart.yaml
+          ' charts/cloudzero-agent/Chart.yaml > temp.yaml && mv temp.yaml charts/cloudzero-agent/Chart.yaml
+          cd charts/cloudzero-insights-controller
+          helm dependency update
+          cd ../../
 
       # Install the chart using our temporary image
       - name: TEST - Install the chart
