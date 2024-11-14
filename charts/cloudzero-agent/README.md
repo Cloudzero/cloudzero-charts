@@ -144,50 +144,6 @@ kube-state-metrics:
     repository: my-custom-kube-state-metrics/kube-state-metrics
 ```
 
-### Custom Scrape Configs
-
-If running without the default `kube-state-metrics` exporter subchart and your existing `kube-state-metrics` deployment does not have the required `prometheus.io/scrape: "true"`, adjust the Prometheus scrape configs as shown:
-
-`values-override.yaml`
-```yaml
-prometheusConfig:
-  scrapeJobs:
-    kubeStateMetrics:
-      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
-    additionalScrapeJobs:
-    - job_name: custom-kube-state-metrics
-      honor_timestamps: true
-      scrape_interval: 1m
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      static_configs:
-        - targets:
-          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-      relabel_configs:
-      - separator: ;
-        regex: __meta_kubernetes_service_label_(.+)
-        replacement: $1
-        action: labelmap
-      - source_labels: [__meta_kubernetes_namespace]
-        separator: ;
-        regex: (.*)
-        target_label: namespace
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_service_name]
-        separator: ;
-        regex: (.*)
-        target_label: service
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        separator: ;
-        regex: (.*)
-        target_label: node
-        replacement: $1
-        action: replace
-```
-
 ### Exporting Pod Labels
 
 Pod labels can be exported as metrics using kube-state-metrics. To customize the labels for export, modify the values-override.yaml file as shown below:
