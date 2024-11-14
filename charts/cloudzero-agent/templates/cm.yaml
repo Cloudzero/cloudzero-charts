@@ -57,9 +57,7 @@ data:
           action: replace
         metric_relabel_configs:
         - source_labels: [__name__]
-          separator: ;
-          regex: ^(kube_node_info|kube_node_status_capacity|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_labels|kube_pod_info)$
-          replacement: $1
+          regex: "^({{ join "|" .Values.kubeMetrics }})$"
           action: keep
         - separator: ;
           regex: ^(board_asset_tag|container|created_by_kind|created_by_name|image|instance|name|namespace|node|node_kubernetes_io_instance_type|pod|product_name|provider_id|resource|unit|uid|_.*|label_.*|app.kubernetes.io/*|k8s.*)$
