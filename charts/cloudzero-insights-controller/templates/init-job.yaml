@@ -13,6 +13,7 @@ spec:
       labels:
         {{- include "insights-controller.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "insights-controller.serviceAccountName" . }}
       restartPolicy: Never
       containers:
         - name: start-scrape
