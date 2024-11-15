@@ -27,7 +27,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "insights-controller.serviceAccountName" . }}
       securityContext:
         runAsUser: 65534
         runAsNonRoot: true
