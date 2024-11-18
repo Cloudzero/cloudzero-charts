@@ -18,10 +18,28 @@ labels:
   enabled: null
   patterns:
     # - '.*'
+  resources:
+    pods: true
+    namespaces: true
+    deployments: false
+    statefulsets: false
+    nodes: false
+    jobs: false
+    cronjobs: false
+    daemonsets: false
 annotations:
   enabled: false
   patterns:
     - '.*'
+  resources:
+    pods: true
+    namespaces: true
+    deployments: false
+    statefulsets: false
+    nodes: false
+    jobs: false
+    cronjobs: false
+    daemonsets: false
 
 server:
   replicaCount: 3
