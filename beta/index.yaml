@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-18T12:34:15.442631-05:00"
+    created: "2024-11-18T12:42:34.655134-05:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -27,7 +27,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-18T12:34:15.438214-05:00"
+    created: "2024-11-18T12:42:34.650101-05:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -51,7 +51,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-18T12:34:15.433189-05:00"
+    created: "2024-11-18T12:42:34.644514-05:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -75,7 +75,7 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2024-11-18T12:34:15.451376-05:00"
+    created: "2024-11-18T12:42:34.666857-05:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -84,7 +84,7 @@ entries:
       version: v1.15.3
     description: Provides telemetry to the CloudZero platform to enabling complex
       cost allocation and analysis.
-    digest: 28d3106a4a13f12607ed3e56c6f4a758e25200ea9d008de75d4c644ad802b702
+    digest: 9ecd28b851ea4a2d9de5e5e49a2db461e799c50859d8f22ce5f3c337bd12063c
     name: cloudzero-insights-controller
     type: application
     urls:
@@ -92,7 +92,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-18T12:34:15.448757-05:00"
+    created: "2024-11-18T12:42:34.663161-05:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -109,7 +109,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-18T12:34:15.44538-05:00"
+    created: "2024-11-18T12:42:34.659383-05:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -124,4 +124,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2024-11-18T12:34:15.431037-05:00"
+generated: "2024-11-18T12:42:34.641796-05:00"
