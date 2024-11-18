@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-18T12:46:34.098006-05:00"
+    created: "2024-11-18T12:50:40.392749-05:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -16,7 +16,7 @@ entries:
       version: 1.0.1-beta
     description: A chart for using Prometheus in agent mode to send cluster metrics
       to the CloudZero platform.
-    digest: 91f84e09456cce3035ee7810846b2ad0c8a447cff108c4e82a593530771c451e
+    digest: 3d7484409714a324a2f13a04a51234dcfdc0495b290d94a63faf056b81347d58
     maintainers:
     - email: support@cloudzero.com
       name: CloudZero
@@ -27,7 +27,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-18T12:46:34.093798-05:00"
+    created: "2024-11-18T12:50:40.387691-05:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -51,7 +51,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-18T12:46:34.088829-05:00"
+    created: "2024-11-18T12:50:40.381794-05:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -75,7 +75,7 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2024-11-18T12:46:34.107726-05:00"
+    created: "2024-11-18T12:50:40.40223-05:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -84,7 +84,7 @@ entries:
       version: v1.15.3
     description: Provides telemetry to the CloudZero platform to enabling complex
       cost allocation and analysis.
-    digest: 9ecd28b851ea4a2d9de5e5e49a2db461e799c50859d8f22ce5f3c337bd12063c
+    digest: db9b733e3eab3769cf87db3df4c2a31ff1b984f315ba70c140082ae165395d66
     name: cloudzero-insights-controller
     type: application
     urls:
@@ -92,7 +92,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-18T12:46:34.104495-05:00"
+    created: "2024-11-18T12:50:40.399091-05:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -109,7 +109,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-18T12:46:34.101063-05:00"
+    created: "2024-11-18T12:50:40.395453-05:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -124,4 +124,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2024-11-18T12:46:34.086776-05:00"
+generated: "2024-11-18T12:50:40.379607-05:00"
