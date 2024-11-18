@@ -40,6 +40,7 @@ data:
       send_interval: 1m
       max_bytes_per_send: 10000000
       send_timeout: 10s
+      max_retries: 3
     k8s_client:
       timeout: 30s
     database:
