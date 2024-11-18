@@ -46,6 +46,7 @@ data:
     database:
       retention_time: 24h
       cleanup_interval: 3h
+      batch_update_size: 500
     {{- with .Values.server.tls }}
     certificate:
       key: {{ .mountPath }}/tls.key
