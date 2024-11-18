@@ -45,7 +45,7 @@ helm install <RELEASE_NAME> cloudzero-beta/cloudzero-agent \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \
-    --set kube-state-metrics.enabled=<true|false> \
+    --set kube_state_metrics.enabled=<true|false> \
     --create-namespace
 ```
 
@@ -63,7 +63,7 @@ helm install <RELEASE_NAME> cloudzero-beta/cloudzero-agent \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \
-    --set kube-state-metrics.enabled=<true|false> \
+    --set kube_state_metrics.enabled=<true|false> \
     --create-namespace
 ```
 

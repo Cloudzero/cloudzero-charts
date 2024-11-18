@@ -18,11 +18,10 @@ data:
       scrape_interval: {{ .Values.prometheusConfig.globalScrapeInterval }}
     scrape_configs:
       {{- if .Values.prometheusConfig.scrapeJobs.kubeStateMetrics.enabled }}
-      - job_name: cloudzero-service-endpoints # kube_*, node_* metrics
-        honor_labels: true
+      - job_name: static-kube-state-metrics
         honor_timestamps: true
         track_timestamps_staleness: false
-        scrape_interval: {{ .Values.prometheusConfig.scrapeJobs.kubeStateMetrics.scrapeInterval }}
+        scrape_interval: 1m
         scrape_timeout: 10s
         scrape_protocols:
         - OpenMetricsText1.0.0
@@ -34,38 +33,6 @@ data:
         follow_redirects: true
         enable_http2: true
         relabel_configs:
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
-          separator: ;
-          regex: "true"
-          replacement: $1
-          action: keep
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape_slow]
-          separator: ;
-          regex: "true"
-          replacement: $1
-          action: drop
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
-          separator: ;
-          regex: (https?)
-          target_label: __scheme__
-          replacement: $1
-          action: replace
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
-          separator: ;
-          regex: (.+)
-          target_label: __metrics_path__
-          replacement: $1
-          action: replace
-        - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
-          separator: ;
-          regex: (.+?)(?::\d+)?;(\d+)
-          target_label: __address__
-          replacement: $1:$2
-          action: replace
-        - separator: ;
-          regex: __meta_kubernetes_service_annotation_prometheus_io_param_(.+)
-          replacement: __param_$1
-          action: labelmap
         - separator: ;
           regex: __meta_kubernetes_service_label_(.+)
           replacement: $1
@@ -92,13 +59,13 @@ data:
         - source_labels: [__name__]
           regex: "^({{ join "|" .Values.kubeMetrics }})$"
           action: keep
-        - action: labelkeep
-          regex: "^({{ include "cloudzero-agent.requiredMetricLabels" . }})$"
-        kubernetes_sd_configs:
-        - role: endpoints
-          kubeconfig_file: ""
-          follow_redirects: true
-          enable_http2: true
+        - separator: ;
+          regex: ^(board_asset_tag|container|created_by_kind|created_by_name|image|instance|name|namespace|node|node_kubernetes_io_instance_type|pod|product_name|provider_id|resource|unit|uid|_.*|label_.*|app.kubernetes.io/*|k8s.*)$
+          replacement: $1
+          action: labelkeep
+        static_configs:
+        - targets:
+            - {{ printf "%s-kube-state-metrics.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.cadvisor.enabled }}
       - job_name: cloudzero-nodes-cadvisor # container_* metrics

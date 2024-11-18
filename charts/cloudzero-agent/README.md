@@ -39,8 +39,6 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \
-    # optionally deploy kube-state-metrics if it doesn't exist in the cluster already
-    --set kube-state-metrics.enabled=<true|false>
 ```
 
 ### Update Helm Chart
@@ -58,7 +56,6 @@ helm upgrade <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \
-    --set kube-state-metrics.enabled=<true|false>
 ```
 
 ### Mandatory Values
@@ -109,33 +106,6 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     -f values-override.yaml
 ```
 
-### Metric Exporters
-
-This chart depends on metrics from [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics). There are two installation options for providing the `kube-state-metrics` metrics to the cloudzero-agent. If you don't know which option is right for you, use the second option.
-
-#### Option 1 (default): Use existing kube-state-metrics
-
-Using an existing `kube-state-metrics` exporter may be desirable for minimizing cost. By default, the `cloudzero-agent` will attempt to find an existing `kube-state-metrics` K8s Service by searching for a K8s Service with the annotation `prometheus.io/scrape: "true"`. If an existing `kube-state-metrics` Service exists but does not have that annotation and you do not wish to add it, see the **Custom Scrape Configs** section below.
-
-In addition to the above, the existing `kube-state-metrics` Service address should be added in `values-override.yaml` as shown below so that the `cloudzero-agent` can validate the connection:
-
-```yaml
-validator:
-  serviceEndpoints:
-     kubeStateMetrics: <kube-state-metrics>.<example-namespace>.svc.cluster.local:8080
-```
-
-
-#### Option 2: Use kube-state-metrics subchart
-
-Alternatively, deploy the `kube-state-metrics` subchart that comes packaged with this chart. This is done by enabling settings in `values-override.yaml` as shown:
-
-```yaml
-kube-state-metrics:
-  enabled: true
-```
-In this option, no additional configuration is required in the `validator` field.
-
 ### Secret Management
 
 The chart requires a CloudZero API key to send metric data. Admins can retrieve API keys [here](https://app.cloudzero.com/organization/api-keys).
@@ -172,50 +142,6 @@ kube-state-metrics:
   image:
     registry: my-custom-registry.io
     repository: my-custom-kube-state-metrics/kube-state-metrics
-```
-
-### Custom Scrape Configs
-
-If running without the default `kube-state-metrics` exporter subchart and your existing `kube-state-metrics` deployment does not have the required `prometheus.io/scrape: "true"`, adjust the Prometheus scrape configs as shown:
-
-`values-override.yaml`
-```yaml
-prometheusConfig:
-  scrapeJobs:
-    kubeStateMetrics:
-      enabled: false # this disables the default kube-state-metrics scrape job, which will be replaced by an entry in additionalScrapeJobs
-    additionalScrapeJobs:
-    - job_name: custom-kube-state-metrics
-      honor_timestamps: true
-      scrape_interval: 1m
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      static_configs:
-        - targets:
-          - 'my-kube-state-metrics-service.default.svc.cluster.local:8080'
-      relabel_configs:
-      - separator: ;
-        regex: __meta_kubernetes_service_label_(.+)
-        replacement: $1
-        action: labelmap
-      - source_labels: [__meta_kubernetes_namespace]
-        separator: ;
-        regex: (.*)
-        target_label: namespace
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_service_name]
-        separator: ;
-        regex: (.*)
-        target_label: service
-        replacement: $1
-        action: replace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        separator: ;
-        regex: (.*)
-        target_label: node
-        replacement: $1
-        action: replace
 ```
 
 ### Exporting Pod Labels
