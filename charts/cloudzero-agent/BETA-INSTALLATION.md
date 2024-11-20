@@ -39,7 +39,7 @@ There are two ways to install a beta version of the chart:
 This method installs the latest beta version available.
 
 ```sh
-helm install <RELEASE_NAME> cloudzero/cloudzero-agent -n <NAMESPACE> --create-namespace -f configuration.example.yaml --devel
+helm install <RELEASE_NAME> cloudzero-beta/cloudzero-agent -n <NAMESPACE> --create-namespace -f configuration.example.yaml --devel
 ```
 
 - The `--devel` flag allows Helm to consider beta versions when resolving the chart version.
@@ -50,7 +50,7 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent -n <NAMESPACE> --create-na
 If you want to install a specific beta version, specify it using the `--version` flag:
 
 ```sh
-helm install <RELEASE_NAME> cloudzero/cloudzero-agent -n <NAMESPACE> --create-namespace -f configuration.example.yaml --version <CHART_VERSION>
+helm install <RELEASE_NAME> cloudzero-beta/cloudzero-agent -n <NAMESPACE> --create-namespace -f configuration.example.yaml --version <CHART_VERSION>
 ```
 
 - Replace `<CHART_VERSION>` with the specific beta version (e.g., `1.0.0-beta`).
