@@ -1,3 +1,16 @@
+{{- if not (and .Values.labels.enabled .Values.labels.patterns) }}
+{{- $msg := "\n\nThe required field(s) 'labels.enabled' and/or 'labels.patterns' is not set! See the README.md for more information." }}
+{{- $enabledMsg:=""}}
+{{- $patternMsg:=""}}
+{{- if not .Values.labels.enabled  }}
+{{- $enabledMsg = "Ensure that 'labels.enabled' is a boolean (true or false). Set 'true' to enable exporting labels."}}
+{{- end }}
+{{- if not .Values.labels.patterns }}
+{{- $patternMsg = "The required field 'labels.patterns' is not set or set incorrectly. It must be an array of regular expressions that match label keys to be exported."}}
+{{- end }}
+{{- fail (printf "\n %s \n %s \n %s" $msg $enabledMsg $patternMsg) }}
+{{- end }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
