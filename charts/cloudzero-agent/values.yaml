@@ -63,6 +63,7 @@ tags:
 kubeStateMetrics:
   enabled: true
   fullnameOverride: "cloudzero-state-metrics"
+  nameOverride: "cloudzero-state-metrics"
   # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicity defined
   # by the Validators config file.
   prometheusScrape: false

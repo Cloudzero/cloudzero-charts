@@ -12,6 +12,7 @@ dependencies:
     version: "5.15.*"
     repository: https://prometheus-community.github.io/helm-charts
     condition: kubeStateMetrics.enabled
+    alias: kubeStateMetrics
   - name: cloudzero-insights-controller
     version: "1.0.0-beta"
     repository: https://cloudzero.github.io/cloudzero-charts/beta
