@@ -14,7 +14,6 @@ For the latest release, see [Releases](https://github.com/Cloudzero/cloudzero-ch
 - Helm 3+
 - A CloudZero API key
 - Each Kubernetes cluster must have a route to the internet and a rule that allows egress from the agent to the CloudZero collector endpoint at https://api.cloudzero.com on port 443
-- A kube-state-metrics exporter running in the cluster, available via Kubernetes Service (see below for details)
 
 ## Installation
 
@@ -192,7 +191,7 @@ A common addition may be to pull the container images from custom image registri
 
 `values-override.yaml`
 ```yaml
-kube-state-metrics:
+kubeStateMetrics:
   enabled: true
   image:
     registry: my-custom-registry.io
