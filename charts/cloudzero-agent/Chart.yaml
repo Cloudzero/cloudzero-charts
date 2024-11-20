@@ -14,7 +14,7 @@ dependencies:
     condition: kubeStateMetrics.enabled
     alias: kubeStateMetrics
   - name: cloudzero-insights-controller
-    version: "1.0.0-beta"
+    version: "1.0.1-beta"
     repository: https://cloudzero.github.io/cloudzero-charts/beta
     condition: cloudzero-insights-controller.enabled
     alias: tags
