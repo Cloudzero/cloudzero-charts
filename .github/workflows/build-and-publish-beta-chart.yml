@@ -156,4 +156,4 @@ jobs:
           files: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
           make_latest: false
           target_commitish: ${{ env.COMMIT_HASH }}
-          body_path: ${{ github.workspace }}/docs/releases/${{ env.NEW_VERSION }}.md
+          body_path: ${{ github.workspace }}/charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md
