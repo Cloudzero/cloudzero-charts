@@ -5,5 +5,5 @@ dependencies:
 - name: cloudzero-insights-controller
   repository: https://cloudzero.github.io/cloudzero-charts/beta
   version: 1.0.1-beta
-digest: sha256:467fc1a751a584f61a9264a7f071209db408036baf45a62f061e34a444137e0f
-generated: "2024-11-18T12:45:12.292096-05:00"
+digest: sha256:3518ffb88382f3e613cc9b21aac6dc474d634b316aa69cfe7f4e85474844e54b
+generated: "2024-11-21T00:05:12.882895449Z"
