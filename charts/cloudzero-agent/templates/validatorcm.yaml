@@ -30,15 +30,15 @@ data:
       disable_telemetry: false
 
     prometheus:
-      {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
-      kube_state_metrics_service_endpoint: http://{{ .Values.validator.serviceEndpoints.kubeStateMetrics }}/
+      {{- if .Values.validator.serviceNames.kubeStateMetrics }}
+      kube_state_metrics_service_name: http://{{ .Values.validator.serviceNames.kubeStateMetrics }}/
       {{- else }}
-      kube_state_metrics_service_endpoint: {{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics
+      kube_state_metrics_service_name: {{- if .Release.Name }}{{.Release.Name}}-{{- end }}kube-state-metrics
       {{- end }}
-      {{- if .Values.validator.serviceEndpoints.prometheusNodeExporter }}
-      prometheus_node_exporter_service_endpoint: http://{{ .Values.validator.serviceEndpoints.prometheusNodeExporter }}/
+      {{- if .Values.validator.serviceNames.prometheusNodeExporter }}
+      prometheus_node_exporter_service_name: http://{{ .Values.validator.serviceNames.prometheusNodeExporter }}/
       {{- else }}
-      prometheus_node_exporter_service_endpoint: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
+      prometheus_node_exporter_service_name: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
       {{- end }}
       executable: /bin/prometheus
       namespace: {{ include "cloudzero-agent.namespace" . }}
