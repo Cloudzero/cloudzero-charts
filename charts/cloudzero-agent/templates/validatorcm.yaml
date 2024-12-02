@@ -41,6 +41,7 @@ data:
       prometheus_node_exporter_service_endpoint: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
       {{- end }}
       executable: /bin/prometheus
+      namespace: {{ include "cloudzero-agent.namespace" . }}
       configurations:
         - /etc/prometheus/prometheus.yml
         - /etc/config/prometheus/configmaps/prometheus.yml
