@@ -22,7 +22,6 @@ kubeMetrics:
   - kube_pod_container_resource_requests
   - kube_pod_labels
   - kube_pod_info
-  - node_dmi_info
 containerMetrics:
   - container_cpu_usage_seconds_total
   - container_memory_working_set_bytes
