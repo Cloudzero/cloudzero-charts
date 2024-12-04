@@ -33,7 +33,7 @@ data:
       {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
       kube_state_metrics_service_endpoint: http://{{ .Values.validator.serviceEndpoints.kubeStateMetrics }}/
       {{- else }}
-      kube_state_metrics_service_endpoint: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}state-metrics:8080/
+      kube_state_metrics_endpoint: http://{{ .Values.kubeStateMetrics.nameOverride }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.kubeStateMetrics.service.port }}
       {{- end }}
       {{- if .Values.validator.serviceEndpoints.prometheusNodeExporter }}
       prometheus_node_exporter_service_endpoint: http://{{ .Values.validator.serviceEndpoints.prometheusNodeExporter }}/
@@ -41,6 +41,10 @@ data:
       prometheus_node_exporter_service_endpoint: http://{{- if .Release.Name }}{{.Release.Name}}-{{- end }}prometheus-node-exporter:9100/
       {{- end }}
       executable: /bin/prometheus
+      kube_metrics:
+        {{- range .Values.kubeMetrics }}
+        - {{ . }}
+        {{- end }}
       configurations:
         - /etc/prometheus/prometheus.yml
         - /etc/config/prometheus/configmaps/prometheus.yml
