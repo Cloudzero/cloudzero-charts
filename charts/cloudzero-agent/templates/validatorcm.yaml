@@ -42,9 +42,7 @@ data:
       {{- end }}
       executable: /bin/prometheus
       kube_metrics:
-        {{- range .Values.kubeMetrics }}
-        - {{ . }}
-        {{- end }}
+        {{- toYaml .Values.kubeMetrics | nindent 8 }}
       configurations:
         - /etc/prometheus/prometheus.yml
         - /etc/config/prometheus/configmaps/prometheus.yml
