@@ -33,7 +33,7 @@ data:
       {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
       kube_state_metrics_service_endpoint: http://{{ .Values.validator.serviceEndpoints.kubeStateMetrics }}/
       {{- else }}
-      kube_state_metrics_endpoint: http://{{ .Values.kubeStateMetrics.nameOverride }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.kubeStateMetrics.service.port }}
+      kube_state_metrics_service_endpoint: http://{{ .Values.kubeStateMetrics.nameOverride }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.kubeStateMetrics.service.port }}
       {{- end }}
       {{- if .Values.validator.serviceEndpoints.prometheusNodeExporter }}
       prometheus_node_exporter_service_endpoint: http://{{ .Values.validator.serviceEndpoints.prometheusNodeExporter }}/
