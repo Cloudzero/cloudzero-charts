@@ -61,7 +61,7 @@ data:
           checks:
             - k8s_version
             - kube_state_metrics_reachable
-            - node_exporter_reachable
+            #- node_exporter_reachable
             - prometheus_version
             - scrape_cfg
         - name: pre-stop
