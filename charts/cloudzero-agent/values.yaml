@@ -83,8 +83,8 @@ validator:
   name: env-validator
   image:
     repository: ghcr.io/cloudzero/cloudzero-agent-validator/cloudzero-agent-validator
-    tag: dev-59de324ea9e4488dd12280a3cb5a4575933b5336
-    digest: sha256:41070957cfba55065243abc61023695f046bc42b6a2bfb83db62a77942cd11a8
+    tag: 0.9.0
+    digest:
     pullPolicy: Always
 
 server:
