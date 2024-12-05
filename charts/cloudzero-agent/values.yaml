@@ -22,7 +22,6 @@ kubeMetrics:
   - kube_pod_container_resource_requests
   - kube_pod_labels
   - kube_pod_info
-  - node_dmi_info
 containerMetrics:
   - container_cpu_usage_seconds_total
   - container_memory_working_set_bytes
@@ -84,7 +83,7 @@ validator:
   name: env-validator
   image:
     repository: ghcr.io/cloudzero/cloudzero-agent-validator/cloudzero-agent-validator
-    tag: 0.4.1
+    tag: 0.9.0
     digest:
     pullPolicy: Always
 
