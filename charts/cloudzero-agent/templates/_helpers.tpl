@@ -60,9 +60,6 @@ app.kubernetes.io/component: {{ .Values.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
-
-
-
 {{/*
 Create unified labels for prometheus components
 */}}
@@ -80,7 +77,6 @@ app.kubernetes.io/part-of: {{ include "cloudzero-agent.name" . }}
 {{ include "cloudzero-agent.server.matchLabels" . }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
-
 
 {{/*
 Define the cloudzero-agent.namespace template if set with forceNamespace or .Release.Namespace is set
@@ -116,9 +112,6 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 {{- end -}}
 {{- end -}}
-
-
-
 
 {{/*
 Return the appropriate apiVersion for rbac.
@@ -164,10 +157,8 @@ Required metric labels
 {{- end -}}
 
 
-
 {{/*
 Insights Controller
-
 */}}
 
 {{/*
@@ -188,7 +179,6 @@ app.kubernetes.io/component: {{ include "cloudzero-agent.initJobName" . }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
-
 {{/*
 Service selector labels
 */}}
@@ -197,12 +187,10 @@ Service selector labels
 {{ include "cloudzero-agent.insightsController.server.matchLabels" . }}
 {{- end }}
 
-
 {{- define "cloudzero-agent.insightsController.labels" -}}
 {{ include "cloudzero-agent.insightsController.server.matchLabels" . }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
-
 
 {{/*
 Create a fully qualified webhook server name.
@@ -220,7 +208,6 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 {{- end -}}
 {{- end -}}
-
 
 {{/*
 Name for the webhook server service
@@ -268,7 +255,6 @@ Name for the job resource
 {{- define "cloudzero-agent.initJobName" -}}
 {{- printf "%s-init" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
-
 
 {{/*
 Annotations for the webhooks

@@ -126,7 +126,6 @@ server:
   emptyDir:
     sizeLimit: 8Gi
 
-# todo change to insightsWebhook insightsController
 insightsController:
   enabled: true
   labels:

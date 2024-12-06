@@ -22,7 +22,7 @@ spec:
           args:
             - |
               while true; do
-                echo "Waiting for the insightsController server to be ready...";
+                echo "Waiting for the tags server to be ready...";
                 if curl -s -o /dev/null -w "%{http_code}" -k https://{{ include "insights-controller.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.service.port }}/healthz | grep -q 200; then
                   echo "Server is ready, starting scrape job...";
                   curl -X POST -k https://{{ include "insights-controller.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.service.port }}/scrape;
