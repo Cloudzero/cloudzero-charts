@@ -240,3 +240,18 @@ app.kubernetes.io/name: {{ include "cloudzero-agent.tags.server.webhookFullname"
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
+
+
+{{/*
+Name for the issuer resource
+*/}}
+{{- define "cloudzero-agent.issuerName" -}}
+{{- printf "%s-issuer" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}
+
+{{/*
+Name for the job resource
+*/}}
+{{- define "cloudzero-agent.initJobName" -}}
+{{- printf "%s-init" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}
