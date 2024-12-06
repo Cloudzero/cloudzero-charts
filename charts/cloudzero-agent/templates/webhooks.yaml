@@ -1,4 +1,4 @@
-{{- range $configType, $configs := .Values.tags.webhook.configurations }}
+{{- range $configType, $configs := .Values.insightsController.webhooks.configurations }}
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -6,14 +6,14 @@ metadata:
   name: {{ include "cloudzero-agent.validatingWebhookConfigName" $ }}-{{ $configType }}
   namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "cloudzero-agent.tags.labels" $ | nindent 4 }}
+    {{- include "cloudzero-agent.insightsController.labels" $ | nindent 4 }}
   {{- if .annotations}}
   annotations:
     {{- include "cloudzero-agent.webhooks.annotations" $ | nindent 4 }}
   {{- end }}
 webhooks:
   - name: {{ include "cloudzero-agent.validatingWebhookName" $ }}
-    namespaceSelector: {{ toYaml $.Values.tags.webhooks.namespaceSelector }}
+    namespaceSelector: {{ toYaml $.Values.insightsController.webhooks.namespaceSelector }}
     failurePolicy: Ignore
     rules:
       - operations: [ "CREATE", "UPDATE" ]
@@ -26,9 +26,9 @@ webhooks:
         namespace: {{ $.Release.Namespace }}
         name: {{ include "cloudzero-agent.serviceName" $ }}
         path: "{{ $configs.path }}"
-        port: {{ $.Values.tags.service.port }}
-      {{- if and $.Values.tags.webhooks.certificate.enabled $.Values.tags.webhooks.issuer.enabled }}
-      caBundle: {{ $.Values.tags.webhooks.caBundle }}
+        port: {{ $.Values.insightsController.service.port }}
+      {{- if and $.Values.insightsController.webhooks.certificate.enabled $.Values.insightsController.webhooks.issuer.enabled }}
+      caBundle: {{ $.Values.insightsController.webhooks.caBundle }}
       {{- end }}
     admissionReviewVersions: ["v1"]
     sideEffects: None

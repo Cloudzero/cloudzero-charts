@@ -3,13 +3,13 @@ kind: Service
 metadata:
   name: {{ include "cloudzero-agent.serviceName" . }}
   labels:
-    {{- include "cloudzero-agent.tags.labels" . | nindent 4 }}
+    {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
 spec:
   type: ClusterIP
   ports:
-    - port: {{ .Values.tags.service.port }}
+    - port: {{ .Values.insightsController.service.port }}
       targetPort: 8443
       name: http
   selector:
-    {{- include "cloudzero-agent.tags.server.matchLabels" . | nindent 4 }}
+    {{- include "cloudzero-agent.insightsController.server.matchLabels" . | nindent 4 }}

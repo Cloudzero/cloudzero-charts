@@ -133,15 +133,15 @@ data:
             action: keep
         metadata_config:
           send: false
-{{- if .Values.tags.enabled }}
+{{- if .Values.insightsController.enabled }}
 ---
-{{- with .Values.tags }}
+{{- with .Values.insightsController }}
 {{- if not (and .labels.enabled .labels.patterns) }}
-{{- $msg := "\n\nThe required field(s) 'tags.labels.enabled' and/or 'tags.labels.patterns' is not set! See the README.md for more information." }}
+{{- $msg := "\n\nThe required field(s) 'insightsController.labels.enabled' and/or 'insightsController.labels.patterns' is not set! See the README.md for more information." }}
 {{- $enabledMsg:=""}}
 {{- $patternMsg:=""}}
 {{- if not .labels.enabled  }}
-{{- $enabledMsg = "Ensure that 'tags.labels.enabled' is a boolean (true or false). Set 'true' to enable exporting labels."}}
+{{- $enabledMsg = "Ensure that 'insightsController.labels.enabled' is a boolean (true or false). Set 'true' to enable exporting labels."}}
 {{- end }}
 {{- if not .labels.patterns }}
 {{- $patternMsg = "The required field 'labels.patterns' is not set or set incorrectly. It must be an array of regular expressions that match label keys to be exported."}}
@@ -178,7 +178,7 @@ data:
       cleanup_interval: 3h
       batch_update_size: 500
     api_key_path: {{ include "cloudzero-agent.secretFileFullPath" . }}
-    {{- with .Values.tags.server }}
+    {{- with .Values.insightsController.server }}
     certificate:
       key: {{ .tls.mountPath }}/tls.key
       cert: {{ .tls.mountPath }}/tls.crt
@@ -190,7 +190,7 @@ data:
     {{- end }}
     filters:
       labels:
-        {{- .Values.tags.labels | toYaml | nindent 8 }}
+        {{- .Values.insightsController.labels | toYaml | nindent 8 }}
       annotations:
-        {{- .Values.tags.annotations | toYaml | nindent 8 }}
+        {{- .Values.insightsController.annotations | toYaml | nindent 8 }}
 {{- end }}

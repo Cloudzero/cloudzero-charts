@@ -173,17 +173,17 @@ Insights Controller
 {{/*
 Create common matchLabels for webhook server
 */}}
-{{- define "cloudzero-agent.tags.common.matchLabels" -}}
+{{- define "cloudzero-agent.insightsController.common.matchLabels" -}}
 app.kubernetes.io/name: {{ include "cloudzero-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
-{{- define "cloudzero-agent.tags.server.matchLabels" -}}
-app.kubernetes.io/component: {{ .Values.tags.server.name }}
+{{- define "cloudzero-agent.insightsController.server.matchLabels" -}}
+app.kubernetes.io/component: {{ .Values.insightsController.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
-{{- define "cloudzero-agent.tags.initJob.matchLabels" -}}
+{{- define "cloudzero-agent.insightsController.initJob.matchLabels" -}}
 app.kubernetes.io/component: {{ include "cloudzero-agent.initJobName" . }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
@@ -194,12 +194,12 @@ Service selector labels
 */}}
 {{- define "cloudzero-agent.selectorLabels" -}}
 {{ include "cloudzero-agent.common.matchLabels" . }}
-{{ include "cloudzero-agent.tags.server.matchLabels" . }}
+{{ include "cloudzero-agent.insightsController.server.matchLabels" . }}
 {{- end }}
 
 
-{{- define "cloudzero-agent.tags.labels" -}}
-{{ include "cloudzero-agent.tags.server.matchLabels" . }}
+{{- define "cloudzero-agent.insightsController.labels" -}}
+{{ include "cloudzero-agent.insightsController.server.matchLabels" . }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
 
@@ -208,15 +208,15 @@ Service selector labels
 Create a fully qualified webhook server name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "cloudzero-agent.tags.server.webhookFullname" -}}
+{{- define "cloudzero-agent.insightsController.server.webhookFullname" -}}
 {{- if .Values.server.fullnameOverride -}}
 {{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}-webhook
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Release.Name .Values.insightsController.server.name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.insightsController.server.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -226,47 +226,47 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Name for the webhook server service
 */}}
 {{- define "cloudzero-agent.serviceName" -}}
-{{- printf "%s-svc" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- printf "%s-svc" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 {{/*
 Name for the validating webhook configuration resource
 */}}
 {{- define "cloudzero-agent.validatingWebhookConfigName" -}}
-{{- printf "%s-webhook" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- printf "%s-webhook" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 {{/*
 Name for the certificate secret
 */}}
 {{- define "cloudzero-agent.tlsSecretName" -}}
-{{- printf "%s-tls" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 
 {{ define "cloudzero-agent.webhookConfigMapName" -}}
-{{ .Values.tags.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
+{{ .Values.insightsController.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
 {{- end}}
 
 {{/*
 Mount path for the insights server configuration file
 */}}
-{{- define "cloudzero-agent.tags.configurationMountPath" -}}
-{{- default .Values.tags.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
+{{- define "cloudzero-agent.insightsController.configurationMountPath" -}}
+{{- default .Values.insightsController.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
 {{- end }}
 
 {{/*
 Name for the issuer resource
 */}}
 {{- define "cloudzero-agent.issuerName" -}}
-{{- printf "%s-issuer" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- printf "%s-issuer" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 {{/*
 Name for the job resource
 */}}
 {{- define "cloudzero-agent.initJobName" -}}
-{{- printf "%s-init" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- printf "%s-init" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 
@@ -286,5 +286,5 @@ cert-manager.io/inject-ca-from: {{ .Values.webhook.caInjection | default (printf
 Name for the certificate resource
 */}}
 {{- define "cloudzero-agent.certificateName" -}}
-{{- printf "%s-certificate" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- printf "%s-certificate" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}

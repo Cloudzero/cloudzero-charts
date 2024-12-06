@@ -40,9 +40,9 @@ helm repo update
 2. Ensure that required CRDs are installed for certifiacte management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](https://github.com/Cloudzero/cloudzero-charts/tree/develop/charts/cloudzero-insights-controller#deployment-configurations-and-certificate-management) section in the `cloudzero-insights-controller` subchart.
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set tags.webhook.issuer.enabled=false \
-    --set tags.webhook.certificate.enabled=false \
-    --set tags.cert-manager.installCRDs=true
+    --set insightsController.webhook.issuer.enabled=false \
+    --set insightsController.webhook.certificate.enabled=false \
+    --set insightsController.cert-manager.installCRDs=true
 ```
 
 3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:

@@ -1,4 +1,4 @@
-{{ if .Values.tags.webhooks.issuer.enabled }}
+{{ if .Values.insightsController.webhooks.issuer.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -6,5 +6,5 @@ metadata:
   name: {{ include "cloudzero-agent.issuerName" . }}
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- toYaml .Values.tags.webhooks.issuer.spec | nindent 2 }}
+  {{- toYaml .Values.insightsController.webhooks.issuer.spec | nindent 2 }}
 {{- end }}
