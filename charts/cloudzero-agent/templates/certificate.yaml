@@ -1,19 +1,19 @@
-{{ if .Values.webhook.certificate.enabled }}
+{{ if .Values.tags.webhooks.certificate.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "insights-controller.certificateName" . }}
+  name: {{ include "cloudzero-agent.certificateName" . }}
   namespace: {{ .Release.Namespace }}
 spec:
-  secretName: {{ include "insights-controller.tlsSecretName" .}}
+  secretName: {{ include "cloudzero-agent.tlsSecretName" .}}
   secretTemplate:
     {{- with .Values.secretAnnotations }}
     annotations:
     {{- toYaml . | nindent 4 }}
     {{- end }}
     labels:
-      {{- include "insights-controller.labels" . | nindent 6 }}
+      {{- include "cloudzero-agent.tags.labels" . | nindent 6 }}
   privateKey:
     algorithm: RSA
     encoding: PKCS1
@@ -21,8 +21,8 @@ spec:
   duration: 2160h # 90d
   renewBefore: 360h # 15d
   dnsNames:
-    - {{ include "insights-controller.serviceName" . }}.{{ .Release.Namespace }}.svc
+    - {{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc
   issuerRef:
-    name: {{ include "insights-controller.issuerName" . }}
+    name: {{ include "cloudzero-agent.issuerName" . }}
     kind: Issuer
 {{ end }}

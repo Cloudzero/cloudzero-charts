@@ -255,3 +255,23 @@ Name for the job resource
 {{- define "cloudzero-agent.initJobName" -}}
 {{- printf "%s-init" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
 {{- end }}
+
+
+{{/*
+Annotations for the webhooks
+*/}}
+{{- define "cloudzero-agent.webhooks.annotations" -}}
+{{- if .Values.webhooks.annotations }}
+{{ toYaml .Values.webhook.annotations }}
+{{- end }}
+{{- if and .Values.webhook.certificate.enabled .Values.webhook.issuer.enabled }}
+cert-manager.io/inject-ca-from: {{ .Values.webhook.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
+{{- end }}
+{{- end }}
+
+{{/*
+Name for the certificate resource
+*/}}
+{{- define "cloudzero-agent.certificateName" -}}
+{{- printf "%s-certificate" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}

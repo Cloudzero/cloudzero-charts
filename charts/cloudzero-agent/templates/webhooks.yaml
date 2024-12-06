@@ -9,7 +9,7 @@ metadata:
     {{- include "cloudzero-agent.tags.labels" $ | nindent 4 }}
   {{- if .annotations}}
   annotations:
-    {{- toYaml .annotations | nindent 4 }}
+    {{- include "cloudzero-agent.webhooks.annotations" $ | nindent 4 }}
   {{- end }}
 webhooks:
   - name: {{ include "cloudzero-agent.validatingWebhookName" $ }}
