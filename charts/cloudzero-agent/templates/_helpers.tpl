@@ -234,7 +234,7 @@ Mount path for the insights server configuration file
 {{- default .Values.tags.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
 {{- end }}
 
-{{- define "cloudzero-agent.tags.server.labels" -}}
+{{- define "cloudzero-agent.tags.labels" -}}
 {{ include "cloudzero-agent.tags.server.matchLabels" . }}
 app.kubernetes.io/name: {{ include "cloudzero-agent.tags.server.webhookFullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}

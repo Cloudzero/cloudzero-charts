@@ -123,9 +123,12 @@ tags:
         path: /validate/daemonset
         apiGroups: [ "apps" ]
 
-
-
-
+initJob:
+  enabled: true
+  image:
+    repository: curlimages/curl
+    pullPolicy: Always
+    tag: "8.10.1"
 
 kubeStateMetrics:
   enabled: true

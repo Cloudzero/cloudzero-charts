@@ -6,7 +6,7 @@ metadata:
   name: {{ include "cloudzero-agent.validatingWebhookConfigName" $ }}-{{ $configType }}
   namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "cloudzero-agent.tags.server.labels" $ | nindent 4 }}
+    {{- include "cloudzero-agent.tags.labels" $ | nindent 4 }}
   {{- if .annotations}}
   annotations:
     {{- toYaml .annotations | nindent 4 }}

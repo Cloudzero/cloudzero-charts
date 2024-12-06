@@ -2,18 +2,18 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "insights-controller.initJobName" . }}
+  name: {{ include "cloudzero-agent.initJobName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "insights-controller.labels" . | nindent 4 }}
+    {{- include "cloudzero-agent.tags.labels" . | nindent 4 }}
 spec:
   template:
     metadata:
-      name: {{ include "insights-controller.initJobName" . }}
+      name: {{ include "cloudzero-agent.initJobName" . }}
       labels:
-        {{- include "insights-controller.labels" . | nindent 8 }}
+        {{- include "cloudzero-agent.tags.labels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "insights-controller.serviceAccountName" . }}
+      serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: Never
       containers:
         - name: start-scrape
@@ -23,9 +23,9 @@ spec:
             - |
               while true; do
                 echo "Waiting for the tags server to be ready...";
-                if curl -s -o /dev/null -w "%{http_code}" -k https://{{ include "insights-controller.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.service.port }}/healthz | grep -q 200; then
+                if curl -s -o /dev/null -w "%{http_code}" -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.tags.service.port }}/healthz | grep -q 200; then
                   echo "Server is ready, starting scrape job...";
-                  curl -X POST -k https://{{ include "insights-controller.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.service.port }}/scrape;
+                  curl -X POST -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.tags.service.port }}/scrape;
                   echo "Scrape process started.";
                   break;
                 fi;
