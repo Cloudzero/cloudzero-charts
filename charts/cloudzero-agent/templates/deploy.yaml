@@ -41,7 +41,7 @@ spec:
           volumeMounts:
           {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
-              mountPath: {{ .Values.server.containerSecretFilePath }}
+              mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
               subPath: ""
               readOnly: true
           {{- end }}
@@ -134,7 +134,7 @@ spec:
               mountPath: /check/app/config/
           {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
-              mountPath: {{ .Values.server.containerSecretFilePath }}
+              mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
               subPath: ""
               readOnly: true
           {{- end }}

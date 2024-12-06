@@ -7,11 +7,10 @@ clusterName: null
 # -- Region the cluster is running in.
 region: null
 
-global:
-  # -- CloudZero API key. Required if useExistingSecret is false.
-  apiKey: null
-  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
-  existingSecretName: null
+# -- CloudZero API key. Required if useExistingSecret is false.
+apiKey: null
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+existingSecretName: null
 
 # -- The following lists of metrics are required for CloudZero to function.
 # -- Modifications made to these lists may cause issues with the processing of cluster data
@@ -123,6 +122,13 @@ tags:
         path: /validate/daemonset
         apiGroups: [ "apps" ]
 
+# General server settings that apply to both the prometheus agent server and the webhook server
+serverConfig:
+  # -- The agent will use this file path on the container filesystem to get the CZ API key.
+  containerSecretFilePath: /etc/config/secrets/
+  # -- The agent will look for a file with this name to get the CZ API key.
+  containerSecretFileName: value
+
 initJob:
   enabled: true
   image:
@@ -182,10 +188,6 @@ server:
   - --web.console.libraries=/etc/prometheus/console_libraries
   - --web.console.templates=/etc/prometheus/consoles
   - --enable-feature=agent
-  # -- The agent will use this file path on the container filesystem to get the CZ API key.
-  containerSecretFilePath: /etc/config/prometheus/secrets/
-  # -- The agent will look for a file with this name to get the CZ API key.
-  containerSecretFileName: value
   persistentVolume:
     existingClaim: ""
     enabled: false

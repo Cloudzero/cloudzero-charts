@@ -14,12 +14,12 @@ Create chart name and version as used by the chart label.
 
 {{/* Define the secret name which holds the CloudZero API key */}}
 {{ define "cloudzero-agent.secretName" -}}
-{{ .Values.global.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
+{{ .Values.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end}}
 
 {{/* Define the path and filename on the container filesystem which holds the CloudZero API key */}}
 {{ define "cloudzero-agent.secretFileFullPath" -}}
-{{ printf "%s%s" .Values.server.containerSecretFilePath .Values.server.containerSecretFileName }}
+{{ printf "%s%s" .Values.serverConfig.containerSecretFilePath .Values.serverConfig.containerSecretFileName }}
 {{- end}}
 
 {{/*
@@ -170,10 +170,39 @@ Insights Controller
 
 */}}
 
+{{/*
+Create common matchLabels for webhook server
+*/}}
+{{- define "cloudzero-agent.tags.common.matchLabels" -}}
+app.kubernetes.io/name: {{ include "cloudzero-agent.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
 {{- define "cloudzero-agent.tags.server.matchLabels" -}}
 app.kubernetes.io/component: {{ .Values.tags.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
+
+{{- define "cloudzero-agent.tags.initJob.matchLabels" -}}
+app.kubernetes.io/component: {{ include "cloudzero-agent.initJobName" . }}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{- end -}}
+
+
+{{/*
+Service selector labels
+*/}}
+{{- define "cloudzero-agent.selectorLabels" -}}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{ include "cloudzero-agent.tags.server.matchLabels" . }}
+{{- end }}
+
+
+{{- define "cloudzero-agent.tags.labels" -}}
+{{ include "cloudzero-agent.tags.server.matchLabels" . }}
+{{ include "cloudzero-agent.common.metaLabels" . }}
+{{- end -}}
+
 
 {{/*
 Create a fully qualified webhook server name.
@@ -201,14 +230,6 @@ Name for the webhook server service
 {{- end }}
 
 {{/*
-Service selector labels
-*/}}
-{{- define "cloudzero-agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "cloudzero-agent.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
 Name for the validating webhook configuration resource
 */}}
 {{- define "cloudzero-agent.validatingWebhookConfigName" -}}
@@ -233,14 +254,6 @@ Mount path for the insights server configuration file
 {{- define "cloudzero-agent.tags.configurationMountPath" -}}
 {{- default .Values.tags.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
 {{- end }}
-
-{{- define "cloudzero-agent.tags.labels" -}}
-{{ include "cloudzero-agent.tags.server.matchLabels" . }}
-app.kubernetes.io/name: {{ include "cloudzero-agent.tags.server.webhookFullname" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{ include "cloudzero-agent.common.metaLabels" . }}
-{{- end -}}
-
 
 {{/*
 Name for the issuer resource

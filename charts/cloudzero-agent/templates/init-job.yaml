@@ -11,7 +11,7 @@ spec:
     metadata:
       name: {{ include "cloudzero-agent.initJobName" . }}
       labels:
-        {{- include "cloudzero-agent.tags.labels" . | nindent 8 }}
+        {{- include "cloudzero-agent.tags.initJob.matchLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: Never

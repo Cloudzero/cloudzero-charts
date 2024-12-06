@@ -31,11 +31,12 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      securityContext:
-        runAsUser: 65534
-        runAsNonRoot: true
-        runAsGroup: 65534
-        fsGroup: 65534
+      securityContext: #FIXME
+        runAsUser: 0
+        allowPrivilegeEscalation: true
+        # runAsNonRoot: false
+        # runAsGroup: 65534
+        # fsGroup: 65534
       containers:
         - name: webhook-server
           image: "{{ .Values.tags.server.image.repository }}:{{ .Values.tags.server.image.tag | default .Chart.AppVersion }}"
@@ -60,7 +61,7 @@ spec:
             {{- end }}
           {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
-              mountPath: {{ default .Values.tags.server.containerSecretFilePath .Values.tags.server.containerSecretFilePath }}
+              mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
               subPath: ""
               readOnly: true
           {{- end }}

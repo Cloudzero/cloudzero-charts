@@ -177,17 +177,17 @@ data:
       retention_time: 24h
       cleanup_interval: 3h
       batch_update_size: 500
+    api_key_path: {{ include "cloudzero-agent.secretFileFullPath" . }}
     {{- with .Values.tags.server }}
     certificate:
       key: {{ .tls.mountPath }}/tls.key
       cert: {{ .tls.mountPath }}/tls.crt
-    {{- end }}
-    api_key_path: {{ .containerSecretFilePath }}/{{ .containerSecretFileName }}
     server:
       port: {{ .port }}
       read_timeout: {{ .read_timeout }}
       write_timeout: {{ .write_timeout }}
       idle_timeout: {{ .idle_timeout }}
+    {{- end }}
     filters:
       labels:
         {{- .Values.tags.labels | toYaml | nindent 8 }}
