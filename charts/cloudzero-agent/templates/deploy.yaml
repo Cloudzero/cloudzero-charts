@@ -174,9 +174,6 @@ spec:
             name: {{ template "cloudzero-agent.validatorConfigMapName" . }}
         - name: lifecycle-volume
           emptyDir: {}
-        {{- if or .Values.existingSecretName .Values.apiKey}}
-        {{- fail "The `existingSecretName` or `apiKey` setting should be set as `globals.existingSecretName` or `globals.apiKey`, not at the top level." }}
-        {{- end }}
         {{- if or .Values.existingSecretName .Values.apiKey }}
         - name: cloudzero-api-key
           secret:

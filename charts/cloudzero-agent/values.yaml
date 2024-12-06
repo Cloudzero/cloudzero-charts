@@ -76,8 +76,8 @@ tags:
     read_timeout: 10s
     write_timeout: 10s
     idle_timeout: 120s
-    volumeMounts: []
-    volumes: []
+  volumeMounts: []
+  volumes: []
   resources: {}
   nodeSelector: {}
   tolerations: []
