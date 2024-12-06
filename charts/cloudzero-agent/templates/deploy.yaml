@@ -29,7 +29,7 @@ spec:
 {{- if .Values.server.priorityClassName }}
       priorityClassName: "{{ .Values.server.priorityClassName }}"
 {{- end }}
-      serviceAccountName: {{ template "cloudzero-agent.serviceAccountName.server" . }}
+      serviceAccountName: {{ template "cloudzero-agent.serviceAccountName" . }}
       initContainers:
         - name: {{ .Values.validator.name }}
           image: "{{ .Values.validator.image.repository }}:{{ .Values.validator.image.tag }}"
@@ -132,7 +132,7 @@ spec:
               mountPath: /check/
             - name: validator-config-volume
               mountPath: /check/app/config/
-          {{- if or .Values.global.existingSecretName .Values.global.apiKey }}
+          {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
               mountPath: {{ .Values.server.containerSecretFilePath }}
               subPath: ""
@@ -177,7 +177,7 @@ spec:
         {{- if or .Values.existingSecretName .Values.apiKey}}
         {{- fail "The `existingSecretName` or `apiKey` setting should be set as `globals.existingSecretName` or `globals.apiKey`, not at the top level." }}
         {{- end }}
-        {{- if or .Values.global.existingSecretName .Values.global.apiKey }}
+        {{- if or .Values.existingSecretName .Values.apiKey }}
         - name: cloudzero-api-key
           secret:
             secretName: {{ include "cloudzero-agent.secretName" . }}

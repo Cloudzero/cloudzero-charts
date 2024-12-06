@@ -2,8 +2,5 @@ dependencies:
 - name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
   version: 5.15.3
-- name: cloudzero-insights-controller
-  repository: https://cloudzero.github.io/cloudzero-charts/beta
-  version: 1.0.1-beta
-digest: sha256:3518ffb88382f3e613cc9b21aac6dc474d634b316aa69cfe7f4e85474844e54b
-generated: "2024-11-21T00:05:12.882895449Z"
+digest: sha256:eb6b05c226ee0bd8f052108e96efad345fad4deb7f0ec8e60d3de07db965aba0
+generated: "2024-12-06T08:20:50.444292-05:00"

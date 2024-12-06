@@ -135,6 +135,20 @@ data:
           send: false
 {{- if .Values.tags.enabled }}
 ---
+{{- with .Values.tags }}
+{{- if not (and .labels.enabled .labels.patterns) }}
+{{- $msg := "\n\nThe required field(s) 'tags.labels.enabled' and/or 'tags.labels.patterns' is not set! See the README.md for more information." }}
+{{- $enabledMsg:=""}}
+{{- $patternMsg:=""}}
+{{- if not .labels.enabled  }}
+{{- $enabledMsg = "Ensure that 'tags.labels.enabled' is a boolean (true or false). Set 'true' to enable exporting labels."}}
+{{- end }}
+{{- if not .labels.patterns }}
+{{- $patternMsg = "The required field 'labels.patterns' is not set or set incorrectly. It must be an array of regular expressions that match label keys to be exported."}}
+{{- end }}
+{{- fail (printf "\n %s \n %s \n %s" $msg $enabledMsg $patternMsg) }}
+{{- end }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -147,9 +161,36 @@ metadata:
   {{- toYaml . | nindent 4 }}
   {{- end }}
 data:
-  cloudzero-config.yaml: |-
+  server-config.yaml: |-
     cloud_account_id: {{ .Values.cloudAccountId }}
     region: {{ .Values.region }}
     cluster_name: {{ .Values.clusterName }}
     host: {{ .Values.host }}
+    remote_write:
+      send_interval: 1m
+      max_bytes_per_send: 500000
+      send_timeout: 10s
+      max_retries: 3
+    k8s_client:
+      timeout: 30s
+    database:
+      retention_time: 24h
+      cleanup_interval: 3h
+      batch_update_size: 500
+    {{- with .Values.tags.server }}
+    certificate:
+      key: {{ .tls.mountPath }}/tls.key
+      cert: {{ .tls.mountPath }}/tls.crt
+    {{- end }}
+    api_key_path: {{ .containerSecretFilePath }}/{{ .containerSecretFileName }}
+    server:
+      port: {{ .port }}
+      read_timeout: {{ .read_timeout }}
+      write_timeout: {{ .write_timeout }}
+      idle_timeout: {{ .idle_timeout }}
+    filters:
+      labels:
+        {{- .Values.tags.labels | toYaml | nindent 8 }}
+      annotations:
+        {{- .Values.tags.annotations | toYaml | nindent 8 }}
 {{- end }}

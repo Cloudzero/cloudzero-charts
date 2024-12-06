@@ -22,6 +22,13 @@ Create chart name and version as used by the chart label.
 {{ printf "%s%s" .Values.server.containerSecretFilePath .Values.server.containerSecretFileName }}
 {{- end}}
 
+{{/*
+Name for the certificate secret
+*/}}
+{{- define "cloudzero-agent.tlsSecretName" -}}
+{{- printf "%s-tls" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}
+
 {{ define "cloudzero-agent.configMapName" -}}
 {{ .Values.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
 {{- end}}
@@ -29,6 +36,13 @@ Create chart name and version as used by the chart label.
 {{ define "cloudzero-agent.cloudzeroConfigMapName" -}}
 {{ .Values.cloudzeroConfigMapNameOverride | default (printf "%s-cloudzero-configuration" .Release.Name) }}
 {{- end}}
+
+{{/*
+Mount path for the insights server configuration file
+*/}}
+{{- define "cloudzero-agent.tags.configurationMountPath" -}}
+{{- default .Values.tags.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
+{{- end }}
 
 {{ define "cloudzero-agent.validatorConfigMapName" -}}
 {{- printf "%s-validator-configuration" .Release.Name -}}
@@ -57,6 +71,12 @@ app.kubernetes.io/component: {{ .Values.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
+{{- define "cloudzero-agent.tags.server.matchLabels" -}}
+app.kubernetes.io/component: {{ .Values.tags.server.name }}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{- end -}}
+
+
 {{/*
 Create unified labels for prometheus components
 */}}
@@ -75,6 +95,11 @@ app.kubernetes.io/part-of: {{ include "cloudzero-agent.name" . }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
 
+{{- define "cloudzero-agent.tags.server.labels" -}}
+{{ include "cloudzero-agent.tags.server.matchLabels" . }}
+{{ include "cloudzero-agent.common.metaLabels" . }}
+{{- end -}}
+
 
 {{/*
 Define the cloudzero-agent.namespace template if set with forceNamespace or .Release.Namespace is set
@@ -86,11 +111,11 @@ Define the cloudzero-agent.namespace template if set with forceNamespace or .Rel
 {{/*
 Create the name of the service account to use for the server component
 */}}
-{{- define "cloudzero-agent.serviceAccountName.server" -}}
-{{- if .Values.serviceAccounts.server.create -}}
-    {{ default (include "cloudzero-agent.server.fullname" .) .Values.serviceAccounts.server.name }}
+{{- define "cloudzero-agent.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "cloudzero-agent.server.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.serviceAccounts.server.name }}
+    {{ default "default" .Values.server.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
 
@@ -107,6 +132,24 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" .Release.Name .Values.server.name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s-%s-%s" .Release.Name $name "server" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Create a fully qualified webhook server name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "cloudzero-agent.tags.server.webhookFullname" -}}
+{{- if .Values.server.fullnameOverride -}}
+{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}-webhook
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}

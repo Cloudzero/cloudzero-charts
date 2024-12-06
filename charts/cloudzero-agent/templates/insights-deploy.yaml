@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+{{- if .Values.tags.server.deploymentAnnotations }}
+  annotations:
+    {{- toYaml .Values.tags.server.deploymentAnnotations | nindent 4 }}
+{{- end }}
+  name: {{ include "cloudzero-agent.tags.server.webhookFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cloudzero-agent.tags.server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.tags.server.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cloudzero-agent.tags.server.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tags.server.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "cloudzero-agent.tags.server.labels" . | nindent 8 }}
+        {{- with .Values.tags.server.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
+      {{- with .Values.tags.server.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsUser: 65534
+        runAsNonRoot: true
+        runAsGroup: 65534
+        fsGroup: 65534
+      containers:
+        - name: webhook-server
+          image: "{{ .Values.tags.server.image.repository }}:{{ .Values.tags.server.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.tags.server.image.pullPolicy }}
+          command:
+            - /app/controller
+          args:
+            - -config
+            - "{{ include "cloudzero-agent.tags.configurationMountPath" . }}/server-config.yaml"
+          ports:
+            - containerPort: 8443
+          resources:
+            {{- toYaml .Values.tags.server.resources | nindent 12 }}
+          {{- if or .Values.tags.server.volumeMounts .Values.tags.server.tls.useManagedSecret }}
+          volumeMounts:
+            - name: insights-server-config
+              mountPath: {{ include "cloudzero-agent.tags.configurationMountPath" . }}
+            {{- if .Values.tags.server.tls.useManagedCertificate }}
+            - name: tls-certs
+              mountPath: {{ .Values.tags.server.tls.mountPath }}
+              readOnly: true
+            {{- end }}
+          {{- if or .Values.existingSecretName .Values.apiKey }}
+            - name: cloudzero-api-key
+              mountPath: {{ default .Values.tags.server.containerSecretFilePath .Values.tags.server.containerSecretFilePath }}
+              subPath: ""
+              readOnly: true
+          {{- end }}
+            {{- with .Values.tags.server.volumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.tags.server.volumes .Values.tags.server.tls.useManagedCertificate }}
+      volumes:
+        - name: insights-server-config
+          configMap:
+            name: {{ include "cloudzero-agent.configMapName" . }}
+        {{- if .Values.tags.server.tls.useManagedCertificate }}
+        - name: tls-certs
+          secret:
+            secretName: {{ include "cloudzero-agent.tlsSecretName" . }}
+        {{- end }}
+        {{- if or .Values.existingSecretName .Values.apiKey }}
+        - name: cloudzero-api-key
+          secret:
+            secretName: {{ include "cloudzero-agent.secretName" . }}
+        {{- end }}
+        {{- with .Values.tags.server.volumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.tags.server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tags.server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tags.server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
