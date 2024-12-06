@@ -48,7 +48,7 @@ prometheusConfig:
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
-# webhook
+# todo change to insightsWebhook
 tags:
   enabled: true
   labels:
@@ -85,6 +85,45 @@ tags:
   imagePullSecrets: []
   podAnnotations: {}
   podLabels: {}
+  service:
+    port: 443
+  webhooks:
+    annotations: {}
+    namespaceSelector: {} # This denotes no specific selection, applies to all namespaces
+    issuer:
+      enabled: true
+      spec:
+        selfSigned: {}
+    certificate:
+      enabled: true
+    caBundle: '' # by default, this is empty, and the value is populated by cert-manager's ca-injector if cert-manager is used
+    configurations:
+      pods:
+        path: /validate/pod
+        apiGroups: [ '""' ]
+      namespaces:
+        path: /validate/namespace
+        apiGroups: [ '""' ]
+      deployments:
+        path: /validate/deployment
+        apiGroups: [ "apps" ]
+      statefulsets:
+        path: /validate/statefulset
+        apiGroups: [ "apps" ]
+      nodes:
+        path: /validate/node
+        apiGroups: [ '""' ]
+      jobs:
+        path: /validate/job
+        apiGroups: [ "batch" ]
+      cronjobs:
+        path: /validate/cronjob
+        apiGroups: [ "batch" ]
+      daemonsets:
+        path: /validate/daemonset
+        apiGroups: [ "apps" ]
+
+
 
 
 

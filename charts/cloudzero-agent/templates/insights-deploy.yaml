@@ -49,10 +49,10 @@ spec:
             - containerPort: 8443
           resources:
             {{- toYaml .Values.tags.resources | nindent 12 }}
-          {{- if or .Values.tags.volumeMounts .Values.tags.server.tls.useManagedSecret }}
           volumeMounts:
             - name: insights-server-config
               mountPath: {{ include "cloudzero-agent.tags.configurationMountPath" . }}
+          {{- if or .Values.tags.volumeMounts .Values.tags.server.tls.useManagedCertificate }}
             {{- if .Values.tags.server.tls.useManagedCertificate }}
             - name: tls-certs
               mountPath: {{ .Values.tags.server.tls.mountPath }}
@@ -72,7 +72,7 @@ spec:
       volumes:
         - name: insights-server-config
           configMap:
-            name: {{ include "cloudzero-agent.configMapName" . }}
+            name: {{ include "cloudzero-agent.webhookConfigMapName" . }}
         {{- if .Values.tags.server.tls.useManagedCertificate }}
         - name: tls-certs
           secret:

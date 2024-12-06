@@ -154,7 +154,7 @@ kind: ConfigMap
 metadata:
   labels:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
-  name: {{ include "cloudzero-agent.cloudzeroConfigMapName" . }}
+  name: {{ include "cloudzero-agent.webhookConfigMapName" . }}
   namespace: {{ include "cloudzero-agent.namespace" . }}
   {{- with .Values.prometheusConfig.configMapAnnotations }}
   annotations:

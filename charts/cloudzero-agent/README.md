@@ -104,8 +104,8 @@ There are several mandatory values that must be specified for the chart to insta
 | cloudAccountId    | string | `nil`                 | Account ID in AWS or Subscription ID in Azure or Project Number in GCP where the cluster is running. Must be a string due to Helm limitations.  |
 | clusterName       | string | `nil`                 | Name of the cluster. Must be RFC 1123 compliant.                                                                         |
 | host              | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                                      |
-| global.apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
-| global.existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
+| apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
+| existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
 | tags.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
 | tags.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |

@@ -39,7 +39,7 @@ spec:
             - -c
             - cp -r /app /checks/bin/ && cloudzero-agent-validator d pre-start -f /checks/config/validator.yml
           volumeMounts:
-          {{- if or .Values.global.existingSecretName .Values.global.apiKey }}
+          {{- if or .Values.existingSecretName .Values.apiKey }}
             - name: cloudzero-api-key
               mountPath: {{ .Values.server.containerSecretFilePath }}
               subPath: ""

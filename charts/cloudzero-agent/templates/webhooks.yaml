@@ -1,0 +1,36 @@
+{{- range $configType, $configs := .Values.tags.webhook.configurations }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "cloudzero-agent.validatingWebhookConfigName" $ }}-{{ $configType }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "cloudzero-agent.tags.server.labels" $ | nindent 4 }}
+  {{- if .annotations}}
+  annotations:
+    {{- toYaml .annotations | nindent 4 }}
+  {{- end }}
+webhooks:
+  - name: {{ include "cloudzero-agent.validatingWebhookName" $ }}
+    namespaceSelector: {{ toYaml $.Values.tags.webhooks.namespaceSelector }}
+    failurePolicy: Ignore
+    rules:
+      - operations: [ "CREATE", "UPDATE" ]
+        apiGroups: {{ $configs.apiGroups }}
+        apiVersions: [ "v1" ]
+        resources: [ {{ $configType }} ]
+        scope: "*"
+    clientConfig:
+      service:
+        namespace: {{ $.Release.Namespace }}
+        name: {{ include "cloudzero-agent.serviceName" $ }}
+        path: "{{ $configs.path }}"
+        port: {{ $.Values.tags.service.port }}
+      {{- if and $.Values.tags.webhooks.certificate.enabled $.Values.tags.webhooks.issuer.enabled }}
+      caBundle: {{ $.Values.tags.webhooks.caBundle }}
+      {{- end }}
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    timeoutSeconds: 5
+{{- end }}

@@ -23,26 +23,15 @@ Create chart name and version as used by the chart label.
 {{- end}}
 
 {{/*
-Name for the certificate secret
+Name for the validating webhook
 */}}
-{{- define "cloudzero-agent.tlsSecretName" -}}
-{{- printf "%s-tls" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- define "cloudzero-agent.validatingWebhookName" -}}
+{{- printf "%s.%s.svc" (include "cloudzero-agent.validatingWebhookConfigName" .) .Release.Namespace }}
 {{- end }}
 
 {{ define "cloudzero-agent.configMapName" -}}
 {{ .Values.configMapNameOverride | default (printf "%s-configuration" .Release.Name) }}
 {{- end}}
-
-{{ define "cloudzero-agent.cloudzeroConfigMapName" -}}
-{{ .Values.cloudzeroConfigMapNameOverride | default (printf "%s-cloudzero-configuration" .Release.Name) }}
-{{- end}}
-
-{{/*
-Mount path for the insights server configuration file
-*/}}
-{{- define "cloudzero-agent.tags.configurationMountPath" -}}
-{{- default .Values.tags.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
-{{- end }}
 
 {{ define "cloudzero-agent.validatorConfigMapName" -}}
 {{- printf "%s-validator-configuration" .Release.Name -}}
@@ -71,10 +60,7 @@ app.kubernetes.io/component: {{ .Values.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
-{{- define "cloudzero-agent.tags.server.matchLabels" -}}
-app.kubernetes.io/component: {{ .Values.tags.server.name }}
-{{ include "cloudzero-agent.common.matchLabels" . }}
-{{- end -}}
+
 
 
 {{/*
@@ -92,11 +78,6 @@ app.kubernetes.io/part-of: {{ include "cloudzero-agent.name" . }}
 
 {{- define "cloudzero-agent.server.labels" -}}
 {{ include "cloudzero-agent.server.matchLabels" . }}
-{{ include "cloudzero-agent.common.metaLabels" . }}
-{{- end -}}
-
-{{- define "cloudzero-agent.tags.server.labels" -}}
-{{ include "cloudzero-agent.tags.server.matchLabels" . }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
 
@@ -137,22 +118,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 
-{{/*
-Create a fully qualified webhook server name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-*/}}
-{{- define "cloudzero-agent.tags.server.webhookFullname" -}}
-{{- if .Values.server.fullnameOverride -}}
-{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}-webhook
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
+
 
 {{/*
 Return the appropriate apiVersion for rbac.
@@ -195,4 +161,82 @@ Required metric labels
 {{- $total := concat .Values.additionalMetricLabels $requiredCZMetricLabels $requiredSpecialMetricLabels -}}
 {{- $result := join "|" $total -}}
 {{- $result -}}
+{{- end -}}
+
+
+
+{{/*
+Insights Controller
+
+*/}}
+
+{{- define "cloudzero-agent.tags.server.matchLabels" -}}
+app.kubernetes.io/component: {{ .Values.tags.server.name }}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{- end -}}
+
+{{/*
+Create a fully qualified webhook server name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "cloudzero-agent.tags.server.webhookFullname" -}}
+{{- if .Values.server.fullnameOverride -}}
+{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}-webhook
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- printf "%s-%s" .Release.Name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s-%s" .Release.Name $name .Values.tags.server.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Name for the webhook server service
+*/}}
+{{- define "cloudzero-agent.serviceName" -}}
+{{- printf "%s-svc" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}
+
+{{/*
+Service selector labels
+*/}}
+{{- define "cloudzero-agent.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "cloudzero-agent.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Name for the validating webhook configuration resource
+*/}}
+{{- define "cloudzero-agent.validatingWebhookConfigName" -}}
+{{- printf "%s-webhook" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}
+
+{{/*
+Name for the certificate secret
+*/}}
+{{- define "cloudzero-agent.tlsSecretName" -}}
+{{- printf "%s-tls" (include "cloudzero-agent.tags.server.webhookFullname" .) }}
+{{- end }}
+
+
+{{ define "cloudzero-agent.webhookConfigMapName" -}}
+{{ .Values.tags.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
+{{- end}}
+
+{{/*
+Mount path for the insights server configuration file
+*/}}
+{{- define "cloudzero-agent.tags.configurationMountPath" -}}
+{{- default .Values.tags.configurationMountPath (printf "/etc/%s-insights" .Chart.Name)  }}
+{{- end }}
+
+{{- define "cloudzero-agent.tags.server.labels" -}}
+{{ include "cloudzero-agent.tags.server.matchLabels" . }}
+app.kubernetes.io/name: {{ include "cloudzero-agent.tags.server.webhookFullname" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
