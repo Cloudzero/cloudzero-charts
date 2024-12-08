@@ -58,21 +58,7 @@ Create the name of the secret to use
 {{- end }}
 
 {{/*
-Create the name of the service account to use
-*/}}
-{{- define "cloudzero-certificate.serviceAccountName" -}}
-{{- default (include "cloudzero-certificate.fullname" .) .Values.serviceAccount.name }}
-{{- end }}
-
-{{/*
-Create the name of the role to use
-*/}}
-{{- define "cloudzero-certificate.roleName" -}}
-{{- default (include "cloudzero-certificate.fullname" .) .Values.role.name }}
-{{- end }}
-
-{{/*
-Generate certificate for custom-metrics api server 
+Generate certificate for the webhook server
 */}}
 {{- define "cloudzero-certificate.genCerts" -}}
 {{- $releaseName := required "`cloudzeroAgentReleaseName` must be supplied. This value should be the name of the cloudzero-agent helm release that will be created" .Values.cloudzeroAgentReleaseName -}}
