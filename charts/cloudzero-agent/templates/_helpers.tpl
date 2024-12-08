@@ -227,7 +227,7 @@ Name for the validating webhook configuration resource
 Name for the certificate secret
 */}}
 {{- define "cloudzero-agent.tlsSecretName" -}}
-{{- printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) .Values.insightsController.server.tls.nameOverride }}
 {{- end }}
 
 

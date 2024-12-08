@@ -75,8 +75,8 @@ Create the name of the role to use
 Generate certificate for custom-metrics api server 
 */}}
 {{- define "cloudzero-certificate.genCerts" -}}
-{{- required "`cloudzeroAgentReleaseName` must be supplied. This value should be the name of the cloudzero-agent helm release that will be created" .Values.cloudzeroAgentReleaseName }}
-{{- $dnsName :=  printf "%s-svc" .Values.cloudzeroAgentReleaseName -}}
+{{- $releaseName := required "`cloudzeroAgentReleaseName` must be supplied. This value should be the name of the cloudzero-agent helm release that will be created" .Values.cloudzeroAgentReleaseName -}}
+{{- $dnsName :=  printf "%s-svc" $releaseName -}}
 {{- $ca := genCA "cloudzero-agent-ca" 365 -}}
 {{- $cert := genSignedCert $dnsName nil (list $dnsName) 9999999 $ca -}}
 ca.crt: {{ $cert.Cert | b64enc }}

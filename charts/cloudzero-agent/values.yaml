@@ -164,6 +164,7 @@ insightsController:
     tls:
       enabled: true
       useManagedCertificate: true
+      nameOverride: ""
       mountPath: /etc/certs
     port: 8443
     read_timeout: 10s
