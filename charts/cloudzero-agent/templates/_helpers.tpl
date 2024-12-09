@@ -30,6 +30,10 @@ Create chart name and version as used by the chart label.
 {{- printf "%s-validator-configuration" .Release.Name -}}
 {{- end}}
 
+{{ define "cloudzero-agent.inspectorName" -}}
+{{ .Values.inspectorName | default (printf "%s-inspector" .Release.Name) }}
+{{- end}}
+
 {{/*
   This helper function trims whitespace and newlines from a given string.
 */}}
