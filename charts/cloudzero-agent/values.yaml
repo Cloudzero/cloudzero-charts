@@ -132,10 +132,28 @@ insightsController:
     enabled:
     patterns:
       # - '.*'
+    resources:
+      pods: true
+      namespaces: true
+      deployments: false
+      statefulsets: false
+      nodes: false
+      jobs: false
+      cronjobs: false
+      daemonsets: false
   annotations:
     enabled: false
     patterns:
       - '.*'
+    resources:
+      pods: true
+      namespaces: true
+      deployments: false
+      statefulsets: false
+      nodes: false
+      jobs: false
+      cronjobs: false
+      daemonsets: false
   server:
     name: webhook-server
     replicaCount: 3

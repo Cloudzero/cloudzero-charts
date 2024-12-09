@@ -260,11 +260,11 @@ Name for the job resource
 Annotations for the webhooks
 */}}
 {{- define "cloudzero-agent.webhooks.annotations" -}}
-{{- if .Values.webhooks.annotations }}
-{{ toYaml .Values.webhook.annotations }}
+{{- if .Values.insightsController.webhooks.annotations }}
+{{ toYaml .Values.insightsController.webhook.annotations }}
 {{- end }}
-{{- if and .Values.webhook.certificate.enabled .Values.webhook.issuer.enabled }}
-cert-manager.io/inject-ca-from: {{ .Values.webhook.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
+{{- if and .Values.insightsController.webhooks.certificate.enabled .Values.insightsController.webhooks.issuer.enabled }}
+cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
 {{- end }}
 {{- end }}
 
