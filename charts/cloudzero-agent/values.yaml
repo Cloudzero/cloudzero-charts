@@ -164,41 +164,39 @@ insightsController:
     port: 443
   webhooks:
     annotations: {}
-    namespaceSelector: {} # This denotes no specific selection, applies to all namespaces
+    namespaceSelector: {}  # This denotes no specific selection, applies to all namespaces
     issuer:
       enabled: true
       spec:
         selfSigned: {}
     certificate:
       enabled: true
-    caBundle: '' # by default, this is empty, and the value is populated by cert-manager's ca-injector if cert-manager is used
+    caBundle: ''  # by default, this is empty, and the value is populated by cert-manager's ca-injector if cert-manager is used
     configurations:
       pods:
         path: /validate/pod
-        apiGroups: [ '""' ]
+        apiGroups: ['""']
       namespaces:
         path: /validate/namespace
-        apiGroups: [ '""' ]
+        apiGroups: ['""']
       deployments:
         path: /validate/deployment
-        apiGroups: [ "apps" ]
+        apiGroups: ["apps"]
       statefulsets:
         path: /validate/statefulset
-        apiGroups: [ "apps" ]
+        apiGroups: ["apps"]
       nodes:
         path: /validate/node
-        apiGroups: [ '""' ]
+        apiGroups: ['""']
       jobs:
         path: /validate/job
-        apiGroups: [ "batch" ]
+        apiGroups: ["batch"]
       cronjobs:
         path: /validate/cronjob
-        apiGroups: [ "batch" ]
+        apiGroups: ["batch"]
       daemonsets:
         path: /validate/daemonset
-        apiGroups: [ "apps" ]
-
-
+        apiGroups: ["apps"]
 
 serviceAccount:
   create: true
