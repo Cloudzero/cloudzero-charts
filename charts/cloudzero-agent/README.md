@@ -37,13 +37,14 @@ If installing with Helm directly, execute the following steps:
 helm repo update
 ```
 
-2. Ensure that required CRDs are installed for certifiacte management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](https://github.com/Cloudzero/cloudzero-charts/tree/develop/charts/cloudzero-insights-controller#deployment-configurations-and-certificate-management) section in the `cloudzero-insights-controller` subchart.
+2. Ensure that required CRDs are installed for certificate management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](#certificate-management) section.
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set tags.webhook.issuer.enabled=false \
-    --set tags.webhook.certificate.enabled=false \
-    --set tags.cert-manager.installCRDs=true
+    --set insightsController.webhook.issuer.enabled=false \
+    --set insightsController.webhook.certificate.enabled=false \
+    --set insightsController.cert-manager.installCRDs=true
 ```
+Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/docs/installation/helm/).
 
 3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:
 ```yaml
@@ -53,14 +54,13 @@ cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
 clusterName: YOUR_CLUSTER_NAME
 # -- Region the cluster is running in.
 region: YOUR_CLOUD_REGION
-global:
-  # -- CloudZero API key. Required if useExistingSecret is false.
-  apiKey: YOUR_CLOUDZERO_API_KEY
-  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
-  existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
+# -- CloudZero API key. Required if useExistingSecret is false.
+apiKey: YOUR_CLOUDZERO_API_KEY
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
 
-# label and annotation configuration (referred together as 'tags'). See the below 'Labels and Annotations' section for more details.
-tags:
+# label and annotation configuration (managed in the 'insightsController' section). See the below 'Labels and Annotations' section for more details.
+insightsController:
   # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
   enabled: true
   labels:
@@ -68,13 +68,13 @@ tags:
     enabled: true
     # -- This value MUST be set to a list of regular expressions which will be used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
     patterns:
-      - '^foo' # -- match all labels whose key starts with "foo"
-      - 'bar$' # -- match all labels whose key ends with "bar"
+      - '^foo' # -- Match all labels whose key starts with "foo"
+      - 'bar$' # -- Match all labels whose key ends with "bar"
   annotations:
     # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
     enabled: false
     patterns:
-      - '.*'
+      - '.*' # -- match all annotations. This is not recommended.
 ```
 
 4. Install the helm chart using the completed configuration file:
@@ -104,11 +104,11 @@ There are several mandatory values that must be specified for the chart to insta
 | cloudAccountId    | string | `nil`                 | Account ID in AWS or Subscription ID in Azure or Project Number in GCP where the cluster is running. Must be a string due to Helm limitations.  |
 | clusterName       | string | `nil`                 | Name of the cluster. Must be RFC 1123 compliant.                                                                         |
 | host              | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                                      |
-| global.apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
-| global.existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
+| apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
+| existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
-| tags.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
-| tags.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
+| insightsController.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
+| insightsController.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
 
 #### Overriding Default Values
 
@@ -133,7 +133,7 @@ You can use the `--set` flag in Helm commands to directly set or override specif
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set global.existingSecretName=<NAME_OF_SECRET> \
+    --set existingSecretName=<NAME_OF_SECRET> \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION> \
@@ -154,11 +154,17 @@ This chart allows the exporting of labels and annotations from the following res
 - `Namespace`
 
 Additional Notes:
-- By default, only labels from pods and namespaces are exported. To enabled more resources, see the `webhooks.configurations` section of the `values.yaml` file.
-- Labels and annotations exports are managed by a subchart, `cloudzero-insights-controller`, which is also maintained in this repository.
+- By default, only labels from pods and namespaces are exported. To enable more resources, see the `insightsController.labels.resources` and `insightsController.annotations.resources` section of the `values.yaml` file.
+- Labels and annotations exports are managed in the `insightsController` section of the `values.yaml` file.
 - To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the Explorer page. For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
-- Annotations are not exported by default; see the `tags.annotations.enabled` setting to enable. To disambiguate annotations from labels, an `annotation` prefix is prepended to the annotation key; i.e., an `foo: bar` annotation on a namespace would be represented in the Explorer as `node:annotation:foo: bar`
-- For both labels and annotations, the `enabled` flag applies across all resource types; i.e., setting `true` for `tags.labels.enabled` enabels label exporting for labels on pods, nodes, deployments, statefulsets, namespaces, daemonets, jobs, and cronjobs. Specific resources can be disabled by altering the `webhooks.configurations` configuration.
+- Annotations are not exported by default; see the `insightsController.annotations.enabled` setting to enable. To disambiguate annotations from labels, an `annotation` prefix is prepended to the annotation key; i.e., an `foo: bar` annotation on a namespace would be represented in the Explorer as `node:annotation:foo: bar`
+- For both labels and annotations, the `patterns` array applies across all resource types; i.e., setting `['^foo']` for `insightsController.labels.patterns` will match label keys that start with `foo` for all resource types set to `true` in `insightsController.labels.resources`.
+
+### Certificate Management
+
+This chart contains a `ValidatingWebhookConfiguration` resource, which requires a certificate in order validate requests to the webhook server. See related Kubernetes documentation [here](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#configure-admission-webhooks-on-the-fly).
+
+The default behavior of the chart is to deploy [cert-manager](https://github.com/cert-manager/cert-manager/tree/master) to create and manage the certificate.
 
 ### Secret Management
 

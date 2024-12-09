@@ -7,11 +7,10 @@ clusterName: null
 # -- Region the cluster is running in.
 region: null
 
-global:
-  # -- CloudZero API key. Required if useExistingSecret is false.
-  apiKey: null
-  # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
-  existingSecretName: null
+# -- CloudZero API key. Required if useExistingSecret is false.
+apiKey: null
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+existingSecretName: null
 
 # -- The following lists of metrics are required for CloudZero to function.
 # -- Modifications made to these lists may cause issues with the processing of cluster data
@@ -48,16 +47,19 @@ prometheusConfig:
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
-tags:
+# General server settings that apply to both the prometheus agent server and the webhook server
+serverConfig:
+  # -- The agent will use this file path on the container filesystem to get the CZ API key.
+  containerSecretFilePath: /etc/config/secrets/
+  # -- The agent will look for a file with this name to get the CZ API key.
+  containerSecretFileName: value
+
+initJob:
   enabled: true
-  labels:
-    enabled:
-    patterns:
-      # - '.*'
-  annotations:
-    enabled: false
-    patterns:
-      - '.*'
+  image:
+    repository: curlimages/curl
+    pullPolicy: Always
+    tag: "8.10.1"
 
 kubeStateMetrics:
   enabled: true
@@ -111,10 +113,6 @@ server:
   - --web.console.libraries=/etc/prometheus/console_libraries
   - --web.console.templates=/etc/prometheus/consoles
   - --enable-feature=agent
-  # -- The agent will use this file path on the container filesystem to get the CZ API key.
-  containerSecretFilePath: /etc/config/prometheus/secrets/
-  # -- The agent will look for a file with this name to get the CZ API key.
-  containerSecretFileName: value
   persistentVolume:
     existingClaim: ""
     enabled: false
@@ -128,11 +126,103 @@ server:
   emptyDir:
     sizeLimit: 8Gi
 
-serviceAccounts:
+insightsController:
+  enabled: true
+  labels:
+    enabled:
+    patterns:
+      # - '.*'
+    resources:
+      pods: true
+      namespaces: true
+      deployments: false
+      statefulsets: false
+      nodes: false
+      jobs: false
+      cronjobs: false
+      daemonsets: false
+  annotations:
+    enabled: false
+    patterns:
+      - '.*'
+    resources:
+      pods: true
+      namespaces: true
+      deployments: false
+      statefulsets: false
+      nodes: false
+      jobs: false
+      cronjobs: false
+      daemonsets: false
   server:
-    create: true
-    name: ""
+    name: webhook-server
+    replicaCount: 3
+    image:
+      repository: ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller
+      tag: 0.0.2
+      pullPolicy: Always
+    tls:
+      enabled: true
+      useManagedCertificate: true
+      mountPath: /etc/certs
+    port: 8443
+    read_timeout: 10s
+    write_timeout: 10s
+    idle_timeout: 120s
+  volumeMounts: []
+  volumes: []
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+  podAnnotations: {}
+  podLabels: {}
+  service:
+    port: 443
+  webhooks:
     annotations: {}
+    namespaceSelector: {}  # This denotes no specific selection, applies to all namespaces
+    issuer:
+      enabled: true
+      spec:
+        selfSigned: {}
+    certificate:
+      enabled: true
+    caBundle: ''  # by default, this is empty, and the value is populated by cert-manager's ca-injector if cert-manager is used
+    configurations:
+      pods:
+        path: /validate/pod
+        apiGroups: ['""']
+      namespaces:
+        path: /validate/namespace
+        apiGroups: ['""']
+      deployments:
+        path: /validate/deployment
+        apiGroups: ["apps"]
+      statefulsets:
+        path: /validate/statefulset
+        apiGroups: ["apps"]
+      nodes:
+        path: /validate/node
+        apiGroups: ['""']
+      jobs:
+        path: /validate/job
+        apiGroups: ["batch"]
+      cronjobs:
+        path: /validate/cronjob
+        apiGroups: ["batch"]
+      daemonsets:
+        path: /validate/daemonset
+        apiGroups: ["apps"]
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+cert-manager:
+  enabled: true
 
 rbac:
   create: true
