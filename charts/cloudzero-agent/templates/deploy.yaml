@@ -138,6 +138,14 @@ spec:
               subPath: ""
               readOnly: true
           {{- end }}
+        {{- if .Values.enableInspector }}
+        - name: {{ include "cloudzero-agent.inspectorName" . }}
+          image: cloudzero-inspector:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/app/cloudzero-inspector"]
+          args:
+            - --destination=https://{{ include "cloudzero-agent.cleanString" .Values.host }}
+        {{- end }}
       securityContext:
         runAsUser: 65534
         runAsNonRoot: true
