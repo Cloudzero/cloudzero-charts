@@ -221,8 +221,7 @@ serviceAccount:
   name: ""
   annotations: {}
 
-certManager:
-  fullnameOverride: "cert-manager"
+cert-manager:
   enabled: true
 
 rbac:
