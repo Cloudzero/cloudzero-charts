@@ -37,7 +37,7 @@ If installing with Helm directly, execute the following steps:
 helm repo update
 ```
 
-2. Ensure that required CRDs are installed for certificate management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](###certificate-management) section.
+2. Ensure that required CRDs are installed for certificate management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](#certificate-management) section.
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set insightsController.webhook.issuer.enabled=false \
