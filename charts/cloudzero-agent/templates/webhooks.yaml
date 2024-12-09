@@ -1,3 +1,4 @@
+{{- if .Values.insightsController.enabled }}
 {{- range $configType, $configs := .Values.insightsController.webhooks.configurations }}
 {{- if or (index $.Values.insightsController.labels.resources $configType) (index $.Values.insightsController.annotations.resources $configType) }}
 ---
@@ -32,5 +33,6 @@ webhooks:
     admissionReviewVersions: ["v1"]
     sideEffects: None
     timeoutSeconds: 5
+{{- end }}
 {{- end }}
 {{- end }}

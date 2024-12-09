@@ -1,4 +1,5 @@
-{{ if .Values.insightsController.webhooks.certificate.enabled }}
+{{ if .Values.insightsController.enabled }}
+{{ if and .Values.insightsController.webhooks.certificate.enabled (.Values.certManager.enabled) }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -25,4 +26,5 @@ spec:
   issuerRef:
     name: {{ include "cloudzero-agent.issuerName" . }}
     kind: Issuer
+{{ end }}
 {{ end }}

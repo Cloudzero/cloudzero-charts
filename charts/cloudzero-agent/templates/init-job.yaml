@@ -1,4 +1,4 @@
-{{- if .Values.initJob.enabled }}
+{{- if and .Values.initJob.enabled .Values.insightsController.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
