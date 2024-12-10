@@ -37,12 +37,21 @@ If installing with Helm directly, execute the following steps:
 helm repo update
 ```
 
-2. Ensure that required CRDs are installed for certificate management. If you have more specific requirements around managing TLS certificates, see the [Certificate Management](#certificate-management) section.
+2. Provision a TLS certificate; by default, this chart deploys a `ValidatingWebhookConfiguration` resource, which requires a certificate in order validate requests to the webhook server. See related Kubernetes documentation [here](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#configure-admission-webhooks-on-the-fly).
+
+There are several options for provisioning this certificate. The default is to use a third party tool, [cert-manager](https://cert-manager.io/). If you would prefer not to use cert-manager, see the [Certificate Management](#certificate-management) section for other options.
+
+To use `cert-manager` for certificate management, first install the `cert-manager` CRDs with the following:
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set insightsController.webhook.issuer.enabled=false \
     --set insightsController.webhook.certificate.enabled=false \
     --set insightsController.cert-manager.installCRDs=true
+```
+Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/docs/installation/helm/) with:
+
+```console
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
 ```
 Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/docs/installation/helm/).
 
@@ -75,6 +84,9 @@ insightsController:
     enabled: false
     patterns:
       - '.*' # -- match all annotations. This is not recommended.
+cert-manager:
+  # -- Your cluster may already have cert-manager running, in which case this value can be set to false.
+  enabled: true
 ```
 
 4. Install the helm chart using the completed configuration file:
@@ -162,9 +174,71 @@ Additional Notes:
 
 ### Certificate Management
 
-This chart contains a `ValidatingWebhookConfiguration` resource, which requires a certificate in order validate requests to the webhook server. See related Kubernetes documentation [here](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#configure-admission-webhooks-on-the-fly).
+The default behavior of the chart is to deploy [cert-manager](https://github.com/cert-manager/cert-manager/tree/master) to create and manage the certificate, but there are several alternate options if using `cert-manager` is not possible:
 
-The default behavior of the chart is to deploy [cert-manager](https://github.com/cert-manager/cert-manager/tree/master) to create and manage the certificate.
+#### Option 1: use the `cloudzero-certificate` chart
+
+The `cloudzero-certificate` chart, which is maintained in this repo, creates a certificate and stores it in a Secret. The `cloudzero-agent` resources can then access this Secret. To install this helm chart, first decide what the release name of the `cloudzero-agent` will be (shown as `EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME` here), as the release name will be used as the DNS name in the certificate. Then, do the following:
+
+1. Create a Secret using the `cloudzero-certificate` chart and get the CA bundle value:
+```console
+helm repo update
+
+# Install the chart, which creates a Secret with a TLS certificate
+helm upgrade --install --namespace <YOUR_NAMESPACE> <YOUR_RELEASE_NAME> cloudzero --set cloudzeroAgentReleaseName=<EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME>
+
+# Get the CA bundle value by running:
+CA_BUNDLE=$(kubectl get secret -n <YOUR_NAMESPACE> <YOUR_RELEASE_NAME>-cloudzero-certificate -o jsonpath='{.data.ca\.crt}')
+
+# Confirm that CA_BUNDLE is set:
+echo $CA_BUNDLE
+```
+
+2. Next, set the following in your `configuration.example.yaml` file in addition to the existing values:
+```yaml
+insightsController:
+  server:
+    tls:
+      nameOverride: <YOUR_RELEASE_NAME>-cloudzero-certificate # This should be the name of the secret created in the previous step
+  webhooks:
+    caBundle: $CA_BUNDLE # This should be the value of the CA_BUNDLE variable in the previous step
+  certificate:
+    enabled: false
+  issuer:
+    enabled: false
+cert-manager:
+  enabled: false
+```
+
+3. Finally, continue on with the rest of the installation in the [Installation](#installation) section. The only new requirement is that when installing the `cloudzero-agent` helm chart, you must use the same value for the release name as was set in `cloudzeroAgentReleaseName` in step #1. For example:
+
+```console
+helm install <EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
+```
+
+#### Option 2: bring your own certificate
+
+The `cloudzero-agent` chart can also use any certificate provided by an external source. The common name of the certificate should be `<RELEASE_NAME>.<RELEASE_NAMESPACE>.cluster.local`. A Kubernetes Secret should be created with the keys:
+```
+ca.crt: <base64 encoded caBundle>
+tls.crt: <base64 encoded certificate>
+tls.key: <base64 encoded key>
+```
+Finally, set the following in your `configuration.example.yaml` file in addition to the existing values:
+```yaml
+insightsController:
+  server:
+    tls:
+      nameOverride: <YOUR_TLS_SECRET_NAME>-cloudzero-certificate # This should be the name of the secret created in the previous step
+  webhooks:
+    caBundle: $CA_BUNDLE # This should be the value of the `ca.crt` value created in the Secret
+  certificate:
+    enabled: false
+  issuer:
+    enabled: false
+cert-manager:
+  enabled: false
+```
 
 ### Secret Management
 

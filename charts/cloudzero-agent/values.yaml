@@ -164,6 +164,7 @@ insightsController:
     tls:
       enabled: true
       useManagedCertificate: true
+      nameOverride: ""
       mountPath: /etc/certs
     port: 8443
     read_timeout: 10s
@@ -180,15 +181,15 @@ insightsController:
   podLabels: {}
   service:
     port: 443
+  issuer:
+    enabled: true
+    spec:
+      selfSigned: {}
+  certificate:
+    enabled: true
   webhooks:
     annotations: {}
     namespaceSelector: {}  # This denotes no specific selection, applies to all namespaces
-    issuer:
-      enabled: true
-      spec:
-        selfSigned: {}
-    certificate:
-      enabled: true
     caBundle: ''  # by default, this is empty, and the value is populated by cert-manager's ca-injector if cert-manager is used
     configurations:
       pods:
