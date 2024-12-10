@@ -27,7 +27,7 @@ webhooks:
         name: {{ include "cloudzero-agent.serviceName" $ }}
         path: "{{ $configs.path }}"
         port: {{ $.Values.insightsController.service.port }}
-      {{- if and $.Values.insightsController.webhooks.certificate.enabled $.Values.insightsController.webhooks.issuer.enabled }}
+      {{- if or (and $.Values.insightsController.certificate.enabled $.Values.insightsController.issuer.enabled) (gt (len $.Values.insightsController.webhooks.caBundle) 1 ) }}
       caBundle: {{ $.Values.insightsController.webhooks.caBundle }}
       {{- end }}
     admissionReviewVersions: ["v1"]

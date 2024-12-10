@@ -1,4 +1,4 @@
-{{ if and .Values.insightsController.webhooks.certificate.enabled .Values.insightsController.enabled }}
+{{ if and .Values.insightsController.certificate.enabled .Values.insightsController.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
