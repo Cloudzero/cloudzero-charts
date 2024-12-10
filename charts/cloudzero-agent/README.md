@@ -63,7 +63,7 @@ cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
 clusterName: YOUR_CLUSTER_NAME
 # -- Region the cluster is running in.
 region: YOUR_CLOUD_REGION
-# -- CloudZero API key. Required if useExistingSecret is false.
+# -- CloudZero API key. Required if existingSecretName is false.
 apiKey: YOUR_CLOUDZERO_API_KEY
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
@@ -94,19 +94,6 @@ cert-manager:
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
 ```
 
-### Update Helm Chart
-Alternatively, if you are updating an existing installation, pull the latest chart information first:
-
-```console
-helm repo update
-```
-
-Next, upgrade the installation to the latest chart version:
-
-```console
-helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
-```
-
 ### Mandatory Values
 
 There are several mandatory values that must be specified for the chart to install properly. Below are the required settings along with strategies for providing custom values during installation:
@@ -116,7 +103,7 @@ There are several mandatory values that must be specified for the chart to insta
 | cloudAccountId    | string | `nil`                 | Account ID in AWS or Subscription ID in Azure or Project Number in GCP where the cluster is running. Must be a string due to Helm limitations.  |
 | clusterName       | string | `nil`                 | Name of the cluster. Must be RFC 1123 compliant.                                                                         |
 | host              | string | `"api.cloudzero.com"` | CloudZero host to send metrics to.                                                                                      |
-| apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `global.existingSecretName` is not set.                       |
+| apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
 | existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
 | insightsController.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
@@ -137,7 +124,7 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 
 Ensure `values-override.yaml` contains only the values you wish to override from `values.yaml`.
 
-> Note it is possible to save values for different environments, or based on other criteria into seperate values files and multiple files using the `-f` helm parameters.
+> Note it is possible to save values for different environments, or based on other criteria into separate values files and multiple files using the `-f` helm parameters.
 
 ##### Using the `--set` Flag
 
@@ -166,9 +153,10 @@ This chart allows the exporting of labels and annotations from the following res
 - `Namespace`
 
 Additional Notes:
+- Labels and annotations exports are managed in the insightsController section of the values.yaml file.
 - By default, only labels from pods and namespaces are exported. To enable more resources, see the `insightsController.labels.resources` and `insightsController.annotations.resources` section of the `values.yaml` file.
 - Labels and annotations exports are managed in the `insightsController` section of the `values.yaml` file.
-- To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the Explorer page. For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
+- To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the [CloudZero Explorer](https://app.cloudzero.com/explorer). For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
 - Annotations are not exported by default; see the `insightsController.annotations.enabled` setting to enable. To disambiguate annotations from labels, an `annotation` prefix is prepended to the annotation key; i.e., an `foo: bar` annotation on a namespace would be represented in the Explorer as `node:annotation:foo: bar`
 - For both labels and annotations, the `patterns` array applies across all resource types; i.e., setting `['^foo']` for `insightsController.labels.patterns` will match label keys that start with `foo` for all resource types set to `true` in `insightsController.labels.resources`.
 
@@ -244,9 +232,9 @@ cert-manager:
 
 The chart requires a CloudZero API key to send metric data. Admins can retrieve API keys [here](https://app.cloudzero.com/organization/api-keys).
 
-The API key can be supplied as an existing secret (default) or created by the chart. Ensure the Secret is in the same namespace as the chart and follows this format:
+The API key is typically stored in a Secret in the cluster. The `cloudzero-agent` chart will create a Secret if the API key is provided via the `apiKey` argument. Alternatively, the API key can be stored in a Secret external to the chart; this Secret name would then be set as the `existingSecretName` argument. If creating a Secret external to the chart, ensure the Secret is in the same namespace as the chart and follows this format:
 
-**values-override.yaml**
+**Example User-Created Secret Content**
 ```yaml
 data:
   value: <API_KEY>
@@ -257,11 +245,24 @@ Example of creating a secret:
 kubectl create secret -n example-namespace generic example-secret-name --from-literal=value=<example-api-key-value>
 ```
 
-The secret can then be used with `global.existingSecretName`.
+The secret can then be used with `existingSecretName`.
 
 ### Memory Sizing
 
 Please see the [sizing guide](./docs/sizing-guide.md) in the docs directory.
+
+### Update Helm Chart
+If you are updating an existing installation, pull the latest chart information:
+
+```console
+helm repo update
+```
+
+Next, upgrade the installation to the latest chart version:
+
+```console
+helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
+```
 
 #### Passing Values to Subcharts
 
@@ -283,6 +284,8 @@ kubeStateMetrics:
 | Repository                                         | Name                     | Version |
 |----------------------------------------------------|--------------------------|---------|
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics       | 5.15.*  |
+
+Note that while `kube-state-metrics` is listed as a dependency, it is referred to as `cloudzero-state-metrics` within the helm chart. This is to enforce the idea that this KSM deployment is used exclusively by the `cloudzero-agent`
 
 ## Enabling Release Notifications
 
