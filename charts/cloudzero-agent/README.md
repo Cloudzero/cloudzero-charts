@@ -153,7 +153,7 @@ This chart allows the exporting of labels and annotations from the following res
 - `Namespace`
 
 Additional Notes:
-- Labels and annotations exports are managed in the insightsController section of the values.yaml file.
+- Labels and annotations exports are managed in the `insightsController` section of the `values.yaml` file.
 - By default, only labels from pods and namespaces are exported. To enable more resources, see the `insightsController.labels.resources` and `insightsController.annotations.resources` section of the `values.yaml` file.
 - Labels and annotations exports are managed in the `insightsController` section of the `values.yaml` file.
 - To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the [CloudZero Explorer](https://app.cloudzero.com/explorer). For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
