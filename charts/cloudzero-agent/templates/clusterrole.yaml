@@ -7,9 +7,27 @@ metadata:
   name: {{ include "cloudzero-agent.clusterRoleName" . }}
 rules:
   - apiGroups:
+      - "apps"
+    resources:
+      - "deployments"
+      - "statefulsets"
+      - "daemonsets"
+    verbs:
+      - "get"
+      - "list"
+  - apiGroups:
+      - "batch"
+    resources:
+      - "jobs"
+      - "cronjobs"
+    verbs:
+      - "get"
+      - "list"
+  - apiGroups:
       - ""
     resources:
       - endpoints
+      - namespaces
       - nodes
       - nodes/proxy
       - nodes/metrics
