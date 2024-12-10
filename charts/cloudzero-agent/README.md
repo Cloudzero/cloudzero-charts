@@ -63,7 +63,7 @@ cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
 clusterName: YOUR_CLUSTER_NAME
 # -- Region the cluster is running in.
 region: YOUR_CLOUD_REGION
-# -- CloudZero API key. Required if existingSecretName is false.
+# -- CloudZero API key. Required if existingSecretName is null.
 apiKey: YOUR_CLOUDZERO_API_KEY
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
