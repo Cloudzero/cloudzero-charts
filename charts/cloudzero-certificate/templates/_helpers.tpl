@@ -62,7 +62,7 @@ Generate certificate for the webhook server
 */}}
 {{- define "cloudzero-certificate.genCerts" -}}
 {{- $releaseName := required "`cloudzeroAgentReleaseName` must be supplied. This value should be the name of the cloudzero-agent helm release that will be created" .Values.cloudzeroAgentReleaseName -}}
-{{- $dnsName :=  printf "%s-svc" $releaseName -}}
+{{- $dnsName :=  printf "%s-svc.%s.cluster.local" $releaseName $.Release.Namespace -}}
 {{- $ca := genCA "cloudzero-agent-ca" 365 -}}
 {{- $cert := genSignedCert $dnsName nil (list $dnsName) 9999999 $ca -}}
 ca.crt: {{ $cert.Cert | b64enc }}

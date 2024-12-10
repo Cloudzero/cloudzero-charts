@@ -263,7 +263,7 @@ Annotations for the webhooks
 {{- if .Values.insightsController.webhooks.annotations }}
 {{ toYaml .Values.insightsController.webhook.annotations }}
 {{- end }}
-{{- if and .Values.insightsController.webhooks.certificate.enabled .Values.insightsController.webhooks.issuer.enabled }}
+{{- if and .Values.insightsController.certificate.enabled .Values.insightsController.issuer.enabled }}
 cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
 {{- end }}
 {{- end }}
