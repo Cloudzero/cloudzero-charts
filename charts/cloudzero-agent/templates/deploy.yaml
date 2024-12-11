@@ -70,6 +70,15 @@ spec:
               mountPath: /etc/config
               readOnly: true
         {{- end }}
+        {{- if .Values.inspector.enabled }}
+        - name: {{ include "cloudzero-agent.inspectorName" . }}
+          image: {{ .Values.inspector.image.repository }}:{{ .Values.inspector.image.tag }}
+          imagePullPolicy: {{ .Values.inspector.image.pullPolicy }}
+          command: ["/app/cloudzero-inspector"]
+          args:
+            - --destination=https://{{ include "cloudzero-agent.cleanString" .Values.host }}
+            - --log-level={{ .Values.inspector.logLevel }}
+        {{- end }}
         - name: {{ template "cloudzero-agent.name" . }}-server
           {{- if .Values.server.image.digest }}
           image: "{{ .Values.server.image.repository }}@{{ .Values.server.image.digest }}"

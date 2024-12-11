@@ -134,3 +134,11 @@ configmapReload:
 
     containerSecurityContext: {}
     resources: {}
+
+inspector:
+  enabled: false
+  image:
+    repository: 975482786146.dkr.ecr.us-east-1.amazonaws.com/cloudzero-inspector-test
+    tag: latest
+    pullPolicy: Always
+    logLevel: info
