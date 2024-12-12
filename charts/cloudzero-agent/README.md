@@ -17,14 +17,36 @@ For the latest release, see [Releases](https://github.com/Cloudzero/cloudzero-ch
 
 ## Installation
 
-### Get Helm Repository Info
+### Adding Helm Repository Information
+
+To use the chart or a beta version, you must add the repository to Helm. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details.
+
+#### 1. Add the Helm Chart Repository
 
 ```console
 helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
-helm repo update
+```
+> Note: If you intend to use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
+
+#### 2. Add Repository Dependencies
+
+**Cert Manager**
+```console
+helm repo add cert-manager https://charts.jetstack.io    
 ```
 
-_See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentation._
+**Metrics Exporter**
+```console
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+```
+
+#### 3. Update the Helm Repositories
+
+Ensure that the most recent chart versions are available:
+
+```console
+helm repo update
+```
 
 ### Install Helm Chart
 
@@ -53,7 +75,7 @@ Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/
 ```console
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
 ```
-Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/docs/installation/helm/).
+
 
 3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:
 ```yaml
