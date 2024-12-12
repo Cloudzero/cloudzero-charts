@@ -5,9 +5,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to use for the release (beta suffix will be automatically appended (e.g. "0.0.1" + "-beta"))'
-        required: false
-        default: ''
+        description: 'Version to use for the release. Must contain "beta" (e.g. "0.0.1-beta").'
+        required: true
       branch:
         description: 'Branch to use for the release'
         required: true
@@ -54,18 +53,18 @@ jobs:
       - name: Package Cloudzero Agent Chart
         run: helm package charts/cloudzero-agent/ --destination .deploy
 
-      # Step 3: Determine Version
-      - name: Get Github Tag Version
-        id: version
-        uses: flatherskevin/semver-action@v1
-        with:
-          incrementLevel: patch
-          source: tags
-
-      - name: Determine Chart Version
+      # Step 3: Validate and Set Version
+      - name: Validate Input Version
         run: |
-          NEW_VERSION=${{ github.event.inputs.version || steps.version.outputs.nextVersion }}
-          echo "NEW_VERSION=$NEW_VERSION-beta" >> $GITHUB_ENV
+          if [[ -z "${{ github.event.inputs.version }}" ]]; then
+            echo "Version input is required."
+            exit 1
+          fi
+          if [[ "${{ github.event.inputs.version }}" != *"beta"* ]]; then
+            echo "Version must contain 'beta'. Provided version: ${{ github.event.inputs.version }}"
+            exit 1
+          fi
+          echo "NEW_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
       - name: Update Chart Version
         run: |
@@ -128,7 +127,6 @@ jobs:
 
       - name: Save Index in GH Pages
         run: |
-          # copy the new chart and index.yaml
           git add beta
           git commit -m "Updating ${{ env.NEW_VERSION }} Index"
           git push origin gh-pages
