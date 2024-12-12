@@ -2,7 +2,7 @@ apiVersion: v2
 name: cloudzero-insights-controller
 description: Provides telemetry to the CloudZero platform to enabling complex cost allocation and analysis.
 type: application
-version: 0.0.0-dev
+version: 1.0.0-beta-4
 appVersion: "0.0.2"
 dependencies:
   - name: cert-manager
