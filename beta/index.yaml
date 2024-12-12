@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-21T00:42:58.324213723Z"
+    created: "2024-12-12T16:10:54.96191426Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -28,7 +28,7 @@ entries:
     version: 1.0.2-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-21T00:42:58.31832066Z"
+    created: "2024-12-12T16:10:54.954988702Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -52,7 +52,31 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-21T00:42:58.311113176Z"
+    created: "2024-12-12T16:10:54.941239791Z"
+    dependencies:
+    - alias: kubeStateMetrics
+      condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    - condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: v1.15.3
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: b824b82a02fc64e4147aca7d4c196410d3a63644a02871ae762edcba328a8543
+    maintainers:
+    - email: support@cloudzero.com
+      name: CloudZero
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-agent-1.0.0-beta-4.tgz
+    version: 1.0.0-beta-4
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2024-12-12T16:10:54.948681237Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -76,7 +100,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2024-11-21T00:42:58.304215998Z"
+    created: "2024-12-12T16:10:54.934350359Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -100,7 +124,7 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2024-11-21T00:42:58.342912132Z"
+    created: "2024-12-12T16:10:54.985747942Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -117,7 +141,7 @@ entries:
     version: 1.0.2-beta
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2024-11-21T00:42:58.338085984Z"
+    created: "2024-12-12T16:10:54.980732271Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -133,8 +157,25 @@ entries:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-1.0.1-beta.tgz
     version: 1.0.1-beta
   - apiVersion: v2
+    appVersion: 0.0.2
+    created: "2024-12-12T16:10:54.971300234Z"
+    dependencies:
+    - alias: cert-manager
+      condition: cert-manager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: v1.15.3
+    description: Provides telemetry to the CloudZero platform to enabling complex
+      cost allocation and analysis.
+    digest: 707ff3ee35dbd47120d583b576746a2a0b1a199a2e86ab0df85e0813ecc26f6a
+    name: cloudzero-insights-controller
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-1.0.0-beta-4.tgz
+    version: 1.0.0-beta-4
+  - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-21T00:42:58.333965294Z"
+    created: "2024-12-12T16:10:54.976458806Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -151,7 +192,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-11-21T00:42:58.329115204Z"
+    created: "2024-12-12T16:10:54.967133258Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -166,4 +207,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2024-11-21T00:42:58.301160418Z"
+generated: "2024-12-12T16:10:54.931256167Z"
