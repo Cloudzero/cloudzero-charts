@@ -120,7 +120,7 @@ data:
           enable_http2: true
       {{- end }}
       {{- if .Values.insightsController.enabled }}
-      - job_name: '{{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}'
+      - job_name: cloudzero-insights-controller-job
         metrics_path: /metrics
         scheme: https
         enable_compression: true
