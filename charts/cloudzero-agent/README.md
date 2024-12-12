@@ -76,6 +76,7 @@ Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
 ```
 
+Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/docs/installation/helm/).
 
 3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:
 ```yaml
