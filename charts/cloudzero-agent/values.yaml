@@ -159,7 +159,7 @@ insightsController:
     replicaCount: 3
     image:
       repository: ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller
-      tag: 0.0.3
+      tag: 0.0.4
       pullPolicy: Always
     tls:
       enabled: true
