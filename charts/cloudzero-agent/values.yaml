@@ -170,6 +170,15 @@ insightsController:
     read_timeout: 10s
     write_timeout: 10s
     idle_timeout: 120s
+    healthCheck:
+      enabled: true
+      path: /healthz
+      port: 8443
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 5
   volumeMounts: []
   volumes: []
   resources: {}
