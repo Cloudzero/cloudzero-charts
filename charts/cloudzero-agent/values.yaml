@@ -159,7 +159,7 @@ insightsController:
     replicaCount: 3
     image:
       repository: ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller
-      tag: 0.0.3
+      tag: 0.0.4
       pullPolicy: Always
     tls:
       enabled: true
@@ -170,6 +170,15 @@ insightsController:
     read_timeout: 10s
     write_timeout: 10s
     idle_timeout: 120s
+    healthCheck:
+      enabled: true
+      path: /healthz
+      port: 8443
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 5
   volumeMounts: []
   volumes: []
   resources: {}

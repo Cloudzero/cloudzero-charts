@@ -69,6 +69,28 @@ spec:
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
+          {{- if and .Values.insightsController.server.healthCheck.enabled }}
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: {{ .Values.insightsController.server.healthCheck.path }}
+              port: {{ .Values.insightsController.server.healthCheck.port }}
+            initialDelaySeconds: {{ .Values.insightsController.server.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.insightsController.server.healthCheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.insightsController.server.healthCheck.timeoutSeconds }}
+            successThreshold: {{ .Values.insightsController.server.healthCheck.successThreshold }}
+            failureThreshold: {{ .Values.insightsController.server.healthCheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: {{ .Values.insightsController.server.healthCheck.path }}
+              port: {{ .Values.insightsController.server.healthCheck.port }}
+            initialDelaySeconds: {{ .Values.insightsController.server.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.insightsController.server.healthCheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.insightsController.server.healthCheck.timeoutSeconds }}
+            successThreshold: {{ .Values.insightsController.server.healthCheck.successThreshold }}
+            failureThreshold: {{ .Values.insightsController.server.healthCheck.failureThreshold }}
+          {{- end }}
       {{- if or .Values.insightsController.volumes .Values.insightsController.server.tls.useManagedCertificate }}
       volumes:
         - name: insights-server-config
