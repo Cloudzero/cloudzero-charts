@@ -3,8 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   {{- if .Values.insightsController.server.deploymentAnnotations }}
-    annotations:
-      {{- toYaml .Values.insightsController.server.deploymentAnnotations | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.insightsController.server.deploymentAnnotations | nindent 4 }}
   {{- end }}
   name: {{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}
   namespace: {{ .Release.Namespace }}
