@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  {{- if .Values.insightsController.server.deploymentAnnotations }}
+{{- if .Values.insightsController.server.deploymentAnnotations }}
   annotations:
     {{- toYaml .Values.insightsController.server.deploymentAnnotations | nindent 4 }}
-  {{- end }}
+{{- end }}
   name: {{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
@@ -72,6 +72,7 @@ spec:
           {{- if and .Values.insightsController.server.healthCheck.enabled }}
           livenessProbe:
             httpGet:
+              scheme: HTTPS
               path: {{ .Values.insightsController.server.healthCheck.path }}
               port: {{ .Values.insightsController.server.healthCheck.port }}
             initialDelaySeconds: {{ .Values.insightsController.server.healthCheck.initialDelaySeconds }}
@@ -81,6 +82,7 @@ spec:
             failureThreshold: {{ .Values.insightsController.server.healthCheck.failureThreshold }}
           readinessProbe:
             httpGet:
+              scheme: HTTPS
               path: {{ .Values.insightsController.server.healthCheck.path }}
               port: {{ .Values.insightsController.server.healthCheck.port }}
             initialDelaySeconds: {{ .Values.insightsController.server.healthCheck.initialDelaySeconds }}
