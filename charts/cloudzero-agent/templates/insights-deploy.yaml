@@ -37,6 +37,15 @@ spec:
         runAsNonRoot: true
         runAsGroup: 65534
         fsGroup: 65534
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: webhook-server
+                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: webhook-server
           image: "{{ .Values.insightsController.server.image.repository }}:{{ .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
