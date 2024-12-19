@@ -71,9 +71,10 @@ kubeStateMetrics:
   # Set a default port other than 8080 to avoid collisions with any existing KSM services.
   service:
     port: 8080
+
   # Overriding static scrape target address for an existing KSM.
   # Set to service <servie-name>.<namespace>.svc.cluster.local:port if built-in is disabled (enable=false above)
-  #targetOverride: kube-state-metrics.monitors.svc.cluster.local:8080
+  # targetOverride: kube-state-metrics.monitors.svc.cluster.local:8080
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
 secretAnnotations: {}
