@@ -65,7 +65,7 @@ data:
           action: labelkeep
         static_configs:
         - targets:
-            - {{ printf "%s.%s.svc.cluster.local:%d" .Values.kubeStateMetrics.fullnameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
+            - {{ include "cloudzero-agent.kubeStateMetrics.targetOverride" . }}
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.cadvisor.enabled }}
       - job_name: cloudzero-nodes-cadvisor # container_* metrics

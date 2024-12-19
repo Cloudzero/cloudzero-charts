@@ -156,6 +156,20 @@ Required metric labels
 {{- $result -}}
 {{- end -}}
 
+{{/*
+KubeStateMetrics target override
+*/}}
+{{- define "cloudzero-agent.kubeStateMetrics.targetOverride" -}}
+{{- if .Values.kubeStateMetrics.enabled -}}
+{{ printf "%s.%s.svc.cluster.local:%d" .Values.kubeStateMetrics.fullnameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
+{{- else -}}
+{{- if not .Values.kubeStateMetrics.targetOverride }}
+{{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
+{{- else -}}
+{{ .Values.kubeStateMetrics.targetOverride }}
+{{- end }}
+{{- end }}
+{{- end }}
 
 {{/*
 Insights Controller
