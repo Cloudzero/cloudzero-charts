@@ -1,14 +1,23 @@
-# -- CloudZero host to send metrics to.
-host: api.cloudzero.com
-# -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
-cloudAccountId: null
+# ############### #
+# Required Values #
+# ############### #
+
 # -- Name of the clusters.
 clusterName: null
+# -- CloudZero API key. Required if existingSecretName is null.
+apiKey: null
+
+
+# Default Values
+# -- CloudZero host to send metrics to.
+host: api.cloudzero.com
+
+
+# -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
+cloudAccountId: null
 # -- Region the cluster is running in.
 region: null
 
-# -- CloudZero API key. Required if existingSecretName is null.
-apiKey: null
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: null
 
