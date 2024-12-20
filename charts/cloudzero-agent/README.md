@@ -15,6 +15,14 @@ For the latest release, see [Releases](https://github.com/Cloudzero/cloudzero-ch
 - A CloudZero API key
 - Each Kubernetes cluster must have a route to the internet and a rule that allows egress from the agent to the CloudZero collector endpoint at https://api.cloudzero.com on port 443
 
+### Recommended Knowledge
+
+For an optimal installation experience, we recommend the following:
+
+- Have a basic understanding of Kubernetes and Helm charts.
+- Be prepared with a list of the labels and annotations your organization plans to collect.
+- Determine if your Kubernetes deployment includes [cert-manager](https://cert-manager.io/). If not, determine if you can install third-party Custom Resource Definitions (CRDs).
+
 ## Installation
 
 ### Adding Helm Repository Information
