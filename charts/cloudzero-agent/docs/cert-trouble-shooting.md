@@ -93,7 +93,7 @@ Ensure that the certificate management configuration in your `values.yaml` or `c
   
   eg.
   ```bash
-  $kubectl get pods -n cert-manager
+  $ kubectl get pods -n cert-manager
   NAME                                       READY   STATUS    RESTARTS   AGE
   cert-manager-57d855897b-v5f5s              1/1     Running   0          11d
   cert-manager-cainjector-5c7f79b84b-nwksr   1/1     Running   0          11d
@@ -360,7 +360,7 @@ Ensure that all certificate-related fields in your configuration files correctly
 - [`cert-manager` Documentation](https://cert-manager.io/docs/)
 - [CloudZero Agent Helm Chart README](./README.md)
 - [ValidatingWebhookConfiguration Reference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#validatingwebhookconfiguration-v1-admissionregistration-k8s-io)
-- [Helm Troubleshooting Guide](https://helm.sh/docs/chart_best_practices/troubleshooting/)
+- [Helm Troubleshooting Guide](https://helm.sh/docs/faq/troubleshooting/)
 
 ---
 
