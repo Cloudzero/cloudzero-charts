@@ -87,7 +87,7 @@ Ensure that the certificate management configuration in your `values.yaml` or `c
 
 - **Verify `cert-manager` is Running**:
   ```bash
-  kubectl get pods `-n <YOUR_NAMESPACE>`
+  kubectl get pods -n <YOUR_NAMESPACE>
   ```
   Ensure all `cert-manager` pods are in the `Running` state. Replace the `-n <YOUR_NAMESPACE>` with the cert-manager namespace. eg. `-n cert-manager`.
   
