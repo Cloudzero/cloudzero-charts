@@ -364,4 +364,4 @@ Ensure that all certificate-related fields in your configuration files correctly
 
 ---
 
-If you continue to experience certificate-related issues after following this guide, consider reaching out to [CloudZero Support](https://cloudzero.com/support) or filing an issue on the [CloudZero Helm Charts GitHub repository](https://github.com/Cloudzero/cloudzero-charts/issues).
+If you continue to experience certificate-related issues after following this guide, consider reaching out to [support@cloudzero.com](mailto:support@cloudzero.com) or filing an issue on the [CloudZero Helm Charts GitHub repository](https://github.com/Cloudzero/cloudzero-charts/issues).
