@@ -41,11 +41,11 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
 
-      - name: Build Insights Controller Dependencies
-        run: helm dependency update charts/cloudzero-insights-controller/
+      - name: Build cloudzero-certificate Dependencies
+        run: helm dependency update charts/cloudzero-certificate/
 
-      - name: Package Insights Controller Chart
-        run: helm package charts/cloudzero-insights-controller/ --destination .deploy
+      - name: Package cloudzero-certificate Chart
+        run: helm package charts/cloudzero-certificate/ --destination .deploy
 
       - name: Build Cloudzero Agent Dependencies
         run: helm dependency update charts/cloudzero-agent/
@@ -71,10 +71,10 @@ jobs:
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
 
-      - name: Update Chart Version for insights-controller
+      - name: Update Chart Version for cloudzero-certificate
         run: |
-          VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-insights-controller/Chart.yaml)
-          sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-insights-controller/Chart.yaml
+          VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-certificate/Chart.yaml)
+          sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-certificate/Chart.yaml
 
       - name: Validate Release Notes are Present
         run: |
@@ -87,7 +87,7 @@ jobs:
       - name: Package Chart
         run: |
           helm package charts/cloudzero-agent/ --destination .deploy
-          helm package charts/cloudzero-insights-controller/ --destination .deploy
+          helm package charts/cloudzero-certificatecontroller/ --destination .deploy
 
       - name: Commit updated Chart.yaml
         run: |
@@ -102,8 +102,8 @@ jobs:
       - name: Upload Insight Controller Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: insights-controller-chart
-          path: .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz
+          name: cloudzero-certificate
+          path: .deploy/cloudzero-certificate-${{ env.NEW_VERSION }}.tgz
 
       - name: Upload Cloudzero Agent Chart as Artifact
         uses: actions/upload-artifact@v4
@@ -118,7 +118,7 @@ jobs:
 
       - name: Move release Tarball
         run: |
-          cp .deploy/cloudzero-insights-controller-${{ env.NEW_VERSION }}.tgz ./beta/
+          cp .deploy/cloudzero-certificate-${{ env.NEW_VERSION }}.tgz ./beta/
           cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./beta/
           rm -fr .deploy
 
