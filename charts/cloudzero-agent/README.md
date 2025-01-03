@@ -201,7 +201,7 @@ The `cloudzero-certificate` chart, which is maintained in this repo, creates a c
 helm repo update
 
 # Install the chart, which creates a Secret with a TLS certificate
-helm upgrade --install --namespace <YOUR_NAMESPACE> <YOUR_RELEASE_NAME> cloudzero --set cloudzeroAgentReleaseName=<EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME>
+helm upgrade --install --namespace <YOUR_NAMESPACE> <YOUR_RELEASE_NAME> cloudzero/cloudzero-certificate --set cloudzeroAgentReleaseName=<EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME>
 
 # Get the CA bundle value by running:
 CA_BUNDLE=$(kubectl get secret -n <YOUR_NAMESPACE> <YOUR_RELEASE_NAME>-cloudzero-certificate -o jsonpath='{.data.ca\.crt}')
