@@ -9,8 +9,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "cloudzero-agent.insightsController.labels" $ | nindent 4 }}
-  annotations:
-    {{- include "cloudzero-agent.webhooks.annotations" $ | nindent 4 }}
+  {{- include "cloudzero-agent.webhooks.annotations" $ | nindent 2 }}
 webhooks:
   - name: {{ include "cloudzero-agent.validatingWebhookName" $ }}
     namespaceSelector: {{ toYaml $.Values.insightsController.webhooks.namespaceSelector }}
@@ -27,8 +26,12 @@ webhooks:
         name: {{ include "cloudzero-agent.serviceName" $ }}
         path: "{{ $configs.path }}"
         port: {{ $.Values.insightsController.service.port }}
-      {{- if or (and $.Values.insightsController.certificate.enabled $.Values.insightsController.issuer.enabled) (gt (len $.Values.insightsController.webhooks.caBundle) 1 ) }}
-      caBundle: {{ $.Values.insightsController.webhooks.caBundle }}
+      {{- if $.Values.insightsController.tls.useCertManager }}
+      caBundle: ''
+      {{- else if (gt (len $.Values.insightsController.tls.caBundle) 1 ) }}
+      caBundle: {{ $.Values.insightsController.tls.caBundle | b64enc | quote }}
+      {{- else }}
+      caBundle: {{ $.Values.insightsController.tls.crt }}
       {{- end }}
     admissionReviewVersions: ["v1"]
     sideEffects: None

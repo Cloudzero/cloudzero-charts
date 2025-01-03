@@ -237,13 +237,6 @@ Name for the validating webhook configuration resource
 {{- printf "%s-webhook" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
-{{/*
-Name for the certificate secret
-*/}}
-{{- define "cloudzero-agent.tlsSecretName" -}}
-{{- default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) .Values.insightsController.server.tls.nameOverride }}
-{{- end }}
-
 
 {{ define "cloudzero-agent.webhookConfigMapName" -}}
 {{ .Values.insightsController.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
@@ -274,11 +267,14 @@ Name for the job resource
 Annotations for the webhooks
 */}}
 {{- define "cloudzero-agent.webhooks.annotations" -}}
+{{- if or .Values.insightsController.tls.useCertManager .Values.insightsController.webhooks.annotations }}
+annotations:
 {{- if .Values.insightsController.webhooks.annotations }}
-{{ toYaml .Values.insightsController.webhook.annotations }}
+{{ toYaml .Values.insightsController.webhook.annotations | nindent 2}}
 {{- end }}
-{{- if and .Values.insightsController.certificate.enabled .Values.insightsController.issuer.enabled }}
-cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
+{{- if .Values.insightsController.tls.useCertManager }}
+  cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -287,4 +283,11 @@ Name for the certificate resource
 */}}
 {{- define "cloudzero-agent.certificateName" -}}
 {{- printf "%s-certificate" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- end }}
+
+{{/*
+Name for the secret holding TLS certificates
+*/}}
+{{- define "cloudzero-agent.tlsSecretName" -}}
+{{- default .Values.insightsController.tls.secret.name (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
 {{- end }}
