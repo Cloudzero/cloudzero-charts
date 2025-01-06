@@ -46,49 +46,6 @@ spec:
                   matchLabels:
                     app: webhook-server
                 topologyKey: "kubernetes.io/hostname"
-      initContainers:
-        - name: init-cert
-          image: bitnami/kubectl:1.32.0
-          command: ["/bin/sh", "-c"]
-          workingDir: /var/tmp
-          args:
-            - |
-              set -e
-              # tail -f /dev/null
-              
-              SECRET_NAME={{ include "cloudzero-agent.tlsSecretName" . }}
-
-              EXISTING_TLS_CRT=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.tls\.crt}')
-              EXISTING_TLS_KEY=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.tls\.key}')
-
-              # Check if the TLS Secret already has certificate information
-              if [[ -n "$TLS_CRT" && -n "$TLS_KEY" ]]; then
-                  echo "The TLS Secret: $SECRET contains non-empty tls.crt and tls.key. Will not create a new certificate."
-                  exit 0
-              fi
-
-              # Generate self-signed certificate and private key
-              openssl req -x509 -newkey rsa:2048 -keyout tls.key -out tls.crt -days 36500 -nodes -subj "/CN={{ include "cloudzero-agent.serviceName" . }}"
-              
-              # Base64 encode the certificate
-              export CA_BUNDLE=$(cat tls.crt | base64 | tr -d '\n')
-              export TLS_CRT=$(cat tls.crt | base64 | tr -d '\n')
-              export TLS_KEY=$(cat tls.key | base64 | tr -d '\n')
-
-
-              # Update the TLS Secret with the certificate and key
-              kubectl patch secret $SECRET_NAME \
-                  -p '{"data": {"ca.crt": "'"$TLS_CRT"'", "tls.crt": "'"$TLS_CRT"'", "tls.key": "'"$TLS_KEY"'"}}'
-
-              {{ range $configType, $configs := .Values.insightsController.webhooks.configurations }}
-              {{ $webhookName := printf "%s-%s" (include "cloudzero-agent.validatingWebhookConfigName" $) $configType }}
-              {{- if or (index $.Values.insightsController.labels.resources $configType) (index $.Values.insightsController.annotations.resources $configType) }}
-              # Patch the ValidatingWebhookConfiguration {{ $webhookName }} with the caBundle
-              kubectl patch validatingwebhookconfiguration  {{ $webhookName }} \
-                --type='json' \
-                -p="[{'op': 'replace', 'path': '/webhooks/0/clientConfig/caBundle', 'value':'$CA_BUNDLE'}]"
-              {{ end }}
-              {{ end }}
       containers:
         - name: webhook-server
           image: "{{ .Values.insightsController.server.image.repository }}:{{ .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
