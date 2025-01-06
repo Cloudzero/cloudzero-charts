@@ -291,3 +291,4 @@ Name for the secret holding TLS certificates
 {{- define "cloudzero-agent.tlsSecretName" -}}
 {{- default .Values.insightsController.tls.secret.name (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
 {{- end }}
+

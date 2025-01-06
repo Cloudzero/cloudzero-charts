@@ -26,12 +26,10 @@ webhooks:
         name: {{ include "cloudzero-agent.serviceName" $ }}
         path: "{{ $configs.path }}"
         port: {{ $.Values.insightsController.service.port }}
-      {{- if $.Values.insightsController.tls.useCertManager }}
-      caBundle: ''
-      {{- else if (gt (len $.Values.insightsController.tls.caBundle) 1 ) }}
+      {{- if (gt (len $.Values.insightsController.tls.caBundle) 1 ) }}
       caBundle: {{ $.Values.insightsController.tls.caBundle | b64enc | quote }}
       {{- else }}
-      caBundle: {{ $.Values.insightsController.tls.crt }}
+      caBundle: ''
       {{- end }}
     admissionReviewVersions: ["v1"]
     sideEffects: None
