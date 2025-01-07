@@ -34,7 +34,7 @@ spec:
                 sleep 30;
               done
 {{- end }}
-{{- if and .Values.insightsController.tls.useCertManager .Values.initCertJob.enabled }}
+{{- if and (not .Values.insightsController.tls.useCertManager) .Values.initCertJob.enabled }}
 ---
 apiVersion: batch/v1
 kind: Job
