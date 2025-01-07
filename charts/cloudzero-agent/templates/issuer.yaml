@@ -1,4 +1,4 @@
-{{ if and .Values.insightsController.tls.useCertManager }}
+{{ if .Values.insightsController.tls.useCertManager }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -6,8 +6,8 @@ metadata:
   name: {{ include "cloudzero-agent.issuerName" . }}
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- if .Values.insightsController.tls.issuer.spec }}
-  {{- toYaml .Values.insightsController.tls.issuer.spec | nindent 2 }}
+  {{- if .Values.insightsController.tls.issuerSpec }}
+  {{- toYaml .Values.insightsController.tls.issuerSpec | nindent 2 }}
   {{- else }}
   selfSigned: {}
   {{- end }}

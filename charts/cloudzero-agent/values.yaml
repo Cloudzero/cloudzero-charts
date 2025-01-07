@@ -79,12 +79,19 @@ serverConfig:
   # -- The agent will look for a file with this name to get the CZ API key.
   containerSecretFileName: value
 
-initJob:
+initScrapeJob:
   enabled: true
   image:
     repository: curlimages/curl
     pullPolicy: Always
     tag: "8.10.1"
+
+initCertJob:
+  enabled: true
+  image:
+    repository: bitnami/kubectl
+    pullPolicy: Always
+    tag: "1.32.0"
 
 kubeStateMetrics:
   enabled: true

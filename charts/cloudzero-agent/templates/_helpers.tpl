@@ -188,10 +188,16 @@ app.kubernetes.io/component: {{ .Values.insightsController.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
-{{- define "cloudzero-agent.insightsController.initJob.matchLabels" -}}
-app.kubernetes.io/component: {{ include "cloudzero-agent.initJobName" . }}
+{{- define "cloudzero-agent.insightsController.initScrapeJob.matchLabels" -}}
+app.kubernetes.io/component: {{ include "cloudzero-agent.initScrapeJobName" . }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
+
+{{- define "cloudzero-agent.insightsController.initCertJob.matchLabels" -}}
+app.kubernetes.io/component: {{ include "cloudzero-agent.initCertJobName" . }}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{- end -}}
+
 
 {{/*
 Service selector labels
@@ -259,8 +265,15 @@ Name for the issuer resource
 {{/*
 Name for the job resource
 */}}
-{{- define "cloudzero-agent.initJobName" -}}
-{{- printf "%s-init" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- define "cloudzero-agent.initScrapeJobName" -}}
+{{- printf "%s-init-scrape" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- end }}
+
+{{/*
+Name for the certificate init job resource
+*/}}
+{{- define "cloudzero-agent.initCertJobName" -}}
+{{- printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 {{/*

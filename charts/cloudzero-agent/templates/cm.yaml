@@ -152,6 +152,7 @@ data:
             action: keep
         metadata_config:
           send: false
+
 {{- if .Values.insightsController.enabled }}
 ---
 apiVersion: v1

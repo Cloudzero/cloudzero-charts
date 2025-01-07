@@ -1,29 +1,68 @@
-{{- if and .Values.initJob.enabled .Values.insightsController.enabled }}
+{{- if .Values.insightsController.enabled }}
+{{- if .Values.initScrapeJob.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "cloudzero-agent.initJobName" . }}
+  name: {{ include "cloudzero-agent.initScrapeJobName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
 spec:
   template:
     metadata:
-      name: {{ include "cloudzero-agent.initJobName" . }}
+      name: {{ include "cloudzero-agent.initScrapeJobName" . }}
       labels:
-        {{- include "cloudzero-agent.insightsController.initJob.matchLabels" . | nindent 8 }}
+        {{- include "cloudzero-agent.insightsController.initScrapeJob.matchLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
+      restartPolicy: Never
+      containers:
+        - name: start-scrape
+          image: {{ .Values.initScrapeJob.image.repository }}:{{ .Values.initScrapeJob.image.tag }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              while true; do
+                echo "Waiting for the insightsController server to be ready...";
+                if curl -s -o /dev/null -w "%{http_code}" -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.insightsController.service.port }}/healthz | grep -q 200; then
+                  echo "Server is ready, starting scrape job...";
+                  curl -X POST -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.insightsController.service.port }}/scrape;
+                  echo "Scrape process started.";
+                  break;
+                fi;
+                echo "No 200 response from health endpoint. Retrying in 30 seconds...";
+                sleep 30;
+              done
+{{- end }}
+{{- if and .Values.insightsController.tls.useCertManager .Values.initCertJob.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cloudzero-agent.initCertJobName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: {{ include "cloudzero-agent.initCertJobName" . }}
+      labels:
+        {{- include "cloudzero-agent.insightsController.initCertJob.matchLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: Never
       containers:
         - name: init-cert
-          image: bitnami/kubectl:1.32.0
+          image: {{ .Values.initCertJob.image.repository }}:{{ .Values.initCertJob.image.tag }}
           command: ["/bin/bash", "-c"]
           workingDir: /var/tmp
           args:
             - |
               #!/bin/bash
               set -e
+
+              {{- if not .Values.insightsController.tls.useCertManager }}
 
               # Determine if the ValidatingWebhookConfiguration resources already have caBundle information
               MISSING_CA_BUNDLE=false
@@ -72,22 +111,9 @@ spec:
                 -p="[{'op': 'replace', 'path': '/webhooks/0/clientConfig/caBundle', 'value':'$CA_BUNDLE'}]"
               {{- end }}
               {{- end }}
+              {{- else }}
+              echo "The useCertManager flag is set to true. Skipping certificate generation and patching of resources."
+              {{- end }}
               exit 0
-
-        - name: start-scrape
-          image: {{ .Values.initJob.image.repository }}:{{ .Values.initJob.image.tag }}
-          command: ["sh", "-c"]
-          args:
-            - |
-              while true; do
-                echo "Waiting for the insightsController server to be ready...";
-                if curl -s -o /dev/null -w "%{http_code}" -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.insightsController.service.port }}/healthz | grep -q 200; then
-                  echo "Server is ready, starting scrape job...";
-                  curl -X POST -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.insightsController.service.port }}/scrape;
-                  echo "Scrape process started.";
-                  break;
-                fi;
-                echo "No 200 response from health endpoint. Retrying in 30 seconds...";
-                sleep 30;
-              done
+{{- end }}
 {{- end }}
