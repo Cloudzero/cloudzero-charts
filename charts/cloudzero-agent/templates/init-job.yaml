@@ -18,12 +18,12 @@ spec:
       containers:
         - name: init-cert
           image: bitnami/kubectl:1.32.0
-          command: ["/bin/sh", "-c"]
+          command: ["/bin/bash", "-c"]
           workingDir: /var/tmp
           args:
             - |
+              #!/bin/bash
               set -e
-              tail -f /dev/null
 
               # Determine if the ValidatingWebhookConfiguration resources already have caBundle information
               MISSING_CA_BUNDLE=false
@@ -31,8 +31,7 @@ spec:
               {{- $webhookName := printf "%s-%s" (include "cloudzero-agent.validatingWebhookConfigName" $) $configType }}
               {{- if or (index $.Values.insightsController.labels.resources $configType) (index $.Values.insightsController.annotations.resources $configType) }}
               CA_BUNDLE=$(kubectl get validatingwebhookconfiguration {{ $webhookName }} -o jsonpath='{.webhooks[0].clientConfig.caBundle}')
-              if [[ -n "$CA_BUNDLE" ]]; then
-                  # At least one ValidatingWebhookConfiguration is missing a caBundle
+              if [[ -z "$CA_BUNDLE" ]]; then
                   MISSING_CA_BUNDLE=true
               fi
               {{- end }}
