@@ -25,6 +25,7 @@ For an optimal installation experience, we recommend the following:
 ## Installation
 
 ### Quick Start
+> ⚠️ By default, this chart exports all pod and namespace labels with keys matching `app.kubernetes.io/component`. This behavior can be changed as needed; see the [Labels and Annotations](#labels-and-annotations) section for details.
 
 #### 1. Add CloudZero Helm Repository
 Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
@@ -151,7 +152,12 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 
 ### Labels and Annotations
 
+> ⚠️ CloudZero supports a maximum of **300 labels** for Kubernetes resources. Ensure you configure regex patterns to gather only the necessary labels/annotations. Additional labels after the first 300 are discarded.
+
+**By default**, this chart exports pod and namespace labels with keys matching `app.kubernetes.io/component`, and no annotations. You can configure what labels and/or annotations exported by following the steps in this section.
+
 This chart allows the exporting of labels and annotations from the following resources:
+
 - `Pod`
 - `Deployment`
 - `StatefulSet`
