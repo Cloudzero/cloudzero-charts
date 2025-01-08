@@ -182,7 +182,7 @@ insightsController:
       - 'bar$' # -- Match all labels whose key ends with "bar"
 ```
 
-Labels/annotations can also be gathered by more than just pods and namespaces. An example of gather labels from all available resources would be:
+Labels/annotations can also be gathered from more than just pods and namespaces. An example of gathering labels from all available resources would be:  
 ```yaml
 insightsController:
   enabled: true
