@@ -25,7 +25,11 @@ For an optimal installation experience, we recommend the following:
 ## Installation
 
 ### Quick Start
-> ⚠️ By default, this chart exports all pod and namespace labels with keys matching `app.kubernetes.io/component`. This behavior can be changed as needed; see the [Labels and Annotations](#labels-and-annotations) section for details.
+> ⚠️ By default, this chart exports only the app.kubernetes.io/component label from pods and namespaces. No annotations are exported. While this provides a safe default for demo purposes, it may be insufficient for your organization.
+>
+> **Recommendations:**
+> * Configure additional labels to align with your organization's FinOps tagging practices.
+* Review the [Labels and Annotations](#labels-and-annotations) section for guidance on exposing an expanded set of labels or annotations to meet your organization’s specific requirements.
 
 #### 1. Add CloudZero Helm Repository
 Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
