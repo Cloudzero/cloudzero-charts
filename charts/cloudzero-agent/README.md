@@ -24,7 +24,7 @@ For an optimal installation experience, we recommend the following:
 
 ## Installation
 
-### Easy Install
+### Quick Start
 
 #### 1. Add CloudZero Helm Repository
 Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
@@ -45,7 +45,7 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 ```
 
 ### Advanced Install
-While the "Easy Install" option will cover most cases, the chart has many options for customization.
+The "Quick Start" option will cover most test and demo use cases, but may not be appropriate for a production deployment. This section provides configuration options to ensure production quality deployment.
 
 Below is an example of a configuration file that one might use to configure some more advanced features of the chart.
 
@@ -67,12 +67,16 @@ insightsController:
   # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
   enabled: true
   labels:
-    # -- This value MUST be set to either true or false. The installation will fail otherwise
+    # -- Determines whether the agent will gather labels from Kubernetes resources.
     enabled: true
     # -- This value MUST be set to a list of regular expressions which will be used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
     patterns:
       - '^foo' # -- Match all labels whose key starts with "foo"
       - 'bar$' # -- Match all labels whose key ends with "bar"
+    # -- Labels can be gathered from pods and namespaces by default. See the values.yaml for more options.
+    resources:
+      pods: true
+      namespaces: true
   annotations:
     # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
     enabled: false
@@ -113,12 +117,10 @@ There are several mandatory values that must be specified for the chart to insta
 | apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
 | existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
-| insightsController.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
-| insightsController.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
 
 #### Overriding Default Values
 
-Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` based on the `configuration.example.yaml`  file for your customizations.
+Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` file for the changes.
 
 ##### Using the `--values` Flag
 
@@ -158,6 +160,44 @@ This chart allows the exporting of labels and annotations from the following res
 - `CronJob`
 - `Node`
 - `Namespace`
+
+The export of labels and annotations from a cluster can be turned on or off within the `insightsController` field. For example, the following enables exporting both labels and annotations from pods and namespaces:
+```yaml
+insightsController:
+  enabled: true
+  labels:
+    enabled: true
+  annotations:
+    enabled: true
+```
+
+It is recommended to supply a list of regexes to filter only the labels/annotations required:
+```yaml
+insightsController:
+  enabled: true
+  labels:
+    enabled: true
+    patterns:
+      - '^foo' # -- Match all labels whose key starts with "foo"
+      - 'bar$' # -- Match all labels whose key ends with "bar"
+```
+
+Labels/annotations can also be gathered by more than just pods and namespaces. An example of gather labels from all available resources would be:
+```yaml
+insightsController:
+  enabled: true
+  labels:
+    enabled: true
+    resources:
+      pods: true
+      namespaces: true
+      deployments: true
+      statefulsets: true
+      nodes: true
+      jobs: true
+      cronjobs: true
+      daemonsets: true
+```
 
 Additional Notes:
 - Labels and annotations exports are managed in the `insightsController` section of the `values.yaml` file.

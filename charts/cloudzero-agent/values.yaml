@@ -164,8 +164,9 @@ server:
 insightsController:
   enabled: true
   labels:
-    enabled:
+    enabled: true
     patterns:
+      - 'app.kubernetes.io/component'
       # - '.*'
     resources:
       pods: true
