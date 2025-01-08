@@ -26,7 +26,7 @@ For an optimal installation experience, we recommend the following:
 
 ### Easy Install
 
-To use the chart or a beta version, you must add the repository to Helm. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details.
+The CloudZero helm repository must first be added. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
 
 ```console
 helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
