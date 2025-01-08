@@ -49,6 +49,8 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
     --set region=<REGION>
 ```
 
+---
+
 ### Advanced Install
 The "Quick Start" option will cover most test and demo use cases, but may not be appropriate for a production deployment. This section provides configuration options to ensure production quality deployment.
 
