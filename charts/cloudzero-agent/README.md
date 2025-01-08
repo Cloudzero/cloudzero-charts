@@ -20,7 +20,7 @@ For the latest release, see [Releases](https://github.com/Cloudzero/cloudzero-ch
 For an optimal installation experience, we recommend the following:
 
 - Have a basic understanding of Kubernetes and Helm charts.
-- Be prepared with a list of the labels and annotations your organization plans to collect.
+- Be prepared with a list of the labels and annotations your organization plans to collect if you don't want the default: all Pod and Namespace labels with the key `app.kubernetes.io/component`. See [Labels and Annotations](#labels-and-annotations).
 
 ## Installation
 
