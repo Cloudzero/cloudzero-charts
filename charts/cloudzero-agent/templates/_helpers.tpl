@@ -302,6 +302,6 @@ Name for the certificate resource
 Name for the secret holding TLS certificates
 */}}
 {{- define "cloudzero-agent.tlsSecretName" -}}
-{{- default .Values.insightsController.tls.secret.name (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
+{{- .Values.insightsController.tls.secret.name | default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
 {{- end }}
 
