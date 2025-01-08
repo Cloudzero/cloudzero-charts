@@ -199,12 +199,12 @@ insightsController:
     secret:
       # -- If set to true, a Secret will be created to store the TLS certificate and key.
       create: true
-      # -- If set, the Secret will be created with this name. Otherwise, a default name will be generated. 
+      # -- If set, the Secret will be created with this name. Otherwise, a default name will be generated.
       name: ""
     # -- The following TLS certificate information is for a self signed certificate. It is used as a default value for the validating admission webhook and the webhook server.
     # -- This path determines the location within the container where the TLS certificate and key will be mounted.
     mountPath: /etc/certs
-    # -- This is the caBundle used by the Validating Admission Webhook when sending requests to the webhook server. If left empty, the default self-signed certificate will be used. 
+    # -- This is the caBundle used by the Validating Admission Webhook when sending requests to the webhook server. If left empty, the default self-signed certificate will be used.
     # Set this value to an empty string if using cert-manager to manage the certificate instead. Otherwise, set this to the base64 encoded caBundle of the desired certificate.
     caBundle: ""
     # -- If enabled, the certificate will be managed by cert-manager, which must already be present in the cluster.
