@@ -154,7 +154,7 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 
 > ⚠️ CloudZero supports a maximum of **300 labels** for Kubernetes resources. Ensure you configure regex patterns to gather only the necessary labels/annotations. Additional labels after the first 300 are discarded.
 
-**By default**, this chart exports pod and namespace labels with keys matching `app.kubernetes.io/component`, and no annotations. You can configure what labels and/or annotations exported by following the steps in this section.
+**By default**, this chart exports pod and namespace labels with keys matching `app.kubernetes.io/component`, and no annotations. You can configure what labels and/or annotations are exported by following the steps in this section.
 
 This chart allows the exporting of labels and annotations from the following resources:
 
