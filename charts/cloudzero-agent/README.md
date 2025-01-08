@@ -26,14 +26,14 @@ For an optimal installation experience, we recommend the following:
 
 ### Easy Install
 
-First, add the CloudZero helm repository. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
+#### 1. Add the CloudZero helm repository. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
 
 ```console
 helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
 helm repo update
 ```
 
-#### 1. Install Helm Chart
+#### 2. Install Helm Chart
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
