@@ -26,7 +26,8 @@ For an optimal installation experience, we recommend the following:
 
 ### Easy Install
 
-#### 1. Add the CloudZero helm repository. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
+#### 1. Add CloudZero Helm Repository
+Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
 
 ```console
 helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
@@ -37,7 +38,7 @@ helm repo update
 
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set existingSecretName=<NAME_OF_SECRET> \
+    --set apiKey=<CLOUDZERO_API_KEY> \
     --set clusterName=<CLUSTER_NAME> \
     --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
     --set region=<REGION>
@@ -57,11 +58,11 @@ clusterName: YOUR_CLUSTER_NAME
 region: YOUR_CLOUD_REGION
 # -- CloudZero API key. Required if existingSecretName is null.
 apiKey: YOUR_CLOUDZERO_API_KEY
-# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero. This may be preferable for users who would like to manage the CloudZero API key in a Secret external to this helm chart. See *Secret Management* below for details.
 existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
 
 
-# label and annotation configuration (managed in the 'insightsController' section). See the below 'Labels and Annotations' section for more details.
+# -- Configuration for managing the gathering of labels and annotations. See the below *Labels and Annotations* section for more details.
 insightsController:
   # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
   enabled: true
