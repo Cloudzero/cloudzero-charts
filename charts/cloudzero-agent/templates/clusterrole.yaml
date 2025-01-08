@@ -41,6 +41,8 @@ rules:
       - ""
     resources:
       - "secrets"
+    resourceNames:
+      - {{ include "cloudzero-agent.tlsSecretName" . }}
     verbs:
       - get
       - list
@@ -49,6 +51,10 @@ rules:
       - "admissionregistration.k8s.io"
     resources:
       - "validatingwebhookconfigurations"
+    resourceNames:
+    {{- range $configType, $configs := .Values.insightsController.webhooks.configurations }}
+      - {{ include "cloudzero-agent.validatingWebhookConfigName" $ }}-{{ $configType }}
+    {{- end }}
     verbs:
       - get
       - list
