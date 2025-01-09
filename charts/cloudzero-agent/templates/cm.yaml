@@ -186,10 +186,12 @@ data:
     region: {{ .Values.region }}
     cluster_name: {{ .Values.clusterName }}
     host: {{ .Values.host }}
+    logging:
+      level: debug
     remote_write:
       send_interval: 1m
       max_bytes_per_send: 500000
-      send_timeout: 10s
+      send_timeout: 10m #30s
       max_retries: 3
     k8s_client:
       timeout: 30s
