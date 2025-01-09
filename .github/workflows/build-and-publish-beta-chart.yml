@@ -41,12 +41,6 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v3
 
-      - name: Build cloudzero-certificate Dependencies
-        run: helm dependency update charts/cloudzero-certificate/
-
-      - name: Package cloudzero-certificate Chart
-        run: helm package charts/cloudzero-certificate/ --destination .deploy
-
       - name: Build Cloudzero Agent Dependencies
         run: helm dependency update charts/cloudzero-agent/
 
@@ -71,11 +65,6 @@ jobs:
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
 
-      - name: Update Chart Version for cloudzero-certificate
-        run: |
-          VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-certificate/Chart.yaml)
-          sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-certificate/Chart.yaml
-
       - name: Validate Release Notes are Present
         run: |
           if [ ! -f "charts/cloudzero-agent/docs/releases/${{ env.NEW_VERSION }}.md" ]; then
@@ -84,11 +73,6 @@ jobs:
           fi
 
       # Step 4: Package and Commit Chart
-      - name: Package Chart
-        run: |
-          helm package charts/cloudzero-agent/ --destination .deploy
-          helm package charts/cloudzero-certificatecontroller/ --destination .deploy
-
       - name: Commit updated Chart.yaml
         run: |
           git add .
@@ -99,12 +83,6 @@ jobs:
         continue-on-error: true
 
       # Step 7: Handle Artifacts and Update Pages
-      - name: Upload Insight Controller Chart as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cloudzero-certificate
-          path: .deploy/cloudzero-certificate-${{ env.NEW_VERSION }}.tgz
-
       - name: Upload Cloudzero Agent Chart as Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -115,12 +93,6 @@ jobs:
       - name: Checkout GH Pages
         run: |
           git checkout -f gh-pages
-
-      - name: Move release Tarball
-        run: |
-          cp .deploy/cloudzero-certificate-${{ env.NEW_VERSION }}.tgz ./beta/
-          cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./beta/
-          rm -fr .deploy
 
       - name: Update Index
         run: helm repo index --url https://cloudzero.github.io/cloudzero-charts/beta ./beta/
