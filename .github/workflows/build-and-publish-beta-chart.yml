@@ -73,6 +73,10 @@ jobs:
           fi
 
       # Step 4: Package and Commit Chart
+      - name: Package Chart
+        run: |
+          helm package charts/cloudzero-agent/ --destination .deploy
+
       - name: Commit updated Chart.yaml
         run: |
           git add .
@@ -93,6 +97,11 @@ jobs:
       - name: Checkout GH Pages
         run: |
           git checkout -f gh-pages
+
+      - name: Move release Tarball
+        run: |
+          cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./beta/
+          rm -fr .deploy
 
       - name: Update Index
         run: helm repo index --url https://cloudzero.github.io/cloudzero-charts/beta ./beta/
