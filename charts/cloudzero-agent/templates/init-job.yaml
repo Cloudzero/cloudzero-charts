@@ -11,28 +11,69 @@ spec:
   template:
     metadata:
       name: {{ include "cloudzero-agent.initScrapeJobName" . }}
+      namespace: {{ .Release.Namespace }}
       labels:
         {{- include "cloudzero-agent.insightsController.initScrapeJob.matchLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
-      restartPolicy: Never
+      restartPolicy: OnFailure
       containers:
-        - name: start-scrape
-          image: {{ .Values.initScrapeJob.image.repository }}:{{ .Values.initScrapeJob.image.tag }}
-          command: ["sh", "-c"]
+        - name: init-scrape
+          image: "{{ .Values.insightsController.server.image.repository }}:{{ .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.insightsController.server.image.pullPolicy }}
+          command:
+            - /app/controller
           args:
-            - |
-              while true; do
-                echo "Waiting for the insightsController server to be ready...";
-                if curl -s -o /dev/null -w "%{http_code}" -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.insightsController.service.port }}/healthz | grep -q 200; then
-                  echo "Server is ready, starting scrape job...";
-                  curl -X POST -k https://{{ include "cloudzero-agent.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.insightsController.service.port }}/scrape;
-                  echo "Scrape process started.";
-                  break;
-                fi;
-                echo "No 200 response from health endpoint. Retrying in 30 seconds...";
-                sleep 30;
-              done
+            - -config
+            - "{{ include "cloudzero-agent.insightsController.configurationMountPath" . }}/server-config.yaml"
+            - -backfill
+          resources:
+            {{- toYaml .Values.insightsController.resources | nindent 12 }}
+          volumeMounts:
+            - name: insights-server-config
+              mountPath: {{ include "cloudzero-agent.insightsController.configurationMountPath" . }}
+          {{- if or .Values.insightsController.volumeMounts .Values.insightsController.tls.enabled }}
+          {{- if or .Values.existingSecretName .Values.apiKey }}
+            - name: cloudzero-api-key
+              mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
+              subPath: ""
+              readOnly: true
+          {{- end }}
+            {{- with .Values.insightsController.volumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.insightsController.volumes .Values.insightsController.tls.enabled }}
+      volumes:
+        - name: insights-server-config
+          configMap:
+            name: {{ include "cloudzero-agent.webhookConfigMapName" . }}
+        {{- if .Values.insightsController.tls.enabled }}
+        - name: tls-certs
+          secret:
+            secretName: {{ include "cloudzero-agent.tlsSecretName" . }}
+        {{- end }}
+        {{- if or .Values.existingSecretName .Values.apiKey }}
+        - name: cloudzero-api-key
+          secret:
+            secretName: {{ include "cloudzero-agent.secretName" . }}
+        {{- end }}
+        {{- with .Values.insightsController.volumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.insightsController.server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.insightsController.server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.insightsController.server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- end }}
 {{- if and .Values.insightsController.tls.secret.create (not .Values.insightsController.tls.useCertManager) .Values.initCertJob.enabled (not .Values.insightsController.tls.crt) (not .Values.insightsController.tls.key) }}
 ---
