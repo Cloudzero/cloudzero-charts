@@ -50,6 +50,7 @@ insightsMetrics:
   - remote_write_records_processed_total
   - remote_write_db_failures_total
   - http_requests_total
+  - storage_write_failure_total
 
 
 # -- Any items added to this array will be added to the metrics that are sent to CloudZero, in addition to the minimal labels that CloudZero requires.
