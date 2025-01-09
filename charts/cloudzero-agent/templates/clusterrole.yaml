@@ -38,6 +38,28 @@ rules:
       - list
       - watch
   - apiGroups:
+      - ""
+    resources:
+      - "secrets"
+    resourceNames:
+      - {{ include "cloudzero-agent.tlsSecretName" . }}
+    verbs:
+      - get
+      - list
+      - patch
+  - apiGroups:
+      - "admissionregistration.k8s.io"
+    resources:
+      - "validatingwebhookconfigurations"
+    resourceNames:
+    {{- range $configType, $configs := .Values.insightsController.webhooks.configurations }}
+      - {{ include "cloudzero-agent.validatingWebhookConfigName" $ }}-{{ $configType }}
+    {{- end }}
+    verbs:
+      - get
+      - list
+      - patch
+  - apiGroups:
       - "extensions"
       - "networking.k8s.io"
     resources:

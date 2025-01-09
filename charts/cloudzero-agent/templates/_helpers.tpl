@@ -161,7 +161,7 @@ KubeStateMetrics target override
 */}}
 {{- define "cloudzero-agent.kubeStateMetrics.targetOverride" -}}
 {{- if .Values.kubeStateMetrics.enabled -}}
-{{ printf "%s.%s.svc.cluster.local:%d" .Values.kubeStateMetrics.fullnameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
+{{ printf "%s.%s.svc.cluster.local:%d" .Values.kubeStateMetrics.nameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
 {{- else -}}
 {{- if not .Values.kubeStateMetrics.targetOverride }}
 {{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
@@ -188,10 +188,16 @@ app.kubernetes.io/component: {{ .Values.insightsController.server.name }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
-{{- define "cloudzero-agent.insightsController.initJob.matchLabels" -}}
-app.kubernetes.io/component: {{ include "cloudzero-agent.initJobName" . }}
+{{- define "cloudzero-agent.insightsController.initScrapeJob.matchLabels" -}}
+app.kubernetes.io/component: {{ include "cloudzero-agent.initScrapeJobName" . }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
+
+{{- define "cloudzero-agent.insightsController.initCertJob.matchLabels" -}}
+app.kubernetes.io/component: {{ include "cloudzero-agent.initCertJobName" . }}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{- end -}}
+
 
 {{/*
 Service selector labels
@@ -237,13 +243,6 @@ Name for the validating webhook configuration resource
 {{- printf "%s-webhook" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
-{{/*
-Name for the certificate secret
-*/}}
-{{- define "cloudzero-agent.tlsSecretName" -}}
-{{- default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) .Values.insightsController.server.tls.nameOverride }}
-{{- end }}
-
 
 {{ define "cloudzero-agent.webhookConfigMapName" -}}
 {{ .Values.insightsController.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
@@ -266,19 +265,29 @@ Name for the issuer resource
 {{/*
 Name for the job resource
 */}}
-{{- define "cloudzero-agent.initJobName" -}}
-{{- printf "%s-init" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- define "cloudzero-agent.initScrapeJobName" -}}
+{{- printf "%s-init-scrape" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- end }}
+
+{{/*
+Name for the certificate init job resource
+*/}}
+{{- define "cloudzero-agent.initCertJobName" -}}
+{{- printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
 
 {{/*
 Annotations for the webhooks
 */}}
 {{- define "cloudzero-agent.webhooks.annotations" -}}
+{{- if or .Values.insightsController.tls.useCertManager .Values.insightsController.webhooks.annotations }}
+annotations:
 {{- if .Values.insightsController.webhooks.annotations }}
-{{ toYaml .Values.insightsController.webhook.annotations }}
+{{ toYaml .Values.insightsController.webhook.annotations | nindent 2}}
 {{- end }}
-{{- if and .Values.insightsController.certificate.enabled .Values.insightsController.issuer.enabled }}
-cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
+{{- if .Values.insightsController.tls.useCertManager }}
+  cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -288,3 +297,11 @@ Name for the certificate resource
 {{- define "cloudzero-agent.certificateName" -}}
 {{- printf "%s-certificate" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
 {{- end }}
+
+{{/*
+Name for the secret holding TLS certificates
+*/}}
+{{- define "cloudzero-agent.tlsSecretName" -}}
+{{- .Values.insightsController.tls.secret.name | default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
+{{- end }}
+

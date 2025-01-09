@@ -20,71 +20,42 @@ For the latest release, see [Releases](https://github.com/Cloudzero/cloudzero-ch
 For an optimal installation experience, we recommend the following:
 
 - Have a basic understanding of Kubernetes and Helm charts.
-- Be prepared with a list of the labels and annotations your organization plans to collect.
-- Determine if your Kubernetes deployment includes [cert-manager](https://cert-manager.io/). If not, determine if you can install third-party Custom Resource Definitions (CRDs).
+- Be prepared with a list of the labels and annotations your organization plans to collect if you don't want the default: all pod and namespace labels with the key `app.kubernetes.io/component`. See [Labels and Annotations](#labels-and-annotations).
 
 ## Installation
 
-### Adding Helm Repository Information
+### Quick Start
+> ⚠️ By default, this chart exports only the app.kubernetes.io/component label from pods and namespaces. No annotations are exported. While this provides a safe default for demo purposes, it may be insufficient for your organization.
+>
+> **Recommendations:**
+> * Configure additional labels to align with your organization's FinOps tagging practices.
+* Review the [Labels and Annotations](#labels-and-annotations) section for guidance on exposing an expanded set of labels or annotations to meet your organization’s specific requirements.
 
-To use the chart or a beta version, you must add the repository to Helm. Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details.
-
-#### 1. Add the Helm Chart Repository
+#### 1. Add CloudZero Helm Repository
+Refer to the [`helm repo`](https://helm.sh/docs/helm/helm_repo/) documentation for command details. To use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
 
 ```console
 helm repo add cloudzero https://cloudzero.github.io/cloudzero-charts
-```
-> Note: If you intend to use a beta version, refer to the [beta installation document](./BETA-INSTALLATION.md) for the appropriate channel.
-
-#### 2. Add Repository Dependencies
-
-**Cert Manager**
-```console
-helm repo add cert-manager https://charts.jetstack.io    
-```
-
-**Metrics Exporter**
-```console
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-```
-
-#### 3. Update the Helm Repositories
-
-Ensure that the most recent chart versions are available:
-
-```console
 helm repo update
 ```
 
-### Install Helm Chart
+#### 2. Install Helm Chart
 
-The chart can be installed directly with Helm or any other common Kubernetes deployment tools.
-
-If installing with Helm directly, execute the following steps:
-
-1. Ensure that the most recent chart version is available:
-```console
-helm repo update
-```
-
-2. Provision a TLS certificate; by default, this chart deploys a `ValidatingWebhookConfiguration` resource, which requires a certificate in order validate requests to the webhook server. See related Kubernetes documentation [here](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#configure-admission-webhooks-on-the-fly).
-
-There are several options for provisioning this certificate. The default is to use a third party tool, [cert-manager](https://cert-manager.io/). If you would prefer not to use cert-manager, see the [Certificate Management](#certificate-management) section for other options.
-
-To use `cert-manager` for certificate management, first install the `cert-manager` CRDs with the following:
 ```console
 helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
-    --set insightsController.webhook.issuer.enabled=false \
-    --set insightsController.webhook.certificate.enabled=false \
-    --set insightsController.cert-manager.installCRDs=true
-```
-Alternatively, [install the cert-manager CRDs directly](https://cert-manager.io/docs/installation/helm/) with:
-
-```console
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+    --set apiKey=<CLOUDZERO_API_KEY> \
+    --set clusterName=<CLUSTER_NAME> \
+    --set-string cloudAccountId=<CLOUD_ACCOUNT_ID> \
+    --set region=<REGION>
 ```
 
-3. Fill out all required fields in the `configuration.example.yaml` file in this directory. Rename the file as necessary. Below is an example of a completed configuration file:
+---
+
+### Advanced Install
+The "Quick Start" option will cover most test and demo use cases, but may not be appropriate for a production deployment. This section provides configuration options to ensure production quality deployment.
+
+Below is an example of a configuration file that one might use to configure some more advanced features of the chart.
+
 ```yaml
 # -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
 cloudAccountId: YOUR_CLOUD_ACCOUNT_ID
@@ -94,33 +65,51 @@ clusterName: YOUR_CLUSTER_NAME
 region: YOUR_CLOUD_REGION
 # -- CloudZero API key. Required if existingSecretName is null.
 apiKey: YOUR_CLOUDZERO_API_KEY
-# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
+# -- If set, the agent will use the API key in this Secret to authenticate with CloudZero. This may be preferable for users who would like to manage the CloudZero API key in a Secret external to this helm chart. See *Secret Management* below for details.
 existingSecretName: YOUR_EXISTING_API_KEY_K8S_SECRET
 
-# label and annotation configuration (managed in the 'insightsController' section). See the below 'Labels and Annotations' section for more details.
+
+# -- Configuration for managing the gathering of labels and annotations. See the below *Labels and Annotations* section for more details.
 insightsController:
   # -- By default, a ValidatingAdmissionWebhook will be deployed that records all created labels and annotations
   enabled: true
   labels:
-    # -- This value MUST be set to either true or false. The installation will fail otherwise
+    # -- Determines whether the agent will gather labels from Kubernetes resources.
     enabled: true
     # -- This value MUST be set to a list of regular expressions which will be used to gather labels from pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces
     patterns:
       - '^foo' # -- Match all labels whose key starts with "foo"
       - 'bar$' # -- Match all labels whose key ends with "bar"
+    # -- Labels can be gathered from pods and namespaces by default. See the values.yaml for more options.
+    resources:
+      pods: true
+      namespaces: true
   annotations:
     # -- By default, the gathering of annotations is not enabled. To enable, set this field to true
     enabled: false
     patterns:
       - '.*' # -- match all annotations. This is not recommended.
-cert-manager:
-  # -- Your cluster may already have cert-manager running, in which case this value can be set to false.
-  enabled: true
-```
-
-4. Install the helm chart using the completed configuration file:
-```console
-helm install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
+  tls:
+    # -- If disabled, the insights controller will not mount a TLS certificate from a Secret, and the user is responsible for configuring a method of providing TLS information to the webhook-server container.
+    enabled: true
+    # -- If left as an empty string, the certificate will be generated by the chart. Otherwise, the provided value will be used.
+    crt: ""
+    # -- If left as an empty string, the certificate private key will be generated by the chart. Otherwise, the provided value will be used.
+    key: ""
+    secret:
+      # -- If set to true, a Secret will be created to store the TLS certificate and key.
+      create: true
+      # -- If set, the Secret will be created with this name. Otherwise, a default name will be generated.
+      name: ""
+    # -- The following TLS certificate information is for a self signed certificate. It is used as a default value for the validating admission webhook and the webhook server.
+    # -- This path determines the location within the container where the TLS certificate and key will be mounted.
+    mountPath: /etc/certs
+    # -- This is the caBundle used by the Validating Admission Webhook when sending requests to the webhook server. If left empty, the default self-signed certificate will be used.
+    # Set this value to an empty string if using cert-manager to manage the certificate instead. Otherwise, set this to the base64 encoded caBundle of the desired certificate.
+    caBundle: ""
+    # -- If enabled, the certificate will be managed by cert-manager, which must already be present in the cluster.
+    # If disabled, a default self-signed certificate will be used.
+    useCertManager: false
 ```
 
 ### Mandatory Values
@@ -135,12 +124,10 @@ There are several mandatory values that must be specified for the chart to insta
 | apiKey            | string | `nil`                 | The CloudZero API key to use for exporting metrics. Only used if `existingSecretName` is not set.                       |
 | existingSecretName| string | `nil`                 | Name of the secret that contains the CloudZero API key. Required if not providing the API key via `apiKey`.             |
 | region            | string | `nil`                 | Region where the cluster is running (e.g., `us-east-1`, `eastus`). For more information, see AWS or Azure documentation. |
-| insightsController.labels.enabled            | string | `nil`                 | If enabled, labels for pods, deployments, statefulsets, daemonsets, cronjobs, jobs, nodes, and namespaces |
-| insightsController.labels.patterns            | string | `nil`                 | An array of regular expressions, which are used to match specific label keys |
 
 #### Overriding Default Values
 
-Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` based on the `configuration.example.yaml`  file for your customizations.
+Default values are specified in the chart's `values.yaml` file. If you need to change any of these values, it is recommended to create a `values-override.yaml` file for the changes.
 
 ##### Using the `--values` Flag
 
@@ -171,7 +158,12 @@ helm install <RELEASE_NAME> cloudzero/cloudzero-agent \
 
 ### Labels and Annotations
 
+> ⚠️ CloudZero supports a maximum of **300 labels** for Kubernetes resources. Ensure you configure regex patterns to gather only the necessary labels/annotations. Additional labels after the first 300 are discarded.
+
+**By default**, this chart exports pod and namespace labels with keys matching `app.kubernetes.io/component`, and no annotations. You can configure what labels and/or annotations are exported by following the steps in this section.
+
 This chart allows the exporting of labels and annotations from the following resources:
+
 - `Pod`
 - `Deployment`
 - `StatefulSet`
@@ -181,80 +173,50 @@ This chart allows the exporting of labels and annotations from the following res
 - `Node`
 - `Namespace`
 
+The export of labels and annotations from a cluster can be turned on or off within the `insightsController` field. For example, the following enables exporting both labels and annotations from pods and namespaces:
+```yaml
+insightsController:
+  enabled: true
+  labels:
+    enabled: true
+  annotations:
+    enabled: true
+```
+
+It is recommended to supply a list of regexes to filter only the labels/annotations required:
+```yaml
+insightsController:
+  enabled: true
+  labels:
+    enabled: true
+    patterns:
+      - '^foo' # -- Match all labels whose key starts with "foo"
+      - 'bar$' # -- Match all labels whose key ends with "bar"
+```
+
+Labels/annotations can also be gathered from more than just pods and namespaces. An example of gathering labels from all available resources would be:  
+```yaml
+insightsController:
+  enabled: true
+  labels:
+    enabled: true
+    resources:
+      pods: true
+      namespaces: true
+      deployments: true
+      statefulsets: true
+      nodes: true
+      jobs: true
+      cronjobs: true
+      daemonsets: true
+```
+
 Additional Notes:
 - Labels and annotations exports are managed in the `insightsController` section of the `values.yaml` file.
 - By default, only labels from pods and namespaces are exported. To enable more resources, see the `insightsController.labels.resources` and `insightsController.annotations.resources` section of the `values.yaml` file.
 - To disambiguate labels/annotations between resources, a prefix representing the resource type is prepended to the label key in the [CloudZero Explorer](https://app.cloudzero.com/explorer). For example, a `foo=bar` node label would be presented as `node:foo: bar`. The exception is pod labels which do not have resource prefixes for backward compatibility with previous versions.
 - Annotations are not exported by default; see the `insightsController.annotations.enabled` setting to enable. To disambiguate annotations from labels, an `annotation` prefix is prepended to the annotation key; i.e., an `foo: bar` annotation on a namespace would be represented in the Explorer as `node:annotation:foo: bar`
 - For both labels and annotations, the `patterns` array applies across all resource types; i.e., setting `['^foo']` for `insightsController.labels.patterns` will match label keys that start with `foo` for all resource types set to `true` in `insightsController.labels.resources`.
-
-### Certificate Management
-
-The default behavior of the chart is to deploy [cert-manager](https://github.com/cert-manager/cert-manager/tree/master) to create and manage the certificate, but there are several alternate options if using `cert-manager` is not possible:
-
-#### Option 1: use the `cloudzero-certificate` chart
-
-The `cloudzero-certificate` chart, which is maintained in this repo, creates a certificate and stores it in a Secret. The `cloudzero-agent` resources can then access this Secret. To install this helm chart, first decide what the release name of the `cloudzero-agent` will be (shown as `EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME` here), as the release name will be used as the DNS name in the certificate. Then, do the following:
-
-1. Create a Secret using the `cloudzero-certificate` chart and get the CA bundle value:
-```console
-helm repo update
-
-# Install the chart, which creates a Secret with a TLS certificate
-helm upgrade --install --namespace <YOUR_NAMESPACE> <YOUR_RELEASE_NAME> cloudzero/cloudzero-certificate --set cloudzeroAgentReleaseName=<EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME>
-
-# Get the CA bundle value by running:
-CA_BUNDLE=$(kubectl get secret -n <YOUR_NAMESPACE> <YOUR_RELEASE_NAME>-cloudzero-certificate -o jsonpath='{.data.ca\.crt}')
-
-# Confirm that CA_BUNDLE is set:
-echo $CA_BUNDLE
-```
-
-2. Next, set the following in your `configuration.example.yaml` file in addition to the existing values:
-```yaml
-insightsController:
-  server:
-    tls:
-      nameOverride: <YOUR_RELEASE_NAME>-cloudzero-certificate # This should be the name of the secret created in the previous step
-  webhooks:
-    caBundle: $CA_BUNDLE # This should be the value of the CA_BUNDLE variable in the previous step
-  certificate:
-    enabled: false
-  issuer:
-    enabled: false
-cert-manager:
-  enabled: false
-```
-
-3. Finally, continue on with the rest of the installation in the [Installation](#installation) section. The only new requirement is that when installing the `cloudzero-agent` helm chart, you must use the same value for the release name as was set in `cloudzeroAgentReleaseName` in step #1. For example:
-
-```console
-helm install <EXAMPLE_CLOUDZERO_AGENT_RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
-```
-
-#### Option 2: bring your own certificate
-
-The `cloudzero-agent` chart can also use any certificate provided by an external source. The common name of the certificate should be `<RELEASE_NAME>.<RELEASE_NAMESPACE>.cluster.local`. A Kubernetes Secret should be created with the keys:
-```
-ca.crt: <base64 encoded caBundle>
-tls.crt: <base64 encoded certificate>
-tls.key: <base64 encoded key>
-```
-Finally, set the following in your `configuration.example.yaml` file in addition to the existing values:
-```yaml
-insightsController:
-  server:
-    tls:
-      nameOverride: <YOUR_TLS_SECRET_NAME>-cloudzero-certificate # This should be the name of the secret created in the previous step
-  webhooks:
-    caBundle: $CA_BUNDLE # This should be the value of the `ca.crt` value created in the Secret
-  certificate:
-    enabled: false
-  issuer:
-    enabled: false
-cert-manager:
-  enabled: false
-```
 
 ### Secret Management
 

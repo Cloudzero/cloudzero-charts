@@ -62,10 +62,10 @@ spec:
           volumeMounts:
             - name: insights-server-config
               mountPath: {{ include "cloudzero-agent.insightsController.configurationMountPath" . }}
-          {{- if or .Values.insightsController.volumeMounts .Values.insightsController.server.tls.useManagedCertificate }}
-            {{- if .Values.insightsController.server.tls.useManagedCertificate }}
+          {{- if or .Values.insightsController.volumeMounts .Values.insightsController.tls.enabled }}
+            {{- if .Values.insightsController.tls.enabled }}
             - name: tls-certs
-              mountPath: {{ .Values.insightsController.server.tls.mountPath }}
+              mountPath: {{ .Values.insightsController.tls.mountPath }}
               readOnly: true
             {{- end }}
           {{- if or .Values.existingSecretName .Values.apiKey }}
@@ -100,12 +100,12 @@ spec:
             successThreshold: {{ .Values.insightsController.server.healthCheck.successThreshold }}
             failureThreshold: {{ .Values.insightsController.server.healthCheck.failureThreshold }}
           {{- end }}
-      {{- if or .Values.insightsController.volumes .Values.insightsController.server.tls.useManagedCertificate }}
+      {{- if or .Values.insightsController.volumes .Values.insightsController.tls.enabled }}
       volumes:
         - name: insights-server-config
           configMap:
             name: {{ include "cloudzero-agent.webhookConfigMapName" . }}
-        {{- if .Values.insightsController.server.tls.useManagedCertificate }}
+        {{- if .Values.insightsController.tls.enabled }}
         - name: tls-certs
           secret:
             secretName: {{ include "cloudzero-agent.tlsSecretName" . }}
