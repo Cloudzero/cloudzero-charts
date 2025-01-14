@@ -23,6 +23,16 @@ Create chart name and version as used by the chart label.
 {{- end}}
 
 {{/*
+imagePullSecrets for the agent server
+*/}}
+{{- define "cloudzero-agent.server.imagePullSecrets" -}}
+{{- if .Values.imagePullSecrets -}}
+imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 2 -}}
+{{- end }}
+{{- end }}
+
+{{/*
 Name for the validating webhook
 */}}
 {{- define "cloudzero-agent.validatingWebhookName" -}}
@@ -198,6 +208,50 @@ app.kubernetes.io/component: {{ include "cloudzero-agent.initCertJobName" . }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
+{{/*
+imagePullSecrets for the insights controller webhook server
+*/}}
+{{- define "cloudzero-agent.insightsController.server.imagePullSecrets" -}}
+{{- if .Values.insightsController.server.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- else if .Values.imagePullSecrets }}
+{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- else -}}
+{{- toYaml list "" | indent 2 }}
+{{- end }}
+{{- end }}
+
+{{/*
+imagePullSecrets for the insights controller init scrape job.
+Defaults to given value, then the insightsController value, then the top level value
+*/}}
+{{- define "cloudzero-agent.initScrapeJob.imagePullSecrets" -}}
+{{- if .Values.initScrapeJob.imagePullSecrets -}}
+{{- toYaml .Values.initScrapeJob.imagePullSecrets | indent 2 }}
+{{- else if .Values.insightsController.server.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- else if .Values.imagePullSecrets }}
+{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- else -}}
+{{- toYaml list "" | indent 2 }}
+{{- end }}
+{{- end }}
+
+{{/*
+imagePullSecrets for the insights controller init cert job.
+Defaults to given value, then the insightsController value, then the top level value
+*/}}
+{{- define "cloudzero-agent.initCertJob.imagePullSecrets" -}}
+{{- if .Values.initCertJob.imagePullSecrets -}}
+{{- toYaml .Values.initCertJob.imagePullSecrets | indent 2 }}
+{{- else if .Values.insightsController.server.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- else if .Values.imagePullSecrets }}
+{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- else -}}
+{{- toYaml list "" | indent 2 }}
+{{- end }}
+{{- end }}
 
 {{/*
 Service selector labels

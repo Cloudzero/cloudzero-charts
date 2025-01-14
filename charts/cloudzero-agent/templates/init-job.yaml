@@ -17,9 +17,11 @@ spec:
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: OnFailure
+      imagePullSecrets:
+      {{- include  "cloudzero-agent.initScrapeJob.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: init-scrape
-          image: "{{ .Values.insightsController.server.image.repository }}:{{ .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
+          image: "{{ default .Values.insightsController.server.image.repository .Values.initScrapeJob.image.repository }}:{{ .Values.initScrapeJob.image.tag | default .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.insightsController.server.image.pullPolicy }}
           command:
             - /app/controller
@@ -93,6 +95,7 @@ spec:
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: Never
+      imagePullSecrets:
       containers:
         - name: init-cert
           image: {{ .Values.initCertJob.image.repository }}:{{ .Values.initCertJob.image.tag }}
