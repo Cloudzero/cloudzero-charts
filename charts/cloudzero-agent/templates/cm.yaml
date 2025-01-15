@@ -21,7 +21,7 @@ data:
       - job_name: static-kube-state-metrics
         honor_timestamps: true
         track_timestamps_staleness: false
-        scrape_interval: 1m
+        scrape_interval: {{ .Values.prometheusConfig.scrapeJobs.kubeStateMetrics.scrapeInterval }}
         scrape_timeout: 10s
         scrape_protocols:
         - OpenMetricsText1.0.0
@@ -140,6 +140,18 @@ data:
         metric_relabel_configs:
           - source_labels: [__name__]
             regex: "^({{ join "|" .Values.insightsMetrics }})$"
+            action: keep
+      {{- end }}
+      {{- if .Values.prometheusConfig.scrapeJobs.prometheus.enabled }}
+      - job_name: static-prometheus
+        scrape_interval: {{ .Values.prometheusConfig.scrapeJobs.prometheus.scrapeInterval }}
+        static_configs:
+          - targets:
+              - localhost:9090
+        metrics_path: /metrics
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: "^({{ join "|" .Values.prometheusMetrics }})$"
             action: keep
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs -}}

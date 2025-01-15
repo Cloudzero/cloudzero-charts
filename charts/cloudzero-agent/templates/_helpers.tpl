@@ -150,7 +150,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Combine metric lists
 */}}
 {{- define "cloudzero-agent.combineMetrics" -}}
-{{- $total := concat .Values.kubeMetrics .Values.containerMetrics .Values.insightsMetrics -}}
+{{- $total := concat .Values.kubeMetrics .Values.containerMetrics .Values.insightsMetrics .Values.prometheusMetrics -}}
 {{- $result := join "|" $total -}}
 {{- $result -}}
 {{- end -}}
