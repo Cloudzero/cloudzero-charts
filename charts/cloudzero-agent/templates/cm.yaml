@@ -186,10 +186,12 @@ data:
     region: {{ .Values.region }}
     cluster_name: {{ .Values.clusterName }}
     host: {{ .Values.host }}
+    logging:
+      level: {{ .Values.insightsController.server.logging.level }}
     remote_write:
-      send_interval: 1m
+      send_interval: {{ .Values.insightsController.server.send_interval }}
       max_bytes_per_send: 500000
-      send_timeout: 10s
+      send_timeout: {{ .Values.insightsController.server.send_timeout }}
       max_retries: 3
     k8s_client:
       timeout: 30s

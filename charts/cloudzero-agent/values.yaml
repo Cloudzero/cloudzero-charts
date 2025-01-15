@@ -228,7 +228,11 @@ insightsController:
     port: 8443
     read_timeout: 10s
     write_timeout: 10s
+    send_timeout: 1m
+    send_interval: 1m
     idle_timeout: 120s
+    logging:
+      level: info
     healthCheck:
       enabled: true
       path: /healthz
