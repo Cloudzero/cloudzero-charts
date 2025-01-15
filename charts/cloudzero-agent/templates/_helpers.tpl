@@ -213,7 +213,7 @@ imagePullSecrets for the insights controller webhook server
 */}}
 {{- define "cloudzero-agent.insightsController.server.imagePullSecrets" -}}
 {{- if .Values.insightsController.server.imagePullSecrets -}}
-{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
 {{- else if .Values.imagePullSecrets }}
 {{- toYaml .Values.imagePullSecrets | indent 2 }}
 {{- else -}}
@@ -229,7 +229,7 @@ Defaults to given value, then the insightsController value, then the top level v
 {{- if .Values.initScrapeJob.imagePullSecrets -}}
 {{- toYaml .Values.initScrapeJob.imagePullSecrets | indent 2 }}
 {{- else if .Values.insightsController.server.imagePullSecrets -}}
-{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
 {{- else if .Values.imagePullSecrets }}
 {{- toYaml .Values.imagePullSecrets | indent 2 }}
 {{- else -}}
@@ -245,7 +245,7 @@ Defaults to given value, then the insightsController value, then the top level v
 {{- if .Values.initCertJob.imagePullSecrets -}}
 {{- toYaml .Values.initCertJob.imagePullSecrets | indent 2 }}
 {{- else if .Values.insightsController.server.imagePullSecrets -}}
-{{- toYaml .Values.imagePullSecrets | indent 2 }}
+{{- toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
 {{- else if .Values.imagePullSecrets }}
 {{- toYaml .Values.imagePullSecrets | indent 2 }}
 {{- else -}}

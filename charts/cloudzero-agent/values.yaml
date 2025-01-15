@@ -92,7 +92,7 @@ initScrapeJob:
 initCertJob:
   enabled: true
   # -- Defaults to the same setting as the insightsController.server if set, otherwise left empty.
-  imagePullSecrets: []
+  # imagePullSecrets: []
   image:
     repository: bitnami/kubectl
     pullPolicy: Always
