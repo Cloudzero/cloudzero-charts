@@ -96,6 +96,7 @@ spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: Never
       imagePullSecrets:
+      {{- include  "cloudzero-agent.initCertJob.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: init-cert
           image: {{ .Values.initCertJob.image.repository }}:{{ .Values.initCertJob.image.tag }}
