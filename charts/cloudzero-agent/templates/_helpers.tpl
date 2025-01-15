@@ -213,11 +213,11 @@ imagePullSecrets for the insights controller webhook server
 */}}
 {{- define "cloudzero-agent.insightsController.server.imagePullSecrets" -}}
 {{- if .Values.insightsController.server.imagePullSecrets -}}
-{{- toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
 {{- else if .Values.imagePullSecrets }}
-{{- toYaml .Values.imagePullSecrets | indent 2 }}
-{{- else -}}
-{{- toYaml (list "") | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 2 }}
 {{- end }}
 {{- end }}
 
