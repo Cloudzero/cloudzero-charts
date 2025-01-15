@@ -254,6 +254,18 @@ Next, upgrade the installation to the latest chart version:
 helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent -f configuration.example.yaml
 ```
 
+#### Getting All Image References
+
+A common customization may be to mirror the container images used in this chart into a private registry. To fetch all image references used in this chart, use the following commands:
+
+```console
+CHART_VERSION=1.0.0        # Set this to the chart version for which container image references should be fetched
+CHART_REPO=cloudzero       # Set this to the name of cloudzero helm repository.
+helm template $CHART_REPO/cloudzero-agent --version $CHART_VERSION --set clusterName=foobar --set cloudAccountId=foobar --set region=foobar | grep -i image: | tr -d '"' | sort | uniq | awk '{print $NF}'
+```
+
+This will return the latest image references for that particular chart version.
+
 #### Passing Values to Subcharts
 
 Values can be passed to subcharts like [kube-state-metrics](https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml) by adding entries in `values-override.yaml` as per their specifications.
