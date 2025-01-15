@@ -217,7 +217,7 @@ imagePullSecrets for the insights controller webhook server
 {{- else if .Values.imagePullSecrets }}
 {{- toYaml .Values.imagePullSecrets | indent 2 }}
 {{- else -}}
-{{- toYaml list "" | indent 2 }}
+{{- toYaml (list "") | indent 2 }}
 {{- end }}
 {{- end }}
 
@@ -227,13 +227,16 @@ Defaults to given value, then the insightsController value, then the top level v
 */}}
 {{- define "cloudzero-agent.initScrapeJob.imagePullSecrets" -}}
 {{- if .Values.initScrapeJob.imagePullSecrets -}}
-{{- toYaml .Values.initScrapeJob.imagePullSecrets | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.initScrapeJob.imagePullSecrets | indent 2 }}
 {{- else if .Values.insightsController.server.imagePullSecrets -}}
-{{- toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
 {{- else if .Values.imagePullSecrets }}
-{{- toYaml .Values.imagePullSecrets | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 2 }}
 {{- else -}}
-{{- toYaml list "" | indent 2 }}
+{{- "imagePullSecrets: []" | indent 2 }}
 {{- end }}
 {{- end }}
 
@@ -243,14 +246,33 @@ Defaults to given value, then the insightsController value, then the top level v
 */}}
 {{- define "cloudzero-agent.initCertJob.imagePullSecrets" -}}
 {{- if .Values.initCertJob.imagePullSecrets -}}
-{{- toYaml .Values.initCertJob.imagePullSecrets | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.initCertJob.imagePullSecrets | indent 2 }}
 {{- else if .Values.insightsController.server.imagePullSecrets -}}
-{{- toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
-{{- else if .Values.imagePullSecrets }}
-{{- toYaml .Values.imagePullSecrets | indent 2 }}
+imagePullSecrets:
+{{ toYaml .Values.insightsController.server.imagePullSecrets | indent 2 }}
+{{- else if .Values.imagePullSecrets -}}
+imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 2 }}
 {{- else -}}
-{{- toYaml list "" | indent 2 }}
+{{- "imagePullSecrets: []" | indent 2 }}
 {{- end }}
+{{- end }}
+
+
+{{/*
+Get the full container image reference for the init scrape job pod
+*/}}
+{{- define "cloudzero-agent.initScrapeJob.imageReference" -}}
+{{- $repository := .Values.insightsController.server.image.repository -}}
+{{ $tag := .Values.insightsController.server.image.tag -}}
+{{- if and .Values.initScrapeJob.image .Values.initScrapeJob.image.repository -}}
+{{- $repository = .Values.initScrapeJob.image.repository }}
+{{- end }}
+{{- if and .Values.initScrapeJob.image .Values.initScrapeJob.image.tag -}}
+{{- $tag = .Values.initScrapeJob.image.tag -}}
+{{- end }}
+{{- printf "%s:%s" $repository $tag }}
 {{- end }}
 
 {{/*
