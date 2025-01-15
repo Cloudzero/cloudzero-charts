@@ -171,7 +171,7 @@ KubeStateMetrics target override
 */}}
 {{- define "cloudzero-agent.kubeStateMetrics.targetOverride" -}}
 {{- if .Values.kubeStateMetrics.enabled -}}
-{{ printf "%s.%s.svc.cluster.local:%d" .Values.kubeStateMetrics.nameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
+{{ printf "%s-%s.%s.svc.cluster.local:%d" .Release.Name .Values.kubeStateMetrics.nameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
 {{- else -}}
 {{- if not .Values.kubeStateMetrics.targetOverride }}
 {{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
