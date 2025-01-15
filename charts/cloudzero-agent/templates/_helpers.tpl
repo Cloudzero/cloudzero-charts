@@ -235,8 +235,6 @@ imagePullSecrets:
 {{- else if .Values.imagePullSecrets }}
 imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 2 }}
-{{- else -}}
-{{- "imagePullSecrets: []" | indent 2 }}
 {{- end }}
 {{- end }}
 
@@ -254,8 +252,6 @@ imagePullSecrets:
 {{- else if .Values.imagePullSecrets -}}
 imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 2 }}
-{{- else -}}
-{{- "imagePullSecrets: []" | indent 2 }}
 {{- end }}
 {{- end }}
 
