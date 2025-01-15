@@ -28,10 +28,7 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
-      {{- with .Values.insightsController.server.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "cloudzero-agent.insightsController.server.imagePullSecrets" . | nindent 6 }}
       securityContext:
         runAsUser: 65534
         runAsNonRoot: true

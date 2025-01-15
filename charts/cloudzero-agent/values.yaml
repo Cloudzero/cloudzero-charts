@@ -81,10 +81,18 @@ serverConfig:
   containerSecretFileName: value
 
 initScrapeJob:
+  # -- By default, all image settings use those set in insightsController.server. Optionally use the below to override. This should not be common.
+  # imagePullSecrets: []
+  # image:
+  #   repository: ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller
+  #   tag: 0.1.1
+  #   pullPolicy: Always
   enabled: true
 
 initCertJob:
   enabled: true
+  # -- Defaults to the same setting as the insightsController.server if set, otherwise left empty.
+  # imagePullSecrets: []
   image:
     repository: bitnami/kubectl
     pullPolicy: Always
@@ -211,6 +219,8 @@ insightsController:
   server:
     name: webhook-server
     replicaCount: 3
+    # -- Uncomment to use a specific imagePullSecrets; otherwise, the default top level imagePullSecrets is used.
+    # imagePullSecrets: []
     image:
       repository: ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller
       tag: 0.1.1
@@ -234,7 +244,6 @@ insightsController:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  imagePullSecrets: []
   podAnnotations: {}
   podLabels: {}
   service:
