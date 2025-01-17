@@ -177,7 +177,7 @@ The name of the KSM service target that will be used in the scrape config and va
 {{/* After the first override option is not used, try to mirror what the KSM chart does internally. */}}
 {{- else if .Values.kubeStateMetrics.fullnameOverride -}}
 {{- $svcName := .Values.kubeStateMetrics.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{ printf "%s.svc.cluster.local:%d" .Release.Name $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
+{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
 {{/* If KSM is not enabled, and they haven't set a targetOverride, fail the installation */}}
 {{- else if not .Values.kubeStateMetrics.enabled -}}
 {{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
