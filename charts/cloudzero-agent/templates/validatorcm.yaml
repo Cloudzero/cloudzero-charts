@@ -33,7 +33,7 @@ data:
       {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
       kube_state_metrics_service_endpoint: http://{{ .Values.validator.serviceEndpoints.kubeStateMetrics }}/
       {{- else }}
-      kube_state_metrics_service_endpoint: http://{{ include "cloudzero-agent.kubeStateMetrics.targetOverride" . }}
+      kube_state_metrics_service_endpoint: http://{{ include "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" . }}
       {{- end }}
       executable: /bin/prometheus
       kube_metrics:

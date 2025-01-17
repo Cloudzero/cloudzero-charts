@@ -65,7 +65,7 @@ data:
           action: labelkeep
         static_configs:
         - targets:
-            - {{ include "cloudzero-agent.kubeStateMetrics.targetOverride" . }}
+            - {{ include "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" . | trim }}
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.cadvisor.enabled }}
       - job_name: cloudzero-nodes-cadvisor # container_* metrics
