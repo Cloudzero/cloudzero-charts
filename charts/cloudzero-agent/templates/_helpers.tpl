@@ -172,7 +172,7 @@ The name of the KSM service target that will be used in the scrape config and va
 {{- define "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" -}}
 {{- $name := "" -}}
 {{/* If the user specifies an override for the service name, use it. */}}
-{{- if .Values.kubeStateMetrics.targetOverride }}
+{{- if .Values.kubeStateMetrics.targetOverride -}}
 {{ .Values.kubeStateMetrics.targetOverride }}
 {{/* After the first override option is not used, try to mirror what the KSM chart does internally. */}}
 {{- else if .Values.kubeStateMetrics.fullnameOverride -}}
