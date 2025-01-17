@@ -137,6 +137,10 @@ data:
           - source_labels: [__meta_kubernetes_endpoints_name]
             action: keep
             regex: {{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}-svc
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: "^({{ join "|" .Values.insightsMetrics }})$"
+            action: keep
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs -}}
       {{ toYaml .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs | toString | nindent 6 }}
