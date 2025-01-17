@@ -167,7 +167,7 @@ Required metric labels
 {{- end -}}
 
 {{/*
-The name of the KSM service that will be used in the scrape config and validator
+The name of the KSM service target that will be used in the scrape config and validator
 */}}
 {{- define "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" -}}
 {{- $name := "" -}}
