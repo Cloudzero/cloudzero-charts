@@ -115,7 +115,7 @@ kubeStateMetrics:
   # -- Overriding static scrape target address for an existing KSM.
   # -- Set to service <service-name>.<namespace>.svc.cluster.local:port if built-in is disabled (enable=false above)
   # targetOverride: kube-state-metrics.monitors.svc.cluster.local:8080
-  # -- If targetOverride is set and kubeStateMetrics.enabled is true, if is likely that fullnameOverride below much be set as well.
+  # -- If targetOverride is set and kubeStateMetrics.enabled is true, it is likely that fullnameOverride below must be set as well.
   # -- This should not be a common configuration
   # fullnameOverride: "kube-state-metrics"
 
