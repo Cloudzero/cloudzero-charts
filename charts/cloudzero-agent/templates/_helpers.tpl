@@ -167,16 +167,29 @@ Required metric labels
 {{- end -}}
 
 {{/*
-KubeStateMetrics target override
+The name of the KSM service target that will be used in the scrape config and validator
 */}}
-{{- define "cloudzero-agent.kubeStateMetrics.targetOverride" -}}
-{{- if .Values.kubeStateMetrics.enabled -}}
-{{ printf "%s-%s.%s.svc.cluster.local:%d" .Release.Name .Values.kubeStateMetrics.nameOverride .Release.Namespace (int .Values.kubeStateMetrics.service.port) }}
-{{- else -}}
-{{- if not .Values.kubeStateMetrics.targetOverride }}
-{{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
-{{- else -}}
+{{- define "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" -}}
+{{- $name := "" -}}
+{{/* If the user specifies an override for the service name, use it. */}}
+{{- if .Values.kubeStateMetrics.targetOverride -}}
 {{ .Values.kubeStateMetrics.targetOverride }}
+{{/* After the first override option is not used, try to mirror what the KSM chart does internally. */}}
+{{- else if .Values.kubeStateMetrics.fullnameOverride -}}
+{{- $svcName := .Values.kubeStateMetrics.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
+{{/* If KSM is not enabled, and they haven't set a targetOverride, fail the installation */}}
+{{- else if not .Values.kubeStateMetrics.enabled -}}
+{{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
+{{/* This is the case where the user has not tried to change the name and are still using the internal KSM */}}
+{{- else if .Values.kubeStateMetrics.enabled -}}
+{{- $name = default .Chart.Name .Values.kubeStateMetrics.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- $svcName := .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
+{{- else -}}
+{{- $svcName := printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
 {{- end }}
 {{- end }}
 {{- end }}
