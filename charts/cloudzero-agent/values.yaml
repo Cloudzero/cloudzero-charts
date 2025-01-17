@@ -105,7 +105,7 @@ kubeStateMetrics:
     repository: kube-state-metrics/kube-state-metrics
     tag: "v2.10.1"
   nameOverride: "cloudzero-state-metrics"
-  # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicity defined
+  # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicitly defined
   # by the Validators config file.
   prometheusScrape: false
   # Set a default port other than 8080 to avoid collisions with any existing KSM services.
@@ -113,7 +113,7 @@ kubeStateMetrics:
     port: 8080
 
   # Overriding static scrape target address for an existing KSM.
-  # Set to service <servie-name>.<namespace>.svc.cluster.local:port if built-in is disabled (enable=false above)
+  # Set to service <service-name>.<namespace>.svc.cluster.local:port if built-in is disabled (enable=false above)
   # targetOverride: kube-state-metrics.monitors.svc.cluster.local:8080
 
 # -- Annotations to be added to the Secret, if the chart is configured to create one
