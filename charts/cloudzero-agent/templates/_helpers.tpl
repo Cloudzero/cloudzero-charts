@@ -348,10 +348,12 @@ Name for the issuer resource
 {{- end }}
 
 {{/*
-Name for the job resource
+Name for the initScrape job resource
 */}}
 {{- define "cloudzero-agent.initScrapeJobName" -}}
-{{- printf "%s-init-scrape" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- $name := printf "%s-scrape-%s" .Release.Name .Chart.Version }}
+{{- $imageRef := splitList ":" (include  "cloudzero-agent.initScrapeJob.imageReference" .) | last }}
+{{- printf "%s-%s" $name ($imageRef | trunc 8) | trunc 63 | replace "." "-" }}
 {{- end }}
 
 {{/*
