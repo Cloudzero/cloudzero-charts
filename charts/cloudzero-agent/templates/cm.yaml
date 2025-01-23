@@ -157,8 +157,7 @@ data:
     {{- end}}
     {{- end}}
     remote_write:
-      - url:  "https://d1fj7cxctefcw7.cloudfront.net/v1/container-metrics?cluster_name=foobar&cloud_account_id=618300337335&cloud_region=us-east-1"
-      #- url: 'https://{{ include "cloudzero-agent.cleanString" .Values.host }}/v1/container-metrics?cluster_name={{ include "cloudzero-agent.cleanString" .Values.clusterName | urlquery }}&cloud_account_id={{ include "cloudzero-agent.cleanString" .Values.cloudAccountId | urlquery }}&region={{ include "cloudzero-agent.cleanString" .Values.region | urlquery }}'
+      - url:  "https://d1fj7cxctefcw7.cloudfront.net/bdren/v1/container-metrics?cluster_name=foobar&cloud_account_id=618300337335&cloud_region=us-east-1"
         authorization:
           credentials_file: {{ include "cloudzero-agent.secretFileFullPath" . }}
         write_relabel_configs:
