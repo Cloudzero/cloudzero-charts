@@ -1,26 +1,27 @@
 {{- if .Values.insightsController.enabled }}
-{{- if .Values.initScrapeJob.enabled }}
+{{ $backFillValues := (include "cloudzero-agent.backFill" . | fromYaml) }}
+{{- if $backFillValues.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "cloudzero-agent.initScrapeJobName" . }}
+  name: {{ include "cloudzero-agent.initBackfillJobName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
 spec:
   template:
     metadata:
-      name: {{ include "cloudzero-agent.initScrapeJobName" . }}
+      name: {{ include "cloudzero-agent.initBackfillJobName" . }}
       namespace: {{ .Release.Namespace }}
       labels:
-        {{- include "cloudzero-agent.insightsController.initScrapeJob.matchLabels" . | nindent 8 }}
+        {{- include "cloudzero-agent.insightsController.initBackfillJob.matchLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: OnFailure
-      {{- include  "cloudzero-agent.initScrapeJob.imagePullSecrets" . | nindent 6 }}
+      {{- include  "cloudzero-agent.initBackfillJob.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: init-scrape
-          image: "{{ include  "cloudzero-agent.initScrapeJob.imageReference" . }}"
+          image: "{{ include  "cloudzero-agent.initBackfillJob.imageReference" . }}"
           imagePullPolicy: {{ .Values.insightsController.server.image.pullPolicy }}
           command:
             - /app/controller
