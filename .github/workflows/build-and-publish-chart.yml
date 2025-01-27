@@ -8,6 +8,10 @@ on:
         description: 'Version to use for the release'
         required: false
         default: ''
+      branch:
+        description: 'Branch to use for the release'
+        required: true
+        default: 'main'
 
 jobs:
   build-and-publish-chart:
@@ -24,7 +28,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.inputs.branch }}
           fetch-depth: 0
 
       - name: Set up Git
