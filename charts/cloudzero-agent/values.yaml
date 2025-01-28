@@ -206,7 +206,6 @@ imagePullSecrets: []
 validator:
   serviceEndpoints:
     kubeStateMetrics:
-    prometheusNodeExporter:
   # -- Flag to skip validator failure if unable to connect to the CloudZero API.
   name: env-validator
   image:
