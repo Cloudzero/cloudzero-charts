@@ -14,6 +14,7 @@ on:
 
 jobs:
   build-and-publish-beta-chart:
+    environment: release
     permissions:
       contents: 'write'
       packages: 'write'
@@ -62,6 +63,13 @@ jobs:
           VERSION_LINE=$(awk '/version:/ && !done {print NR; done=1}' charts/cloudzero-agent/Chart.yaml)
           sed -i ''$VERSION_LINE's/.*/version: ${{ env.NEW_VERSION }}/' charts/cloudzero-agent/Chart.yaml
 
+      - name: Validate Release Notes are Present
+        run: |
+          if [ ! -f "docs/releases/${{ env.NEW_VERSION }}.md" ]; then
+            echo "Release notes for ${{ env.NEW_VERSION }} are missing. Please create a release notes file at docs/releases/${{ env.NEW_VERSION }}.md"
+            exit 1
+          fi
+
       # Step 4: Package and Commit Chart
       - name: Package Chart
         run: helm package charts/cloudzero-agent/ --destination .deploy
@@ -82,13 +90,39 @@ jobs:
           name: agent-chart
           path: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
 
+
+      - name: Checkout GH Pages
+        run: |
+          git checkout -f gh-pages
+
       - name: Move release Tarball
         run: |
-          cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./
+          cp .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz ./beta/
           rm -fr .deploy
 
       - name: Update Index
-        run: helm repo index --url https://cloudzero.github.io/cloudzero-charts .
+        run: helm repo index --url https://cloudzero.github.io/cloudzero-charts/beta ./beta/
+
+      - name: Save Index in GH Pages
+        run: |
+          # copy the new chart and index.yaml
+          git add beta
+          git commit -m "Updating ${{ env.NEW_VERSION }} Index"
+          git push origin gh-pages
+        continue-on-error: true
+
+      - name: Update Docs for GH Pages
+        run: |
+          # cleanup garbage files
+          rm -fr .deploy charts/cloudzero-agent/charts
+          git reset --hard 
+          # now checkout docs from main
+          git checkout main -- charts/cloudzero-agent/docs charts/cloudzero-agent/README.md README.md
+          git add README.md charts/cloudzero-agent/docs charts/cloudzero-agent/README.md
+          git commit -m "Update docs for ${{ env.NEW_VERSION }}"
+          git push origin gh-pages
+        continue-on-error: true
+
 
       # Step 5: Create GitHub Release
       - name: Create Release
@@ -99,11 +133,4 @@ jobs:
           files: .deploy/cloudzero-agent-${{ env.NEW_VERSION }}.tgz
           make_latest: false
           target_commitish: ${{ env.COMMIT_HASH }}
-          body: |
-            ## Installation Instructions
-      
-            [Please follow the Installation Instructions provided in this releases README](https://github.com/Cloudzero/cloudzero-charts/blob/${{ env.NEW_VERSION }}/charts/cloudzero-agent/README.md).
-      
-            ## Release ${{ env.NEW_VERSION }} Changes
-      
-            ${{ steps.get_changes.outputs.changes }}
+          body_path: ${{ github.workspace }}/docs/releases/${{ env.NEW_VERSION }}.md
