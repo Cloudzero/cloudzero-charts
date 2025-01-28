@@ -129,4 +129,4 @@ jobs:
               --set=clusterName=$CLUSTER_NAME \
               --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
               --set=region=$REGION \
-
+              "
