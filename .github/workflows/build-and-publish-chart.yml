@@ -24,7 +24,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      # Step 1: Checkout and Setup
+      # Step 1: Prepare Branches
+      - name: Prepare Branches
+        run: |
+          git checkout develop
+          git pull --rebase origin develop
+          git checkout main
+          git pull --rebase origin main
+          git merge develop
+
+      # Step 2: Checkout and Setup
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -38,15 +47,6 @@ jobs:
       
       - name: Fetch All Branches
         run: git fetch --all
-
-      # Step 2: Prepare Branches
-      - name: Prepare Branches
-        run: |
-          git checkout develop
-          git pull --rebase origin develop
-          git checkout main
-          git pull --rebase origin main
-          git merge develop
 
       # Step 3: Helm Setup
       - name: Install Helm
