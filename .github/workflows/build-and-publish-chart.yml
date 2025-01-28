@@ -131,6 +131,13 @@ jobs:
         continue-on-error: true
 
       # Step 8: Create GitHub Release
+      - name: Save Index in GH Pages
+        run: |
+          # Tag the release
+          git tag -a ${{ env.NEW_VERSION }} -m "Release ${{ env.NEW_VERSION }}"
+          git push origin ${{ env.NEW_VERSION }}
+
+      # Step 9: Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
