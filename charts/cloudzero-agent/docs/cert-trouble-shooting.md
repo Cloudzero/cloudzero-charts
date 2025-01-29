@@ -1,6 +1,6 @@
 # Troubleshooting Guide: Certificate Issues for CloudZero Agent Helm Chart
 
-This guide provides comprehensive steps to troubleshoot certificate-related issues when installing and running the CloudZero Agent Helm chart, which functions as a Kubernetes Admission Controller. Proper certificate management is crucial for securing communication between Kubernetes components and the CloudZero platform. This guide covers common certificate problems, diagnostic steps, and resolution strategies, whether you are using `cert-manager`, the `cloudzero-certificate` chart, or your own certificate management solution.
+This guide provides comprehensive steps to troubleshoot certificate-related issues when installing and running the CloudZero Agent Helm chart, which functions as a Kubernetes Admission Controller. Proper certificate management is crucial for securing communication between Kubernetes components and the CloudZero platform. This guide covers common certificate problems, diagnostic steps, and resolution strategies, whether you are using the built in certificate management, `cert-manager`, the `cloudzero-certificate` chart, or your own certificate management solution.
 
 ## Table of Contents
 
@@ -24,9 +24,9 @@ This guide provides comprehensive steps to troubleshoot certificate-related issu
 
 ## Understanding Certificate Management
 
-The CloudZero Agent Helm chart deploys a `ValidatingWebhookConfiguration` resource that requires TLS certificates to secure communication with the Kubernetes API server. By default, the chart uses [`cert-manager`](https://cert-manager.io/) to automate the creation and management of these certificates. However, the chart also supports alternative methods:
+The CloudZero Agent Helm chart deploys a `ValidatingWebhookConfiguration` resource that requires TLS certificates to secure communication with the Kubernetes API server. By default, the chart automatically generates a self-signed certificate and configures the components to use it without any extra configuration. However, the chart also supports alternative methods:
 
-1. **Using `cert-manager`**: Automates certificate issuance and renewal.
+1. **Using `cert-manager`**: Automates certificate issuance and renewal; see [here](https://cert-manager.io/) for details.
 2. **Using `cloudzero-certificate` Chart**: Manually manages certificates via a separate Helm chart.
 3. **Bringing Your Own Certificate**: Utilizes externally managed certificates provided by an existing certificate manager.
 
@@ -44,7 +44,7 @@ Proper configuration and management of these certificates are essential for the 
 
 ---
 
-## Diagnostic Steps
+## Diagnostic Steps For Non-Default Options
 
 ### 1. Verify Certificate Configuration
 
@@ -52,34 +52,37 @@ Ensure that the certificate management configuration in your `values.yaml` or `c
 
 - **Using `cert-manager`**:
   ```yaml
-  cert-manager:
-    enabled: true
   insightsController:
-    cert-manager:
-      enabled: true
+    tls:
+      useCertManager: true
   ```
   
 - **Using `cloudzero-certificate` Chart**:
   ```yaml
-  cert-manager:
-    enabled: false
   insightsController:
-    certificate:
-      enabled: false
-    issuer:
-      enabled: false
+    tls: # fetch these values from the output of the `cloudzero-certificate` chart
+      crt: <base64-encoded-cert-value>
+      key: <base64-encoded-key-value>
+      caBundle: <base64-encoded-caBundle-value>
   ```
 
 - **Using Custom Certificates**:
   ```yaml
-  cert-manager:
-    enabled: false
   insightsController:
-    certificate:
-      enabled: false
-    issuer:
-      enabled: false
+    tls:
+      secret:
+        create: false
+        name: <name-of-secret-containing-tls-information>
   ```
+  OR
+  ```yaml
+  insightsController:
+    tls: # set these values to your own certificate
+      crt: <base64-encoded-cert-value>
+      key: <base64-encoded-key-value>
+      caBundle: <base64-encoded-caBundle-value>
+  ```
+
 
 ### 2. Check Certificate Status
 
