@@ -362,19 +362,20 @@ Name for the backfill job resource
 {{- define "cloudzero-agent.initBackfillJobName" -}}
 {{- $name := printf "%s-backfill-%s" .Release.Name .Chart.Version }}
 {{- $imageRef := splitList ":" (include  "cloudzero-agent.initBackfillJob.imageReference" .) | last }}
-{{- printf "%s-%s" $name ($imageRef | trunc 8) | trunc 63 | replace "." "-" }}
+{{ $name := "%s-%s" $name ($imageRef | trunc 6) | trunc 61 | replace "." "-" }}
+{{- if .Values.forceInit -}}
+{{- $name }}-{{ .Resource.Revision }}
+{{- else }}
+{{ $name }}
+{{- end }}
 {{- end }}
 
 {{/*
-Name for the certificate init job resource
+Name for the certificate init job resource. Should be a new name each installation/upgrade.
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
 {{- $name := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) | trunc 60) -}}
-{{- if .Values.forceInit -}}
-{{- $name -}}-{{ .Release.Revision }}
-{{- else -}}
-{{ $name }}
-{{- end }}
+{{- $name -}}-{{ .Release.Revision | default randAlphaNum 5 }}
 {{- end }}
 
 {{/*

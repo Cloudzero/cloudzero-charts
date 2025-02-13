@@ -12,6 +12,9 @@ apiKey: null
 # -- If set, the agent will use the API key in this Secret to authenticate with CloudZero.
 existingSecretName: null
 
+# -- If set to true, both the init-backfill-job and the init-cert-job will be run on upgrade.
+forceInit: false
+
 # -- The following lists of metrics are required for CloudZero to function.
 # -- Modifications made to these lists may cause issues with the processing of cluster data
 kubeMetrics:
