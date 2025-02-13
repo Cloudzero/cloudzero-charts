@@ -1,0 +1,16 @@
+{{- if .Values.initCertJob.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
+  name: {{ include "cloudzero-agent.initCertJob.roleBindingName" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "cloudzero-agent.initCertJob.serviceAccountName" . }}
+    namespace: {{ include "cloudzero-agent.namespace" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "cloudzero-agent.initCertJob.roleName" . }}
+{{- end }}

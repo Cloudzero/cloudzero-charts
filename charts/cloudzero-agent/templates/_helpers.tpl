@@ -107,6 +107,30 @@ Create the name of the service account to use for the server component
 {{- end -}}
 
 {{/*
+Create the name of the service account to use for the init-cert Job
+*/}}
+{{- define "cloudzero-agent.initCertJob.serviceAccountName" -}}
+{{- $defaultName := include "cloudzero-agent.initCertJobName" . -}}
+{{ .Values.initCertJob.rbac.serviceAccountName | default $defaultName }}
+{{- end -}}
+
+{{/*
+Create the name of the Role to use for the init-cert Job
+*/}}
+{{- define "cloudzero-agent.initCertJob.roleName" -}}
+{{- $defaultName := include "cloudzero-agent.initCertJobName" . -}}
+{{ .Values.initCertJob.rbac.roleName | default $defaultName }}
+{{- end -}}
+
+{{/*
+Create the name of the role binding to use for the init-cert Job
+*/}}
+{{- define "cloudzero-agent.initCertJob.roleBindingName" -}}
+{{- $defaultName := include "cloudzero-agent.initCertJobName" . -}}
+{{ .Values.initCertJob.rbac.roleBindingName | default $defaultName }}
+{{- end -}}
+
+{{/*
 Create a fully qualified Prometheus server name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
@@ -315,6 +339,13 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Name for the webhook server Deployment
+*/}}
+{{- define "cloudzero-agent.insightsController.deploymentName" -}}
+{{- include "cloudzero-agent.insightsController.server.webhookFullname" . }}
+{{- end }}
 
 {{/*
 Name for the webhook server service
