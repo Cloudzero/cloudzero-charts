@@ -125,9 +125,11 @@ spec:
               EXISTING_TLS_CRT=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.tls\.crt}')
               EXISTING_TLS_KEY=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.tls\.key}')
 
+              FORCE_RECREATE={{ .Values.forceInit }}
+              echo "Force recreation is set to: $FORCE_RECREATE by the 'forceInit' flag"
               # Check if the TLS Secret already has certificate information
-              if [[ -z "$TLS_CRT" ]] || [[ -z "$TLS_KEY" ]] || [[ $MISSING_CA_BUNDLE == "true" ]]; then
-                  echo "The TLS Secret and/or at least one webhook configuration contains empty certificate information. Creating a new certificate..."
+              if [[ -z "$EXISTING_TLS_CRT" ]] || [[ -z "$EXISTING_TLS_KEY" ]] || [[ $MISSING_CA_BUNDLE == "true" ]] || [[ $FORCE_RECREATE == "true" ]] ; then
+                  echo "The TLS Secret and/or at least one webhook configuration contains empty certificate information, or forceInit is enabled. Creating a new certificate..."
               else
                   echo "The TLS Secret and all webhook configurations contain non-empty certificate information. Will not create a new certificate and will not patch resources."
                   exit 0

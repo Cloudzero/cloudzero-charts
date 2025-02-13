@@ -369,7 +369,12 @@ Name for the backfill job resource
 Name for the certificate init job resource
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
-{{- printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- $name := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) | trunc 60) -}}
+{{- if .Values.forceInit -}}
+{{- $name -}}-{{ .Release.Revision }}
+{{- else -}}
+{{ $name }}
+{{- end }}
 {{- end }}
 
 {{/*
