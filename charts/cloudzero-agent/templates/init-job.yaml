@@ -9,7 +9,7 @@ metadata:
   labels:
     {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
 spec:
-  ttlSecondsAfterFinished: 30
+  ttlSecondsAfterFinished: 60
   template:
     metadata:
       name: {{ include "cloudzero-agent.initBackfillJobName" . }}
@@ -17,7 +17,7 @@ spec:
       labels:
         {{- include "cloudzero-agent.insightsController.initBackfillJob.matchLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "cloudzero-agent.initCertJob.serviceAccountName" . }}
+      serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       restartPolicy: OnFailure
       {{- include  "cloudzero-agent.initBackfillJob.imagePullSecrets" . | nindent 6 }}
       containers:
@@ -88,14 +88,14 @@ metadata:
   labels:
     {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
 spec:
-  ttlSecondsAfterFinished: 60 # value?
+  ttlSecondsAfterFinished: 3600
   template:
     metadata:
       name: {{ include "cloudzero-agent.initCertJobName" . }}
       labels:
         {{- include "cloudzero-agent.insightsController.initCertJob.matchLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
+      serviceAccountName: {{ include "cloudzero-agent.initCertJob.serviceAccountName" . }}
       restartPolicy: Never
       {{- include  "cloudzero-agent.initCertJob.imagePullSecrets" . | nindent 6 }}
       containers:

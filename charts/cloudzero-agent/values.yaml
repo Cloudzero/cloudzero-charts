@@ -179,8 +179,8 @@ initCertJob:
   rbac:
     create: true
     serviceAccountName: ""
-    roleName: ""
-    roleBindingName: ""
+    clusterRoleName: ""
+    clusterRoleBindingName: ""
 
 kubeStateMetrics:
   enabled: true

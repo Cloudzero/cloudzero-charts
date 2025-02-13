@@ -110,24 +110,24 @@ Create the name of the service account to use for the server component
 Create the name of the service account to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.serviceAccountName" -}}
-{{- $defaultName := include "cloudzero-agent.initCertJobName" . -}}
+{{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
 {{ .Values.initCertJob.rbac.serviceAccountName | default $defaultName }}
 {{- end -}}
 
 {{/*
 Create the name of the Role to use for the init-cert Job
 */}}
-{{- define "cloudzero-agent.initCertJob.roleName" -}}
-{{- $defaultName := include "cloudzero-agent.initCertJobName" . -}}
-{{ .Values.initCertJob.rbac.roleName | default $defaultName }}
+{{- define "cloudzero-agent.initCertJob.clusterRoleName" -}}
+{{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
+{{ .Values.initCertJob.rbac.clusterRoleName | default $defaultName }}
 {{- end -}}
 
 {{/*
 Create the name of the role binding to use for the init-cert Job
 */}}
-{{- define "cloudzero-agent.initCertJob.roleBindingName" -}}
-{{- $defaultName := include "cloudzero-agent.initCertJobName" . -}}
-{{ .Values.initCertJob.rbac.roleBindingName | default $defaultName }}
+{{- define "cloudzero-agent.initCertJob.clusterRoleBindingName" -}}
+{{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
+{{ .Values.initCertJob.rbac.clusterRoleBinding | default $defaultName }}
 {{- end -}}
 
 {{/*
