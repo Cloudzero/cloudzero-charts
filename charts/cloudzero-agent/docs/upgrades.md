@@ -31,7 +31,7 @@ Error: UPGRADE FAILED: failed to replace object: Job.batch "cloudzero-agent-back
    - The Job will be **automatically deleted after 60 seconds** (`ttlSecondsAfterFinished`).
    - Once the Job is removed, retry the Helm upgrade.
 
-2. **Manually delete the running Job and retry the upgrade**  
+2. **Manually delete the running Jobs and retry the upgrade**  
    ```sh
    kubectl delete job -n <NAMESPACE> -l app.kubernetes.io/component=webhook-server
    helm upgrade --install <RELEASE_NAME> cloudzero/cloudzero-agent -n <NAMESPACE> --version <version> --force
