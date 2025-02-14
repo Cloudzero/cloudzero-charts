@@ -1,15 +1,11 @@
-Here's a markdown-formatted document that describes the behavior of the Helm chart and its Jobs.  
-
----
-
 # **Helm Chart Job Execution and Upgrade Behavior**
 
-This document outlines the expected behavior of the **Helm chart Jobs** under different upgrade scenarios, including version upgrades and forced upgrades (`--force`).
+This document outlines the expected behavior of the **CloudZero Agent Jobs** under different upgrade scenarios, including version upgrades and forced upgrades (`--force`).
 
 ## **Jobs Overview**
 The Helm chart deploys two Jobs:  
-- **`backfill`**: Runs during every version upgrade or container image change. It ensures current state of the cluster is captured.  
-- **`init-cert`**: Generates or renews the internal certificates needed for communication between Kubernetes and the webhook server.  
+- **`backfill`**: Runs during every version upgrade or container image change. It ensures that the current state of the cluster is captured.  
+- **`init-cert`**: Generates or renews the internal certificate needed for communication between Kubernetes and the webhook server.  
 
 ---
 
