@@ -1,0 +1,3 @@
+insightsController:
+  tls:
+    useCertManager: true

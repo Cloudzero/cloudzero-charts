@@ -124,8 +124,13 @@ jobs:
             --create-namespace \
             --version v1.17.0 \
             --set crds.enabled=true
+          # Test setup
           kubectl create namespace $NAMESPACE
           kubectl create secret -n $NAMESPACE generic api-token --from-literal=value=$CZ_API_TOKEN
+          kubectl create secret -n $NAMESPACE generic foobar-tls \
+            --from-literal=ca.crt=dummy-cert \
+            --from-literal=tls.crt=dummy-cert \
+            --from-literal=tls.key=dummy-key \
           cd charts/cloudzero-agent
           helm dependency update
           ct install --charts . \
