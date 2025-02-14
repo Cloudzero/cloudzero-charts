@@ -1,0 +1,5 @@
+existingSecretName: api-token
+host: dev-api.cloudzero.com
+clusterName: minimal-test
+cloudAccountId: 1234565
+region: us-east-1

@@ -123,10 +123,6 @@ jobs:
           ct install --charts . \
             --chart-repos=kube-state-metrics=$PROM_CHART_REPO \
             --namespace $NAMESPACE \
-            --helm-extra-set-args "\
-              --set=existingSecretName=api-token \
-              --set=host=dev-api.cloudzero.com \
-              --set=clusterName=$CLUSTER_NAME \
-              --set=cloudAccountId=$CLOUD_ACCOUNT_ID \
-              --set=region=$REGION \
+            --helm-extra-args "\
+              -f ../../tests/cloudzero-agent/minimal-install/values.yaml
               "
