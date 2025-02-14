@@ -115,7 +115,7 @@ Create the name of the service account to use for the init-cert Job
 {{- end -}}
 
 {{/*
-Create the name of the Role to use for the init-cert Job
+Create the name of the ClusterRole to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.clusterRoleName" -}}
 {{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
@@ -123,7 +123,7 @@ Create the name of the Role to use for the init-cert Job
 {{- end -}}
 
 {{/*
-Create the name of the role binding to use for the init-cert Job
+Create the name of the ClusterRoleBinding to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.clusterRoleBindingName" -}}
 {{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
@@ -393,12 +393,7 @@ Name for the backfill job resource
 {{- define "cloudzero-agent.initBackfillJobName" -}}
 {{- $name := printf "%s-backfill-%s" .Release.Name .Chart.Version }}
 {{- $imageRef := splitList ":" (include  "cloudzero-agent.initBackfillJob.imageReference" .) | last }}
-{{- $name := printf "%s-%s" $name ($imageRef | trunc 6) | trunc 61 | replace "." "-" -}}
-{{- if .Values.forceInit -}}
-{{- $name }}-{{ .Release.Revision -}}
-{{- else }}
-{{- $name -}}
-{{- end }}
+{{- printf "%s-%s" $name ($imageRef | trunc 6) | trunc 61 | replace "." "-" -}}
 {{- end }}
 
 {{/*
