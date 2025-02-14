@@ -1,0 +1,3 @@
+kubeStateMetrics:
+  targetOverride: foobar
+  enabled: true

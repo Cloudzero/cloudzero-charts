@@ -1,0 +1,3 @@
+kubeStateMetrics:
+  nameOverride: looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong-name
+  enabled: true

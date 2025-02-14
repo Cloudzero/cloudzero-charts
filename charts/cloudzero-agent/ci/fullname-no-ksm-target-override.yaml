@@ -1,0 +1,3 @@
+kubeStateMetrics:
+  fullnameOverride: batbaz
+  enabled: false

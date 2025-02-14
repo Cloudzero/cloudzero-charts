@@ -1,0 +1,3 @@
+kubeStateMetrics:
+  nameOverride: cloudzero-agent-with-ui
+  enabled: true

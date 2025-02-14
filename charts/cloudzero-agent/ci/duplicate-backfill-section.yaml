@@ -1,0 +1,11 @@
+initScrapeJob:
+  image:
+    repository: scrape.com/scrape
+    tag: 1.2.3
+    pullPolicy: Always
+  imagePullSecrets:
+    - name: foobar
+initBackfillJob:
+  image:
+    repository: backfill.com/backfill
+    pullPolicy: Always

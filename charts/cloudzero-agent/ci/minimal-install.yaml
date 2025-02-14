@@ -3,6 +3,3 @@ host: dev-api.cloudzero.com
 clusterName: minimal-test
 cloudAccountId: '00000000'
 region: us-east-1
-insightsController:
-  server:
-    replicaCount: 1
