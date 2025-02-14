@@ -401,7 +401,7 @@ Name for the certificate init job resource. Should be a new name each installati
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
 {{- $name := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) | trunc 60) -}}
-{{- $name -}}-{{ .Release.Revision | default (randAlpha 5) }}
+{{- $name -}}-{{ .Release.Revision }}
 {{- end }}
 
 {{/*
