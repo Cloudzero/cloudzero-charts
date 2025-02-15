@@ -131,6 +131,17 @@ Create the name of the ClusterRoleBinding to use for the init-cert Job
 {{- end -}}
 
 {{/*
+init-cert Job annotations
+*/}}
+{{- define "cloudzero-agent.initCertJob.annotations" -}}
+{{- if .Values.initCertJob.annotations -}}
+annotations:
+  {{ toYaml .Values.initCertJob.annotations }}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
 Create a fully qualified Prometheus server name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
