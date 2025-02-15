@@ -411,7 +411,8 @@ Name for the backfill job resource
 Name for the certificate init job resource. Should be a new name each installation/upgrade.
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
-{{- $name := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .) | trunc 60) -}}
+{{ $version := .Chart.Version | replace "." "-" }}
+{{- $name := (printf "%s-init-cert-%s" (include "cloudzero-agent.insightsController.server.webhookFullname" .) $version | trunc 60) -}}
 {{- $name -}}-{{ .Release.Revision }}
 {{- end }}
 
