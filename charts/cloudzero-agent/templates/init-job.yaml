@@ -6,6 +6,7 @@ kind: Job
 metadata:
   name: {{ include "cloudzero-agent.initBackfillJobName" . }}
   namespace: {{ .Release.Namespace }}
+  {{- include "cloudzero-agent.initBackfillJob.annotations" . | nindent 2 }}
   labels:
     {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
 spec:

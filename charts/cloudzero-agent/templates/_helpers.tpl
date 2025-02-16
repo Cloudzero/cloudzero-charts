@@ -408,6 +408,16 @@ Name for the backfill job resource
 {{- end }}
 
 {{/*
+initBackfillJob Job annotations
+*/}}
+{{- define "cloudzero-agent.initBackfillJob.annotations" -}}
+{{- if .Values.initBackfillJob.annotations -}}
+annotations:
+  {{ toYaml .Values.initBackfillJob.annotations }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Name for the certificate init job resource. Should be a new name each installation/upgrade.
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
