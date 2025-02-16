@@ -1,0 +1,14 @@
+cloudAccountId: "975482786146"
+clusterName: container-ingest-integration-test
+existingSecretName: existing-dev-api-key
+host: dev-api.cloudzero.com
+region: us-east-1
+initBackfillJob:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+initCertJob:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+
