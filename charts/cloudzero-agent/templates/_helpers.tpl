@@ -136,7 +136,7 @@ init-cert Job annotations
 {{- define "cloudzero-agent.initCertJob.annotations" -}}
 {{- if .Values.initCertJob.annotations -}}
 annotations:
-  {{ toYaml .Values.initCertJob.annotations }}
+  {{- toYaml .Values.initCertJob.annotations | nindent 2 -}}
 {{- end -}}
 {{- end -}}
 
@@ -413,7 +413,7 @@ initBackfillJob Job annotations
 {{- define "cloudzero-agent.initBackfillJob.annotations" -}}
 {{- if .Values.initBackfillJob.annotations -}}
 annotations:
-  {{ toYaml .Values.initBackfillJob.annotations }}
+  {{- toYaml .Values.initBackfillJob.annotations | nindent 2 -}}
 {{- end -}}
 {{- end -}}
 
