@@ -31,8 +31,9 @@ initCertJob:
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
-
 ```
+See the ArgoCD [Hook Deletion](https://argo-cd.readthedocs.io/en/stable/user-guide/resource_hooks/#hook-deletion-policies) documentation for further details.
+
 ---
 ## **Common Issues & Troubleshooting**
 ### **Issue: Forced Upgrade (`--force`) Fails Due to Running `backfill` Job**
