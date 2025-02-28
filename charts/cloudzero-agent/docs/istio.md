@@ -1,8 +1,18 @@
-# Installing `cloudzero-agent` in Istio Enabled Clusters
+# Installing `cloudzero-agent` in Istio-Enabled Clusters
 
-When installing the `cloudzero-agent` Helm chart in a Kubernetes cluster that uses Istio, additional steps may be required to ensure proper functioning. This is because Istio automatically configures sidecars to use **mutual TLS (mTLS)**, which can interfere with the agent’s existing TLS communication.
+When installing the `cloudzero-agent` Helm chart in a Kubernetes cluster that uses Istio, additional steps may be required to ensure proper functionality. This is because Istio automatically configures sidecars to use **mutual TLS (mTLS)**, which can interfere with the agent’s existing TLS communication.
 
-To successfully deploy `cloudzero-agent`, either **exclude some communication from redirecting through envoy**, **disable Istio sidecar injection for a subset of the agent workloads**, or **disable mTLS for a subset of the agent workloads**.
+## Why These Steps Are Needed
+
+The `cloudzero-agent` includes a **webhook server** component responsible for handling admission review requests from the Kubernetes API server. These requests use TLS, and when intercepted by an Istio sidecar, Istio may attempt to apply its mTLS policies. These policies are not always compatible with the webhook’s TLS configuration.
+
+While this does not block pod deployments, it **prevents the `insightsController` from collecting critical pod labels**, which are necessary for accurate cost allocation.
+
+To ensure `cloudzero-agent` works correctly in Istio-enabled clusters, you can choose from the following options:
+
+- [**Disable sidecar injection for `cloudzero-agent` webhook-server pods only**](#option-1-disable-sidecar-injection-for-cloudzero-agent-webhook-server-pods-only) — Completely removes the Istio sidecar from the webhook server, avoiding any interference.
+- [**Disable envoy for webhook ports only**](#option-2-disable-envoy-for-webhook-ports-only) — Keeps the sidecar but excludes webhook traffic, preserving Istio functionality for all other traffic.
+- [**Disable mTLS for `cloudzero-agent` webhook-server pods**](#option-3-disable-mtls-for-cloudzero-agent) — Keeps the sidecar but disables mTLS enforcement specifically for webhook-server traffic.
 
 ---
 
