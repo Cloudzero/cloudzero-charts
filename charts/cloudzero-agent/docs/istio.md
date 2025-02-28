@@ -26,6 +26,8 @@ insightsController:
       sidecar.istio.io/inject: "false"
 ```
 
+This annotation prevents the Istio sidecar from being injected into the `webhook-server` pods, while the rest of the cluster retains normal Istio functionality.
+
 ---
 
 ## **Option 2: Disable Envoy for Webhook Ports Only**
