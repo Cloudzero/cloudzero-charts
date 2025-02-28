@@ -27,7 +27,9 @@ insightsController:
     podAnnotations:
       traffic.sidecar.istio.io/excludeInboundPorts: "8443"
 ```
-In this case, the pods will still have an istio sidecar injected. For more details, see [here](https://istio.io/latest/docs/reference/config/annotations/#SidecarTrafficExcludeInboundPorts).
+In this case, the pods will still have an Istio sidecar injected, but traffic to port 8443 (the webhook port) will bypass envoy.
+
+For more details, see [Istio Documentation](https://istio.io/latest/docs/reference/config/annotations/#SidecarTrafficExcludeInboundPorts).
 
 ---
 ## **Option 3: Disable mTLS for `cloudzero-agent`**
