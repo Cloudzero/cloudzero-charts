@@ -29,7 +29,7 @@ insightsController:
 ---
 
 ## **Option 2: Disable Envoy for Webhook Ports Only**
-To prevent only requests to a single port on the webhook-server pods from being routed through envoy:
+To prevent only requests to a single port on the webhook-server pods from being routed through envoy, apply the following annotation:
 
 ```yaml
 insightsController:
