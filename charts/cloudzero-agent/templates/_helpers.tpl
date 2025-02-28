@@ -340,7 +340,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 */}}
 {{- define "cloudzero-agent.insightsController.server.webhookFullname" -}}
 {{- if .Values.server.fullnameOverride -}}
-{{- printf "%s-%s" .Values.server.fullnameOverride webhook | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-webhook" .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}

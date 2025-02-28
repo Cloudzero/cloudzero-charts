@@ -125,7 +125,7 @@ spec:
 
               CA_BUNDLE=${caBundles[0]}
               for caBundle in "${caBundles[@]}"; do
-                  if [[ "$caBundle" != "missing" ]]; then
+                  if [[ "$caBundle" = "missing" ]]; then
                       echo "Empty caBundle found in ValidatingWebhookConfiguration."
                       GENERATE_CERTIFICATE=true
                   fi
