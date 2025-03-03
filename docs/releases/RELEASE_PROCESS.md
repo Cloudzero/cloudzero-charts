@@ -177,6 +177,13 @@ Copy and paste the following template to create your release notes. Replace plac
 ### Other Changes
 * **Change Description:** Brief explanation of the change.
 * **Change Description:** Brief explanation of the change.
+
+### Security Scan Results
+
+| Image                                                                         | Scanner | Scan Date | Critical | High | Medium | Low | Negligible |
+|:---------------------------------------------------------------------------------------|:-----:|:----------:|---|---|---|---|---|
+| ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller:x.y.z     | Grype | YYYY-MM-DD | X | X | X | X | X |
+| ghcr.io/cloudzero/cloudzero-agent-validator/cloudzero-agent-validator:x.y.z             | Grype | YYYY-MM-DD | X | X | X | X | X |
 ```
 
 **Example:**
