@@ -177,6 +177,7 @@ Copy and paste the following template to create your release notes. Replace plac
 ### Other Changes
 * **Change Description:** Brief explanation of the change.
 * **Change Description:** Brief explanation of the change.
+```
 
 **Example:**
 
