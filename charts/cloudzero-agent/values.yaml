@@ -600,21 +600,29 @@ configmapReload:
     containerSecurityContext: {}
     resources: {}
 
-# Aggregator application. This is the recommended way to deploy the Cloudzero insights controller.
-#
-# The aggregator architecture will deploy 2 more applications in conjunction with the insights admissions controller.
-# The collector application will act as a remote write endpoint for prometheus to send the gathered metrics from the
-# admissions controller, and write them to temporary files on disk.
-# 
-# The shipper application will process completed metrics files and push them to the remote server. This architecture
-# will reduce upload error rates and data loss, along with decoupling the metric collection and shipment components
-# offering greater flexibility for clusters with differing workloads.
+# The aggregator provides an intermediary between the CloudZero Agent and the CloudZero API.
+# It is composed of two applications, the collector and the shipper.
+
+# The collector application provides an endpoint for the CloudZero Agent to write metrics to.
+# It filters out any unwanted metrics as it receives them, aggregates the wanted metrics,
+# and stores them in a compressed format on disk until they are ready to be uploaded to the
+# CloudZero servers. Once the collector has aggregated sufficient metrics (or a given amount of time has elapsed)
+# the data is sent to the shipper.
+
+# The shipper will process the completed metrics files and push them to the remote server.
+# It will also handle any requests from the server to re-send any missing or incomplete data,
+# ensuring that there is no data loss in the event of any loss of communication with the CloudZero API,
+# even when a misconfiguration (such as an incorrect API key) prevents it.
 aggregator:
-  enabled: true
+  enabled: false
   replicas: 1
   logging:
+    # Logging level that will be posted to stdout.
+    # Valid values are: 'debug', 'info', 'warn', 'error'
     level: info
-  # The location that the aggregator will mount a read-write directory. This is where intermediate metric files will exist.
+  # Top-level directory containing CloudZero data. There will be subdirectories for configuration (the mounted ConfigMap)
+  # and the API key (typically a mounted Secret), and data to be uploaded to CloudZero, specifically metrics.
+  # This value is really only visible internally in the container, so you shouldn't generally need to change it.
   # Set `aggregator.database.purgeRules` to control the cleanup behavior of this directory
   mountRoot: /cloudzero
   image:
@@ -632,20 +640,31 @@ aggregator:
     maxRecords: 1500000
     # Max interval to flush a metrics file. This is mostly useful for smaller clusters with little activity.
     maxInterval: 10m
-    # Level of compression on the files. This ranges from 0-9 with tradeoffs between speed and size.
+    # Compression level to use when compressing metrics files on-disk.
+    # Valid value range from 0-11, with higher values yielding improved compression ratios
+    # at the expense of speed and memory usage.
     # Read more about brotli compression here: https://github.com/google/brotli/blob/master/c/tools/brotli.md#options
     compressionLevel: 8
-    # purgeRules defines the rules to follow when removing metric files that have already been uploaded to the Cloudzero platform
+    # The rules that the application will follow in respect to cleaning up old files that have been uploaded to the
+    # Cloudzero platform.
+    # Generally, the defaults will be okay for the majority of use cases. But, the options are here for more advanced
+    # users to optimize disk usage. For example, the default case is to keep uploaded files around for 90 days, as this
+    # falls in line with most customer's data tolerance policies. But, if deployed on a more active and/or larger cluster,
+    # this value can be lowered to keep disk usage lower with the tradeoff of less data-retention. Regardless of what you
+    # define here if there is disk pressure detected, files will be deleted (oldest first) to free space.
     purgeRules:
-      # How long to keep uploaded files. This option can be useful to optimize the storage required by the collector/shipper architecture on your nodes.
-      # `2160h` is 90 days, and is a reasonable default. This can reasonably be any value, as the application will force remove files if space is constrained.
-      # `0s` is also a valid option and can signify that you do not want to keep uploaded files at all. Though do note, that this could possibly
-      # result in data loss if there are transient upload failures during the lifecycle of the application.
+      # How long to keep uploaded files. This option can be useful to optimize the storage required by the collector/shipper
+      # architecture on your nodes.
+      # `2160h` is 90 days, and is a reasonable default. This can reasonably be any value, as the application will force
+      # remove files if space is constrained.
+      # `0s` is also a valid option and can signify that you do not want to keep uploaded files at all. Though do note
+      # that this could possibly result in data loss if there are transient upload failures during the lifecycle of the application.
       metricsOlderThan: 2160h
       # If set to true (default), then files older than `metricsOlderThan` will not be deleted unless there is detected storage pressure.
       # For example, if there are files older than `metricsOlderThan` but only 30% of storage space is used, the files will not be deleted.
       lazy: true
-      # This controls the percentage of files the application will remove when there is critical storage pressure. This is defined by >95% of storage usage.
+      # This controls the percentage of files the application will remove when there is critical storage pressure.
+      # This is defined by >95% of storage usage.
       percent: 20
   collector:
     port: 8080
