@@ -600,27 +600,52 @@ configmapReload:
     containerSecurityContext: {}
     resources: {}
 
+# Aggregator application. This is the recommended way to deploy the Cloudzero insights controller.
+#
+# The aggregator architecture will deploy 2 more applications in conjunction with the insights admissions controller.
+# The collector application will act as a remote write endpoint for prometheus to send the gathered metrics from the
+# admissions controller, and write them to temporary files on disk.
+# 
+# The shipper application will process completed metrics files and push them to the remote server. This architecture
+# will reduce upload error rates and data loss, along with decoupling the metric collection and shipment components
+# offering greater flexibility for clusters with differing workloads.
 aggregator:
-  enabled: false
+  enabled: true
   replicas: 1
   logging:
     level: info
+  # The location that the aggregator will mount a read-write directory. This is where intermediate metric files will exist.
+  # Set `aggregator.database.purgeRules` to control the cleanup behavior of this directory
   mountRoot: /cloudzero
   image:
     repository: ghcr.io/cloudzero/cloudzero-insights-controller/cloudzero-insights-controller
     tag: latest
     pullPolicy: IfNotPresent
   cloudzero:
+    # Interval between attempts to ship metrics to the remote endpoint.
     sendInterval: 1m
-    sendTimeout: 10s
+    # Max time the aggregator will spend attempting to ship metrics to the remote endpoint.
+    sendTimeout: 30s
     rotateInterval: 30m
   database:
+    # Max number of records per file. Use this to adjust file sizes uploaded to the server. The default value is good in most cases.
     maxRecords: 1500000
+    # Max interval to flush a metrics file. This is mostly useful for smaller clusters with little activity.
     maxInterval: 10m
+    # Level of compression on the files. This ranges from 0-9 with tradeoffs between speed and size.
+    # Read more about brotli compression here: https://github.com/google/brotli/blob/master/c/tools/brotli.md#options
     compressionLevel: 8
+    # purgeRules defines the rules to follow when removing metric files that have already been uploaded to the Cloudzero platform
     purgeRules:
+      # How long to keep uploaded files. This option can be useful to optimize the storage required by the collector/shipper architecture on your nodes.
+      # `2160h` is 90 days, and is a reasonable default. This can reasonably be any value, as the application will force remove files if space is constrained.
+      # `0s` is also a valid option and can signify that you do not want to keep uploaded files at all. Though do note, that this could possibly
+      # result in data loss if there are transient upload failures during the lifecycle of the application.
       metricsOlderThan: 2160h
+      # If set to true (default), then files older than `metricsOlderThan` will not be deleted unless there is detected storage pressure.
+      # For example, if there are files older than `metricsOlderThan` but only 30% of storage space is used, the files will not be deleted.
       lazy: true
+      # This controls the percentage of files the application will remove when there is critical storage pressure. This is defined by >95% of storage usage.
       percent: 20
   collector:
     port: 8080
