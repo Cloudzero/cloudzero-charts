@@ -303,6 +303,29 @@ metricFilters:
         - remote_write_response_codes_total
         - remote_write_timeseries_total
         - storage_write_failure_total
+        # shipper
+        - function_execution_seconds
+        - shipper_shutdown_total
+        - shipper_new_files_error_total
+        - shipper_new_files_processing_current
+        - shipper_handle_request_file_count
+        - shipper_handle_request_success_total
+        - shipper_presigned_url_error_total
+        - shipper_replay_request_total
+        - shipper_replay_request_current
+        - shipper_replay_request_file_count
+        - shipper_replay_request_error_total
+        - shipper_replay_request_abandon_files_total
+        - shipper_replay_request_abandon_files_error_total
+        - shipper_disk_total_size_bytes
+        - shipper_current_disk_usage_bytes
+        - shipper_current_disk_usage_percentage
+        - shipper_current_disk_unsent_file
+        - shipper_current_disk_sent_file
+        - shipper_disk_replay_request_current
+        - shipper_disk_cleanup_failure_total
+        - shipper_disk_cleanup_success_total
+        - shipper_disk_cleanup_percentage
       prefix: []
       suffix: []
       contains: []
