@@ -97,6 +97,18 @@ spec:
       labels:
         {{- include "cloudzero-agent.insightsController.initCertJob.matchLabels" . | nindent 8 }}
     spec:
+      {{- with (.Values.initCertJob.nodeSelector | default .Values.insightsController.server.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.initCertJob.affinity | default .Values.insightsController.server.affinity) }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.initCertJob.tolerations | default .Values.insightsController.server.tolerations) }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "cloudzero-agent.initCertJob.serviceAccountName" . }}
       restartPolicy: Never
       {{- include  "cloudzero-agent.initCertJob.imagePullSecrets" . | nindent 6 }}
@@ -190,16 +202,5 @@ spec:
               echo "The useCertManager flag is set to true. Skipping certificate generation and patching of resources."
               {{- end }}
               exit 0
-      {{- with (.Values.initCertJob.nodeSelector | default .Values.insightsController.server.nodeSelector) }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with (.Values.initCertJob.affinity | default .Values.insightsController.server.affinity) }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with (.Values.initCertJob.tolerations | default .Values.insightsController.server.tolerations) }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
 {{- end }}
 {{- end }}
