@@ -417,6 +417,7 @@ annotations:
 {{- end -}}
 {{- end -}}
 
+
 {{/*
 Name for the certificate init job resource. Should be a new name each installation/upgrade.
 */}}
