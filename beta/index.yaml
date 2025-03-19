@@ -3,7 +3,27 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.226370488Z"
+    created: "2025-03-19T00:33:05.570214127Z"
+    dependencies:
+    - alias: kubeStateMetrics
+      condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: 7f8165f27795f75b86fc5a4d487a4c1aa6ee6175f14ec9f101923e2260e4e423
+    maintainers:
+    - email: support@cloudzero.com
+      name: CloudZero
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-agent-1.1.0-beta-1.tgz
+    version: 1.1.0-beta-1
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2025-03-19T00:33:05.566123039Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -28,7 +48,7 @@ entries:
     version: 1.0.2-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.22049881Z"
+    created: "2025-03-19T00:33:05.560316993Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -52,7 +72,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.206646249Z"
+    created: "2025-03-19T00:33:05.546706606Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -72,7 +92,7 @@ entries:
     version: 1.0.0-beta-9
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.204299265Z"
+    created: "2025-03-19T00:33:05.544386758Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -92,7 +112,7 @@ entries:
     version: 1.0.0-beta-8
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.201993568Z"
+    created: "2025-03-19T00:33:05.54208299Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -112,7 +132,7 @@ entries:
     version: 1.0.0-beta-7
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.198903042Z"
+    created: "2025-03-19T00:33:05.538605861Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -136,7 +156,7 @@ entries:
     version: 1.0.0-beta-5
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.193037355Z"
+    created: "2025-03-19T00:33:05.532949043Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -160,7 +180,7 @@ entries:
     version: 1.0.0-beta-4
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.186034791Z"
+    created: "2025-03-19T00:33:05.525246Z"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -180,7 +200,7 @@ entries:
     version: 1.0.0-beta-10
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.213345814Z"
+    created: "2025-03-19T00:33:05.553255543Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -204,7 +224,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-01-17T17:36:19.183514052Z"
+    created: "2025-03-19T00:33:05.52230693Z"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -228,7 +248,7 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2025-01-17T17:36:19.25421379Z"
+    created: "2025-03-19T00:33:05.597933754Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -245,7 +265,7 @@ entries:
     version: 1.0.2-beta
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2025-01-17T17:36:19.249395449Z"
+    created: "2025-03-19T00:33:05.593750609Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -262,7 +282,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2025-01-17T17:36:19.240457803Z"
+    created: "2025-03-19T00:33:05.584589264Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -279,7 +299,7 @@ entries:
     version: 1.0.0-beta-5
   - apiVersion: v2
     appVersion: 0.0.3
-    created: "2025-01-17T17:36:19.236273857Z"
+    created: "2025-03-19T00:33:05.579545707Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -296,7 +316,7 @@ entries:
     version: 1.0.0-beta-4
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-01-17T17:36:19.245190915Z"
+    created: "2025-03-19T00:33:05.588701007Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -313,7 +333,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-01-17T17:36:19.231331334Z"
+    created: "2025-03-19T00:33:05.575339909Z"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -328,4 +348,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2025-01-17T17:36:19.179284746Z"
+generated: "2025-03-19T00:33:05.5191801Z"
