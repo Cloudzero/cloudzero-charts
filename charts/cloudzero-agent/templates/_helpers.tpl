@@ -458,3 +458,29 @@ Name for the secret holding TLS certificates
 {{- .Values.insightsController.tls.secret.name | default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
 {{- end }}
 
+{{/*
+Volume mount for the API key
+*/}}
+{{- define "cloudzero-agent.apiKeyVolumeMount" -}}
+{{- if or .Values.existingSecretName .Values.apiKey -}}
+- name: cloudzero-api-key
+  mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
+  subPath: ""
+  readOnly: true
+{{- end }}
+{{- end }}
+
+{{/*
+Return the URL for the agent and insights controller to send metrics to.
+
+If the CloudZero Aggregator is enabled, this will be the URL for the collector.
+Otherwise, it will be the CloudZero API endpoint.
+
+*/}}
+{{- define "cloudzero-agent.metricsDestination" -}}
+{{- if .Values.aggregator.enabled -}}
+'http://{{ include "cloudzero-agent.aggregator.name" . }}.{{ .Release.Namespace }}.svc.cluster.local/collector'
+{{- else -}}
+'{{ .Values.scheme }}://{{ include "cloudzero-agent.cleanString" .Values.host }}{{ .Values.endpoint }}'
+{{- end -}}
+{{- end -}}
