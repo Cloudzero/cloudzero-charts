@@ -201,7 +201,7 @@ data:
     cloud_account_id: {{ .Values.cloudAccountId }}
     region: {{ .Values.region }}
     cluster_name: {{ .Values.clusterName }}
-    host: {{ .Values.host }}
+    destination: {{ include "cloudzero-agent.metricsDestination" . }}
     logging:
       level: {{ .Values.insightsController.server.logging.level }}
     remote_write:
