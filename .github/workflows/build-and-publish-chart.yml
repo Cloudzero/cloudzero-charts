@@ -46,6 +46,7 @@ jobs:
 
       # We should generally run on the main branch, unless releasing a patch on a specific version
       - name: Checkout branch for release
+        if: ${{ github.ref_name != 'main' && github.ref_name != 'develop' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
