@@ -48,12 +48,15 @@ jobs:
 
       # Step 2: Prepare Branches for the case where we are releasing from main or develop
       - name: Prepare Branches
+        if: ${{ env.RELEASE_BRANCH == 'main' }}
         run: |
           git checkout develop
           git pull --rebase origin develop
           git checkout ${{ env.RELEASE_BRANCH }}
-          git pull --rebase origin main
-          git merge develop
+          git pull --rebase origin ${{ env.RELEASE_BRANCH }}
+          if ${{ env.RELEASE_BRANCH == 'main' }}; then
+            git merge develop
+          fi
 
       # Step 3: Helm Setup
       - name: Install Helm
