@@ -46,7 +46,7 @@ jobs:
       - name: Fetch All Branches
         run: git fetch --all
 
-      # Step 2: Prepare Branches for the case where we are releasing from main or develop
+      # Step 2: Prepare Branches
       - name: Prepare Branches
         run: |
           git checkout develop
