@@ -93,7 +93,6 @@ jobs:
         run: helm package charts/cloudzero-agent/ --destination .deploy
 
       - name: Commit updated Chart.yaml
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'develop' }}
         run: |
           git add .
           git commit -m "Update Chart.yaml to version ${{ env.NEW_VERSION }}"
