@@ -35,8 +35,9 @@ jobs:
       - name: Fetch All Branches
         run: git fetch --all
 
-      # Step 2: Prepare Branches
+      # Step 2: Prepare Branches for the case where we are releasing from main or develop
       - name: Prepare Branches
+        if: ${{ github.ref_name == 'main' || github.ref_name == 'develop' }}
         run: |
           git checkout develop
           git pull --rebase origin develop
@@ -44,7 +45,7 @@ jobs:
           git pull --rebase origin main
           git merge develop
 
-      # We should generally run on the main branch, unless releasing a patch on a specific version
+      # If not releasing off main or develop, checkout the patch branch that we're releasing from
       - name: Checkout branch for release
         if: ${{ github.ref_name != 'main' && github.ref_name != 'develop' }}
         uses: actions/checkout@v4
@@ -88,6 +89,7 @@ jobs:
         run: helm package charts/cloudzero-agent/ --destination .deploy
 
       - name: Commit updated Chart.yaml
+        if: ${{ github.ref_name == 'main' || github.ref_name == 'develop' }}
         run: |
           git add .
           git commit -m "Update Chart.yaml to version ${{ env.NEW_VERSION }}"
