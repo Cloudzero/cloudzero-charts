@@ -48,7 +48,6 @@ jobs:
 
       # Step 2: Prepare Branches for the case where we are releasing from main or develop
       - name: Prepare Branches
-        if: ${{ env.RELEASE_BRANCH == 'main' }}
         run: |
           git checkout develop
           git pull --rebase origin develop
