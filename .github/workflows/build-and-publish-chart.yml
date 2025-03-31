@@ -25,10 +25,11 @@ jobs:
       # Set RELEASE_BRANCH based on the current branch
       - name: Set RELEASE_BRANCH
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "develop" || "${GITHUB_REF_NAME}" == "main" ]]; then
+          if [[ "${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "develop" ]]; then
             echo "RELEASE_BRANCH=main" >> $GITHUB_ENV
           else
-            echo "RELEASE_BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+            echo "RELEASE_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
 
       # Step 1: Checkout and Setup
       - name: Checkout Code
