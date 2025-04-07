@@ -43,13 +43,10 @@ spec:
                   matchLabels:
                     app: webhook-server
                 topologyKey: "kubernetes.io/hostname"
-      dnsPolicy: {{ .Values.insightsController.server.dnsPolicy }}
-      {{- if .Values.insightsController.server.dnsConfig }}
-      dnsConfig: {{ toYaml .Values.insightsController.server.dnsConfig | nindent 8 }}
-      {{- end }}
       containers:
         - name: webhook-server
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" (dict "repository" .Values.insightsController.server.image.repository "tag" (.Values.insightsController.server.image.tag | default .Chart.AppVersion) "pullPolicy" .Values.insightsController.server.image.pullPolicy)) | nindent 10 }}
+          image: "{{ .Values.insightsController.server.image.repository }}:{{ .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.insightsController.server.image.pullPolicy }}
           command:
             - /app/cloudzero-insights-controller
           args:

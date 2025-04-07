@@ -13,7 +13,9 @@
     },
     {
       "Effect": "Allow",
-      "Action": ["elasticfilesystem:CreateAccessPoint"],
+      "Action": [
+        "elasticfilesystem:CreateAccessPoint"
+      ],
       "Resource": "*",
       "Condition": {
         "StringLike": {
@@ -23,7 +25,9 @@
     },
     {
       "Effect": "Allow",
-      "Action": ["elasticfilesystem:TagResource"],
+      "Action": [
+        "elasticfilesystem:TagResource"
+      ],
       "Resource": "*",
       "Condition": {
         "StringLike": {
