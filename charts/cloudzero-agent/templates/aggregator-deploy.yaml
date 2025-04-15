@@ -17,9 +17,8 @@ spec:
   replicas: {{ .Values.aggregator.replicas }}
   template:
     metadata:
-      annotations:
-        checksum/config: {{ include "cloudzero-agent.aggregator.configuration" . | sha256sum }}
       {{- with .Values.aggregator.podAnnotations }}
+      annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
