@@ -7,7 +7,6 @@ metadata:
 {{- end }}
   labels:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
-  {{- include "cloudzero-agent.generateAnnotations" .Values.defaults.annotations | nindent 2 }}
   name: {{ template "cloudzero-agent.server.fullname" . }}
   namespace: {{ include "cloudzero-agent.namespace" . }}
 spec:
@@ -27,11 +26,13 @@ spec:
         {{ toYaml .Values.server.podLabels | nindent 8 }}
         {{- end}}
     spec:
-      {{- include "cloudzero-agent.generatePriorityClassName" (.Values.defaults.priorityClassName | default .Values.server.priorityClassName) | nindent 6 }}
+{{- if .Values.server.priorityClassName }}
+      priorityClassName: "{{ .Values.server.priorityClassName }}"
+{{- end }}
       serviceAccountName: {{ template "cloudzero-agent.serviceAccountName" . }}
       initContainers:
         - name: {{ .Values.validator.name }}-copy
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.validator.image) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" .Values.validator.image) | nindent 10 }}
           command:
             - /app/cloudzero-agent-validator
             - install
@@ -48,7 +49,7 @@ spec:
             - name: validator-config-volume
               mountPath: /checks/config/
         - name: {{ .Values.validator.name }}-run
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.validator.image) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" .Values.validator.image) | nindent 10 }}
           command:
             - /checks/bin/cloudzero-agent-validator
             - diagnose
@@ -68,7 +69,7 @@ spec:
       containers:
         {{- if .Values.configmapReload.prometheus.enabled }}
         - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-configmap-reload
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.prometheusReloader.image "compat" .Values.configmapReload.prometheus.image) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" .Values.configmapReload.prometheus.image) | nindent 10 }}
           args:
             - --watched-dir=/etc/config
             - --reload-url=http://127.0.0.1:9090/-/reload
@@ -83,7 +84,7 @@ spec:
         {{- end }}
         - name: {{ template "cloudzero-agent.name" . }}-server
           {{/* This is a little special because we want to fall back on the .Chart.AppVersion */}}
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.prometheus.image "compat" (dict "repository" .Values.server.image.repository "tag" (.Values.server.image.tag | default .Values.components.prometheus.image.tag | default .Chart.AppVersion) "digest" .Values.server.image.digest "pullPolicy" .Values.server.image.pullPolicy)) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" (dict "repository" .Values.server.image.repository "tag" (.Values.server.image.tag | default .Chart.AppVersion) "digest" .Values.server.image.digest "pullPolicy" .Values.server.image.pullPolicy)) | nindent 10 }}
           {{- if .Values.server.env }}
           env:
 {{ toYaml .Values.server.env | indent 12}}
@@ -152,11 +153,23 @@ spec:
         runAsNonRoot: true
         runAsGroup: 65534
         fsGroup: 65534
-      {{- include "cloudzero-agent.generateDNSInfo" (dict "defaults" .Values.defaults.dns) | nindent 6 }}
+      dnsPolicy: {{ .Values.server.dnsPolicy }}
+      {{- if .Values.server.dnsConfig }}
+      dnsConfig: {{ toYaml .Values.server.dnsConfig | nindent 8 }}
+      {{- end }}
       {{- include "cloudzero-agent.server.imagePullSecrets" . | nindent 6 -}}
-      {{- include "cloudzero-agent.generateNodeSelector" (dict "default" .Values.defaults.nodeSelector "nodeSelector" .Values.server.nodeSelector) | nindent 6 }}
-      {{- include "cloudzero-agent.generateTolerations" (concat .Values.defaults.tolerations .Values.server.tolerations) | nindent 6 }}
-      {{- include "cloudzero-agent.generateAffinity" (dict "default" .Values.defaults.affinity "affinity" .Values.server.affinity) | nindent 6 }}
+    {{- if .Values.server.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.server.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.server.tolerations }}
+      tolerations:
+{{ toYaml .Values.server.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.server.affinity }}
+      affinity:
+{{ toYaml .Values.server.affinity | indent 8 }}
+    {{- end }}
     {{- with .Values.server.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}

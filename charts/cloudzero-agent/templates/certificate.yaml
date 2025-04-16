@@ -5,12 +5,13 @@ kind: Certificate
 metadata:
   name: {{ include "cloudzero-agent.certificateName" . }}
   namespace: {{ .Release.Namespace }}
-  {{- include "cloudzero-agent.generateLabels" (dict "globals" . "labels" .Values.commonMetaLabels) | nindent 2 }}
-  {{- include "cloudzero-agent.generateAnnotations" .Values.defaults.annotations | nindent 2 }}
 spec:
   secretName: {{ include "cloudzero-agent.tlsSecretName" .}}
   secretTemplate:
-    {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations .Values.secretAnnotations) | nindent 2 }}
+    {{- with .Values.secretAnnotations }}
+    annotations:
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
     labels:
       {{- include "cloudzero-agent.insightsController.labels" . | nindent 6 }}
   privateKey:
