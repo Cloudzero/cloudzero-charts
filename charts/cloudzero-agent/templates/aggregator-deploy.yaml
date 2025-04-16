@@ -1,12 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-{{- if .Values.aggregator.deploymentAnnotations }}
-  annotations:
-    {{- toYaml .Values.aggregator.deploymentAnnotations | nindent 4 }}
-{{- end }}
   name: {{ include "cloudzero-agent.aggregator.name" . }}
   namespace: {{ .Release.Namespace }}
+  {{- include "cloudzero-agent.generateAnnotations" .Values.defaults.annotations | nindent 2 }}
   labels:
     {{- include "cloudzero-agent.aggregator.labels" . | nindent 4 }}
 spec:
@@ -16,24 +13,14 @@ spec:
   replicas: {{ .Values.aggregator.replicas }}
   template:
     metadata:
-      annotations:
-        checksum/config: {{ include "cloudzero-agent.aggregator.configuration" . | sha256sum }}
-      {{- with .Values.aggregator.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      labels:
-        {{- include "cloudzero-agent.aggregator.labels" . | nindent 8 }}
-        {{- with .Values.aggregator.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations (dict "checksum/config" (include "cloudzero-agent.aggregator.configuration" . | sha256sum))) | nindent 6 }}
+      {{- include "cloudzero-agent.generateLabels" (dict "globals" . "labels" (merge (include "cloudzero-agent.aggregator.matchLabels" . | fromYaml) .Values.commonMetaLabels)) | nindent 6 }}
     spec:
-{{- if .Values.server.priorityClassName }}
-      priorityClassName: "{{ .Values.server.priorityClassName }}"
-{{- end }}
       serviceAccountName: {{ template "cloudzero-agent.serviceAccountName" . }}
+      {{- include "cloudzero-agent.generatePriorityClassName" (.Values.defaults.priorityClassName | default .Values.server.priorityClassName) | nindent 6 }}
       containers:
         - name: {{ include "cloudzero-agent.aggregator.name" . }}-collector
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" .Values.aggregator.image) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.aggregator.image) | nindent 10 }}
           ports:
             - containerPort: {{ .Values.aggregator.collector.port }}
           command: ["/app/cloudzero-collector", "-config", "{{ .Values.aggregator.mountRoot }}/config/config.yml"]
@@ -65,7 +52,7 @@ spec:
             {{- toYaml .Values.aggregator.collector.resources | nindent 12 }}
 
         - name: {{ include "cloudzero-agent.aggregator.name" . }}-shipper
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.agent.image "image" .Values.aggregator.image) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.aggregator.image) | nindent 10 }}
           command: ["/app/cloudzero-shipper", "-config", "{{ .Values.aggregator.mountRoot }}/config/config.yml"]
           env:
             - name: SERVER_PORT
@@ -99,24 +86,11 @@ spec:
         runAsNonRoot: true
         runAsGroup: 65534
         fsGroup: 65534
-      dnsPolicy: {{ .Values.aggregator.dnsPolicy }}
-      {{- if .Values.aggregator.dnsConfig }}
-      dnsConfig: {{ .Values.aggregator.dnsConfig | nindent 8 }}
-      {{- end }}
+      {{- include "cloudzero-agent.generateDNSInfo" (dict "defaults" .Values.defaults.dns) | nindent 6 }}
       {{- include "cloudzero-agent.server.imagePullSecrets" . | nindent 6 -}}
-
-      {{- with .Values.aggregator.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.aggregator.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.aggregator.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "cloudzero-agent.generateNodeSelector" (dict "default" .Values.defaults.nodeSelector "nodeSelector" .Values.aggregator.nodeSelector) | nindent 6 }}
+      {{- include "cloudzero-agent.generateAffinity" (dict "default" .Values.defaults.affinity) | nindent 6 }}
+      {{- include "cloudzero-agent.generateTolerations" (concat .Values.defaults.tolerations) | nindent 6 }}
   
     {{- with .Values.server.topologySpreadConstraints }}
       topologySpreadConstraints:

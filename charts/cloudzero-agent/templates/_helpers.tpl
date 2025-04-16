@@ -74,13 +74,13 @@ app.kubernetes.io/component: {{ .Values.server.name }}
 Create unified labels for prometheus components
 */}}
 {{- define "cloudzero-agent.common.metaLabels" -}}
-app.kubernetes.io/version: {{ .Chart.AppVersion }}
-helm.sh/chart: {{ include "cloudzero-agent.chart" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: {{ include "cloudzero-agent.name" . }}
-{{- with .Values.commonMetaLabels}}
-{{ toYaml . }}
-{{- end }}
+{{- $labels := dict
+    "app.kubernetes.io/version" .Chart.AppVersion
+    "helm.sh/chart" (include "cloudzero-agent.chart" .)
+    "app.kubernetes.io/managed-by" .Release.Service
+    "app.kubernetes.io/part-of" (include "cloudzero-agent.name" .)
+-}}
+{{- (merge $labels .Values.defaults.labels .Values.commonMetaLabels) | toYaml -}}
 {{- end -}}
 
 {{- define "cloudzero-agent.server.labels" -}}
@@ -500,7 +500,7 @@ Map for initBackfillJob values; this allows us to preferably use initBackfillJob
 Name for a job resource
 */}}
 {{- define "cloudzero-agent.jobName" -}}
-{{- printf "%s-%s-%s" .Release .Name (. | toYaml | sha256sum) | trunc 61 -}}
+{{- printf "%s-%s-%s" .Release .Name (.Values.jobConfigID | default (. | toYaml | sha256sum)) | trunc 61 -}}
 {{- end }}
 
 {{/*
@@ -583,14 +583,109 @@ Otherwise, it will be the CloudZero API endpoint.
 Generate image configuration with defaults.
 */}}
 {{- define "cloudzero-agent.generateImage" -}}
-{{- if .image.digest -}}
-image: "{{ .image.repository | default .defaults.repository }}@{{ .image.digest }}"
-{{- else if .image.tag -}}
-image: "{{ .image.repository | default .defaults.repository }}:{{ .image.tag }}"
-{{- else if .defaults.digest -}}
-image: "{{ .image.repository | default .defaults.repository }}@{{ .defaults.digest }}"
-{{- else -}}
-image: "{{ .image.repository | default .defaults.repository }}:{{ .defaults.tag }}"
+{{- $digest      := (.image.digest      | default .defaults.digest) -}}
+{{- $tag         := (.image.tag         | default .defaults.tag) -}}
+{{- $repository  := (.image.repository  | default .defaults.repository) -}}
+{{- $pullPolicy  := (.image.pullPolicy  | default .defaults.pullPolicy) -}}
+{{- $pullSecrets := (.image.pullSecrets | default .defaults.pullSecrets) -}}
+{{- if .compat -}}
+{{- $digest      = (.compat.digest      | default .image.digest      | default .defaults.digest) -}}
+{{- $tag         = (.compat.tag         | default .image.tag         | default .defaults.tag) -}}
+{{- $repository  = (.compat.repository  | default .image.repository  | default .defaults.repository) -}}
+{{- $pullPolicy  = (.compat.pullPolicy  | default .image.pullPolicy  | default .defaults.pullPolicy) -}}
+{{- $pullSecrets = (.compat.pullSecrets | default .image.pullSecrets | default .defaults.pullSecrets) -}}
+{{- end -}}
+{{- if $digest -}}
+image: "{{ $repository }}@{{ $digest }}"
+{{- else if $tag -}}
+image: "{{ $repository }}:{{ $tag }}"
 {{- end }}
-imagePullPolicy: "{{ .image.pullPolicy | default .defaults.pullPolicy }}"
+{{ if $pullPolicy -}}
+imagePullPolicy: "{{ $pullPolicy }}"
+{{- end }}
+{{ if $pullSecrets -}}
+imagePullSecrets:
+{{ toYaml $pullSecrets | indent 2 }}
+{{- end }}
+{{- end -}}
+
+{{/* Generate priority class name */}}
+{{- define "cloudzero-agent.generatePriorityClassName" -}}
+{{- if . -}}
+priorityClassName: {{ . }}
+{{- end -}}
+{{- end -}}
+
+{{/* Generate DNS info */}}
+{{- define "cloudzero-agent.generateDNSInfo" -}}
+{{- $dnsPolicy := .defaults.policy -}}
+{{- $dnsConfig := .defaults.config -}}
+{{- if $dnsPolicy -}}
+dnsPolicy: {{ $dnsPolicy }}
+{{- end -}}
+{{- if $dnsConfig }}
+dnsConfig:
+{{ $dnsConfig | toYaml | indent 2 }}
+{{ end -}}
+{{- end -}}
+
+{{/*
+Generate labels for a component
+*/}}
+{{- define "cloudzero-agent.generateLabels" -}}
+{{- $labels := dict
+    "app.kubernetes.io/version" .globals.Chart.AppVersion
+    "helm.sh/chart" (include "cloudzero-agent.chart" .globals)
+    "app.kubernetes.io/managed-by" .globals.Release.Service
+    "app.kubernetes.io/part-of" (include "cloudzero-agent.name" .globals)
+-}}
+{{- if len $labels -}}
+labels:
+{{- (merge $labels (.labels | default (dict)) .globals.Values.defaults.labels .globals.Values.commonMetaLabels) | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate annotations
+*/}}
+{{- define "cloudzero-agent.generateAnnotations" -}}
+{{- if . -}}
+annotations:
+{{- . | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate affinity sections
+*/}}
+{{- define "cloudzero-agent.generateAffinity" -}}
+{{ $affinity := .default }}
+{{- if .affinity -}}
+{{ $affinity = merge .affinity .default }}
+{{- end -}}
+{{- if $affinity -}}
+affinity:
+{{- $affinity | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate tolerations sections
+*/}}
+{{- define "cloudzero-agent.generateTolerations" -}}
+{{- if . -}}
+tolerations:
+{{- . | toYaml | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate nodeSelector sections
+*/}}
+{{- define "cloudzero-agent.generateNodeSelector" -}}
+{{- $nodeSelector := .nodeSelector | default .default -}}
+{{if $nodeSelector }}
+nodeSelector:
+{{- $nodeSelector | toYaml | nindent 2 -}}
+{{- end -}}
 {{- end -}}

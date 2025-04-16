@@ -15,13 +15,56 @@ existingSecretName: null
 # Agent largely contains top-level settings which are often shared by multiple
 # components within this chart, or used as defaults in case values are not
 # explicitly set per-component.
-agent:
-  # The container image used for most CloudZero components.
+defaults:
+  # The default image settings which will be fallen back on for all components.
   image:
-    repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-    tag: 1.1.0-beta-3  # <- Software release corresponding to this chart version.
-    digest:
     pullPolicy: IfNotPresent
+    pullSecrets:
+  # If set, these DNS settings will be attached to resources which support it.
+  dns:
+    policy:
+    config: {}
+  # Labels to be added to all resources.
+  labels: {}
+  # Annotations to be added to all resources.
+  annotations: {}
+  # Affinity settings to be added to all resources.
+  affinity: {}
+  # Tolerations to be added to all resources.
+  tolerations: []
+  # Node Selector to be added to all resources.
+  nodeSelector: {}
+  # If set, this priority class name will be used for all deployments and jobs.
+  priorityClassName:
+
+components:
+  agent:
+    image:
+      repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
+      tag: 1.1.0-beta-3  # <- Software release corresponding to this chart version.
+  kubectl:
+    image:
+      repository: docker.io/bitnami/kubectl
+      tag: "1.32.0"
+  prometheus:
+    image:
+      repository: quay.io/prometheus/prometheus
+      tag:  # This will fall back on .Chart.AppVersion if not set.
+  prometheusReloader:
+    image:
+      repository: quay.io/prometheus-operator/prometheus-config-reloader
+      tag: "v0.70.0"
+
+
+#######################################################################################
+#######################################################################################
+####                                                                               ####
+####  Values below this point are not considered API stable. Use at your own risk. ####
+####  If you do require them for some reason, please let us know so we can work on ####
+####  covering your use case in the stable section.                                ####
+####                                                                               ####
+#######################################################################################
+#######################################################################################
 
 prometheusConfig:
   configMapNameOverride: ""
@@ -60,6 +103,8 @@ serverConfig:
 
 # -- The following settings are for the init-backfill-job, which is used to backfill data from the cluster to CloudZero.
 initBackfillJob:
+  annotations: {}
+  tolerations: []
   # -- By default, all image settings use those set in insightsController.server. Optionally use the below to override. This should not be common.
   # imagePullSecrets: []
   image:
@@ -82,13 +127,13 @@ initCertJob:
   enabled: true
   # -- Defaults to the same setting as the insightsController.server if set, otherwise left empty.
   # imagePullSecrets: []
+  annotations: {}
+  tolerations: []
   image:
-    repository: docker.io/bitnami/kubectl
+    repository:
     pullPolicy:
     digest:
-    tag: "1.32.0"
-  dnsPolicy: ClusterFirst
-  dnsConfig: {}
+    tag:
   rbac:
     create: true
     serviceAccountName: ""
@@ -135,14 +180,13 @@ validator:
     tag:
     digest:
     pullPolicy:
+    pullSecrets:
 
 server:
   name: server
   image:
-    repository: quay.io/prometheus/prometheus
-    # if not set appVersion field from Chart.yaml is used
+    repository:
     tag:
-    # When digest is set to a non-empty value, images will be pulled by digest (regardless of tag value).
     digest:
     pullPolicy:
   nodeSelector: {}
@@ -154,8 +198,6 @@ server:
       memory: 1024Mi
   deploymentAnnotations: {}
   podAnnotations: {}
-  dnsPolicy: ClusterFirst
-  dnsConfig: {}
   agentMode: true
   args:
     - --config.file=/etc/config/prometheus/configmaps/prometheus.yml
@@ -171,9 +213,12 @@ server:
     size: 8Gi
     accessModes:
       - ReadWriteOnce
+    annotations: {}
   # --Limit the size to 8Gi to lower impact on the cluster, and to provide a reasonable backup for the WAL
   emptyDir:
     sizeLimit: 8Gi
+  affinity: {}
+  tolerations: []
 
 insightsController:
   enabled: true
@@ -254,8 +299,8 @@ insightsController:
     nodeSelector: {}
     tolerations: []
     affinity: {}
-    dnsPolicy: ClusterFirst
-    dnsConfig: {}
+    deploymentAnnotations: {}
+    podAnnotations: {}
   volumeMounts: []
   volumes: []
   resources: {}
@@ -308,10 +353,10 @@ configmapReload:
   prometheus:
     enabled: true
     image:
-      repository: quay.io/prometheus-operator/prometheus-config-reloader
-      tag: v0.70.0
-      digest: ""
-      pullPolicy: IfNotPresent
+      repository:
+      tag:
+      digest:
+      pullPolicy:
 
     containerSecurityContext: {}
     resources: {}
@@ -348,8 +393,6 @@ aggregator:
     tag:
     digest:
     pullPolicy:
-  dnsPolicy: ClusterFirst
-  dnsConfig: {}
   cloudzero:
     # Interval between attempts to ship metrics to the remote endpoint.
     sendInterval: 1m
@@ -407,3 +450,6 @@ aggregator:
       limits:
         memory: "1024Mi"
         cpu: "2000m"
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
