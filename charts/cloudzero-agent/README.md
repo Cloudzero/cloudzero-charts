@@ -12,12 +12,7 @@ For the latest release, see [Releases](https://github.com/Cloudzero/cloudzero-ch
 
 - Kubernetes 1.23+
 - Helm 3+
-- [A CloudZero API key](https://docs.cloudzero.com/reference/authorization#creating-a-new-api-key) with the following scopes:
-  - `container-metrics_v1:abandon`
-  - `container-metrics_v1:get-status`
-  - `container-metrics_v1:legacy`
-  - `container-metrics_v1:upload`
-  - `insights:read_insights`
+- A CloudZero API key
 - Each Kubernetes cluster must have a route to the internet and a rule that allows egress from the agent to the CloudZero collector endpoint at https://api.cloudzero.com on port 443
 
 ### Recommended Knowledge
@@ -272,10 +267,6 @@ kubeStateMetrics:
     registry: my-custom-registry.io
     repository: my-custom-kube-state-metrics/kube-state-metrics
 ```
-
-## Contributing
-
-We welcome contributions to the CloudZero Agent Helm chart. Contributions for this chart are managed through the [CloudZero Agent repository](https://github.com/cloudzero/cloudzero-agent), which is then automatically synced to the [CloudZero Charts repository](https://github.com/cloudzero/cloudzero-charts). We cannot accept contributions for anything in this directory through the CloudZero Charts repository as they would be overwritten automatically the next time a change is made in the CloudZero Agent Validator repository.
 
 ## Dependencies
 

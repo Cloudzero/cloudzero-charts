@@ -37,7 +37,7 @@ data:
       {{- end }}
       executable: /bin/prometheus
       kube_metrics:
-        {{- (include "cloudzero-agent.defaults" . | fromYaml).kubeMetrics | toYaml | nindent 8 }}
+        {{- toYaml .Values.kubeMetrics | nindent 8 }}
       configurations:
         - /etc/prometheus/prometheus.yml
         - /etc/config/prometheus/configmaps/prometheus.yml
@@ -47,6 +47,7 @@ data:
         - name: pre-start
           enforce: true
           checks:
+            - egress_reachable
             - api_key_valid
         - name: post-start
           enforce: false
