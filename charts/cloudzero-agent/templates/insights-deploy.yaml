@@ -2,14 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-{{- if .Values.insightsController.server.deploymentAnnotations }}
-  annotations:
-    {{- toYaml .Values.insightsController.server.deploymentAnnotations | nindent 4 }}
-{{- end }}
   name: {{ include "cloudzero-agent.insightsController.deploymentName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "cloudzero-agent.insightsController.labels" . | nindent 4 }}
+  {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations .Values.insightsController.server.deploymentAnnotations) | nindent 2 }}
 spec:
   replicas: {{ .Values.insightsController.server.replicaCount }}
   selector:
@@ -17,15 +14,12 @@ spec:
       {{- include "cloudzero-agent.insightsController.server.matchLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.insightsController.server.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
         {{- include "cloudzero-agent.insightsController.labels" . | nindent 8 }}
         {{- with .Values.insightsController.server.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations .Values.insightsController.server.podAnnotations (dict "checksum/config" (include "cloudzero-agent.insightsController.configuration" . | sha256sum))) | nindent 6 }}
     spec:
       serviceAccountName: {{ include "cloudzero-agent.serviceAccountName" . }}
       {{- include "cloudzero-agent.insightsController.server.imagePullSecrets" . | nindent 6 }}
@@ -34,21 +28,17 @@ spec:
         runAsNonRoot: true
         runAsGroup: 65534
         fsGroup: 65534
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: webhook-server
-                topologyKey: "kubernetes.io/hostname"
+      {{ $podAntiAffinity := dict "podAntiAffinity" (dict "preferredDuringSchedulingIgnoredDuringExecution" (list (dict "weight" 100 "podAffinityTerm" (dict "labelSelector" (dict "matchLabels" (dict "app" "webhook-server")) "topologyKey" "kubernetes.io/hostname")))) }}
+      {{- include "cloudzero-agent.generateAffinity" (dict "default" .Values.defaults.affinity "affinity" (merge .Values.insightsController.server.affinity $podAntiAffinity)) | nindent 6 }}
+      {{- include "cloudzero-agent.generateDNSInfo" (dict "defaults" .Values.defaults.dns) | nindent 6 }}
+      {{- include "cloudzero-agent.generatePriorityClassName" .Values.defaults.priorityClassName | nindent 6 }}
+      {{- include "cloudzero-agent.generateNodeSelector" (dict "default" .Values.defaults.nodeSelector "nodeSelector" .Values.insightsController.server.nodeSelector) | nindent 6 }}
+      {{- include "cloudzero-agent.generateTolerations" (concat .Values.defaults.tolerations .Values.insightsController.server.tolerations) | nindent 6 }}
       containers:
         - name: webhook-server
-          image: "{{ .Values.insightsController.server.image.repository }}:{{ .Values.insightsController.server.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.insightsController.server.image.pullPolicy }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.insightsController.server.image) | nindent 10 }}
           command:
-            - /app/controller
+            - /app/cloudzero-insights-controller
           args:
             - -config
             - "{{ include "cloudzero-agent.insightsController.configurationMountPath" . }}/server-config.yaml"
@@ -115,17 +105,5 @@ spec:
         {{- with .Values.insightsController.volumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
-      {{- with .Values.insightsController.server.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.insightsController.server.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.insightsController.server.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}

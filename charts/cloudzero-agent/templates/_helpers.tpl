@@ -74,13 +74,13 @@ app.kubernetes.io/component: {{ .Values.server.name }}
 Create unified labels for prometheus components
 */}}
 {{- define "cloudzero-agent.common.metaLabels" -}}
-app.kubernetes.io/version: {{ .Chart.AppVersion }}
-helm.sh/chart: {{ include "cloudzero-agent.chart" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: {{ include "cloudzero-agent.name" . }}
-{{- with .Values.commonMetaLabels}}
-{{ toYaml . }}
-{{- end }}
+{{- $labels := dict
+    "app.kubernetes.io/version" .Chart.AppVersion
+    "helm.sh/chart" (include "cloudzero-agent.chart" .)
+    "app.kubernetes.io/managed-by" .Release.Service
+    "app.kubernetes.io/part-of" (include "cloudzero-agent.name" .)
+-}}
+{{- (merge $labels .Values.defaults.labels .Values.commonMetaLabels) | toYaml -}}
 {{- end -}}
 
 {{- define "cloudzero-agent.server.labels" -}}
@@ -185,9 +185,101 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Combine metric lists
 */}}
 {{- define "cloudzero-agent.combineMetrics" -}}
-{{- $total := concat .Values.kubeMetrics .Values.containerMetrics .Values.insightsMetrics .Values.prometheusMetrics -}}
+{{- $total := concat (include "cloudzero-agent.defaults" . | fromYaml).kubeMetrics (include "cloudzero-agent.defaults" . | fromYaml).containerMetrics (include "cloudzero-agent.defaults" . | fromYaml).insightsMetrics (include "cloudzero-agent.defaults" . | fromYaml).prometheusMetrics -}}
 {{- $result := join "|" $total -}}
 {{- $result -}}
+{{- end -}}
+
+{{/*
+Internal helper function for generating a metric filter regex
+*/}}
+{{- define "cloudzero-agent.generateMetricFilterRegexInternal" -}}
+{{- $patterns := list -}}
+{{/* Handle exact matches */}}
+{{- $exactPatterns := uniq .exact -}}
+{{- if gt (len $exactPatterns) 0 -}}
+{{- $exactPattern := printf "^(%s)$" (join "|" $exactPatterns) -}}
+{{- $patterns = append $patterns $exactPattern -}}
+{{- end -}}
+
+{{/* Handle prefix matches */}}
+{{- $prefixPatterns := uniq .prefix -}}
+{{- if gt (len $prefixPatterns) 0 -}}
+{{- $prefixPattern := printf "^(%s)" (join "|" $prefixPatterns) -}}
+{{- $patterns = append $patterns $prefixPattern -}}
+{{- end -}}
+
+{{/* Handle suffix matches */}}
+{{- $suffixPatterns := uniq .suffix -}}
+{{- if gt (len $suffixPatterns) 0 -}}
+{{- $suffixPattern := printf "(%s)$" (join "|" $suffixPatterns) -}}
+{{- $patterns = append $patterns $suffixPattern -}}
+{{- end -}}
+
+{{/* Handle contains matches */}}
+{{- $containsPatterns := uniq .contains -}}
+{{- if gt (len $containsPatterns) 0 -}}
+{{- $containsPattern := printf "(%s)" (join "|" $containsPatterns) -}}
+{{- $patterns = append $patterns $containsPattern -}}
+{{- end -}}
+
+{{/* Handle regex matches */}}
+{{- $regexPatterns := uniq .regex -}}
+{{- if gt (len $regexPatterns) 0 -}}
+{{- $regexPattern := printf "(%s)" (join "|" $regexPatterns) -}}
+{{- $patterns = append $patterns $regexPattern -}}
+{{- end -}}
+
+{{- join "|" $patterns -}}
+{{- end -}}
+
+{{- define "cloudzero-agent.generateMetricNameFilterRegex" -}}
+{{- include "cloudzero-agent.generateMetricFilterRegexInternal" (dict
+  "exact"    (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.name.exact    (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.name.exact   ))
+  "prefix"   (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.name.prefix   (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.name.prefix  ))
+  "suffix"   (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.name.suffix   (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.name.suffix  ))
+  "contains" (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.name.contains (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.name.contains))
+  "regex"    (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.name.regex    (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.name.regex   ))
+) -}}
+{{- end -}}
+
+{{- define "cloudzero-agent.generateMetricLabelFilterRegex" -}}
+{{- include "cloudzero-agent.generateMetricFilterRegexInternal" (dict
+  "exact"    (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.labels.exact    (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.labels.exact   ))
+  "prefix"   (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.labels.prefix   (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.labels.prefix  ))
+  "suffix"   (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.labels.suffix   (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.labels.suffix  ))
+  "contains" (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.labels.contains (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.labels.contains))
+  "regex"    (uniq (concat (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.cost.labels.regex    (include "cloudzero-agent.defaults" . | fromYaml).metricFilters.observability.labels.regex   ))
+) -}}
+{{- end -}}
+
+{{/*
+Generate metric filters
+*/}}
+{{- define "cloudzero-agent.generateMetricFilters" -}}
+{{- if ne 0 (add (len .filters.exact) (len .filters.prefix) (len .filters.suffix) (len .filters.contains) (len .filters.regex)) }}
+{{ .name }}:
+{{- range $pattern := uniq .filters.exact }}
+  - pattern: "{{ $pattern }}"
+    match: exact
+{{- end }}
+{{- range $pattern := uniq .filters.prefix }}
+  - pattern: "{{ $pattern }}"
+    match: prefix
+{{- end }}
+{{- range $pattern := uniq .filters.suffix }}
+  - pattern: "{{ $pattern }}"
+    match: suffix
+{{- end }}
+{{- range $pattern := uniq .filters.contains }}
+  - pattern: "{{ $pattern }}"
+    match: contains
+{{- end }}
+{{- range $pattern := uniq .filters.regex }}
+  - pattern: "{{ $pattern }}"
+    match: regex
+{{- end }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -196,7 +288,7 @@ Required metric labels
 {{- define "cloudzero-agent.requiredMetricLabels" -}}
 {{- $requiredSpecialMetricLabels := tuple "_.*" "label_.*" "app.kubernetes.io/*" "k8s.*" -}}
 {{- $requiredCZMetricLabels := tuple "board_asset_tag" "container" "created_by_kind" "created_by_name" "image" "instance" "name" "namespace" "node" "node_kubernetes_io_instance_type" "pod" "product_name" "provider_id" "resource" "unit" "uid" -}}
-{{- $total := concat .Values.additionalMetricLabels $requiredCZMetricLabels $requiredSpecialMetricLabels -}}
+{{- $total := concat $requiredCZMetricLabels $requiredSpecialMetricLabels -}}
 {{- $result := join "|" $total -}}
 {{- $result -}}
 {{- end -}}
@@ -257,6 +349,15 @@ app.kubernetes.io/component: {{ include "cloudzero-agent.initCertJobName" . }}
 {{- end -}}
 
 {{/*
+Create common matchLabels for aggregator
+*/}}
+{{- define "cloudzero-agent.aggregator.matchLabels" -}}
+app.kubernetes.io/component: aggregator
+app.kubernetes.io/name: {{ include "cloudzero-agent.aggregator.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 imagePullSecrets for the insights controller webhook server
 */}}
 {{- define "cloudzero-agent.insightsController.server.imagePullSecrets" -}}
@@ -304,23 +405,6 @@ imagePullSecrets:
 {{- end }}
 {{- end }}
 
-
-{{/*
-Get the full container image reference for the init scrape job pod
-*/}}
-{{- define "cloudzero-agent.initBackfillJob.imageReference" -}}
-{{ $backFillValues := (include "cloudzero-agent.backFill" .) | fromYaml }}
-{{- $repository := .Values.insightsController.server.image.repository -}}
-{{ $tag := .Values.insightsController.server.image.tag -}}
-{{- if and $backFillValues.image $backFillValues.image.repository -}}
-{{- $repository = $backFillValues.image.repository }}
-{{- end }}
-{{- if and $backFillValues.image $backFillValues.image.tag -}}
-{{- $tag = $backFillValues.image.tag -}}
-{{- end }}
-{{- printf "%s:%s" $repository $tag }}
-{{- end }}
-
 {{/*
 Service selector labels
 */}}
@@ -331,6 +415,16 @@ Service selector labels
 
 {{- define "cloudzero-agent.insightsController.labels" -}}
 {{ include "cloudzero-agent.insightsController.server.matchLabels" . }}
+{{ include "cloudzero-agent.common.metaLabels" . }}
+{{- end -}}
+
+{{- define "cloudzero-agent.aggregator.selectorLabels" -}}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{ include "cloudzero-agent.aggregator.matchLabels" . }}
+{{- end }}
+
+{{- define "cloudzero-agent.aggregator.labels" -}}
+{{ include "cloudzero-agent.aggregator.matchLabels" . }}
 {{ include "cloudzero-agent.common.metaLabels" . }}
 {{- end -}}
 
@@ -377,6 +471,10 @@ Name for the validating webhook configuration resource
 {{ .Values.insightsController.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
 {{- end}}
 
+{{ define "cloudzero-agent.aggregator.name" -}}
+{{ .Values.aggregator.name | default (printf "%s-aggregator" .Release.Name) }}
+{{- end}}
+
 {{/*
 Mount path for the insights server configuration file
 */}}
@@ -399,12 +497,17 @@ Map for initBackfillJob values; this allows us to preferably use initBackfillJob
 {{- end }}
 
 {{/*
+Name for a job resource
+*/}}
+{{- define "cloudzero-agent.jobName" -}}
+{{- printf "%s-%s-%s" .Release .Name (.Values.jobConfigID | default (. | toYaml | sha256sum)) | trunc 61 -}}
+{{- end }}
+
+{{/*
 Name for the backfill job resource
 */}}
 {{- define "cloudzero-agent.initBackfillJobName" -}}
-{{- $name := printf "%s-backfill-%s" .Release.Name .Chart.Version }}
-{{- $imageRef := splitList ":" (include  "cloudzero-agent.initBackfillJob.imageReference" .) | last }}
-{{- printf "%s-%s" $name ($imageRef | trunc 6) | trunc 61 | replace "." "-" | trimSuffix "-" -}}
+{{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "backfill" "Version" .Chart.Version "Values" .Values) -}}
 {{- end }}
 
 {{/*
@@ -421,9 +524,7 @@ annotations:
 Name for the certificate init job resource. Should be a new name each installation/upgrade.
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
-{{ $version := .Chart.Version | replace "." "-" }}
-{{- $name := (printf "%s-init-cert-%s" (include "cloudzero-agent.insightsController.server.webhookFullname" .) $version | trunc 60) -}}
-{{- $name -}}-{{ .Release.Revision }}
+{{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "init-cert" "Version" .Chart.Version "Values" .Values) -}}
 {{- end }}
 
 {{/*
@@ -455,3 +556,136 @@ Name for the secret holding TLS certificates
 {{- .Values.insightsController.tls.secret.name | default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
 {{- end }}
 
+{{/*
+Volume mount for the API key
+*/}}
+{{- define "cloudzero-agent.apiKeyVolumeMount" -}}
+{{- if or .Values.existingSecretName .Values.apiKey -}}
+- name: cloudzero-api-key
+  mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
+  subPath: ""
+  readOnly: true
+{{- end }}
+{{- end }}
+
+{{/*
+Return the URL for the agent and insights controller to send metrics to.
+
+If the CloudZero Aggregator is enabled, this will be the URL for the collector.
+Otherwise, it will be the CloudZero API endpoint.
+
+*/}}
+{{- define "cloudzero-agent.metricsDestination" -}}
+'http://{{ include "cloudzero-agent.aggregator.name" . }}.{{ .Release.Namespace }}.svc.cluster.local/collector'
+{{- end -}}
+
+{{/*
+Generate image configuration with defaults.
+*/}}
+{{- define "cloudzero-agent.generateImage" -}}
+{{- $digest      := (.image.digest      | default .defaults.digest) -}}
+{{- $tag         := (.image.tag         | default .defaults.tag) -}}
+{{- $repository  := (.image.repository  | default .defaults.repository) -}}
+{{- $pullPolicy  := (.image.pullPolicy  | default .defaults.pullPolicy) -}}
+{{- $pullSecrets := (.image.pullSecrets | default .defaults.pullSecrets) -}}
+{{- if .compat -}}
+{{- $digest      = (.compat.digest      | default .image.digest      | default .defaults.digest) -}}
+{{- $tag         = (.compat.tag         | default .image.tag         | default .defaults.tag) -}}
+{{- $repository  = (.compat.repository  | default .image.repository  | default .defaults.repository) -}}
+{{- $pullPolicy  = (.compat.pullPolicy  | default .image.pullPolicy  | default .defaults.pullPolicy) -}}
+{{- $pullSecrets = (.compat.pullSecrets | default .image.pullSecrets | default .defaults.pullSecrets) -}}
+{{- end -}}
+{{- if $digest -}}
+image: "{{ $repository }}@{{ $digest }}"
+{{- else if $tag -}}
+image: "{{ $repository }}:{{ $tag }}"
+{{- end }}
+{{ if $pullPolicy -}}
+imagePullPolicy: "{{ $pullPolicy }}"
+{{- end }}
+{{ if $pullSecrets -}}
+imagePullSecrets:
+{{ toYaml $pullSecrets | indent 2 }}
+{{- end }}
+{{- end -}}
+
+{{/* Generate priority class name */}}
+{{- define "cloudzero-agent.generatePriorityClassName" -}}
+{{- if . -}}
+priorityClassName: {{ . }}
+{{- end -}}
+{{- end -}}
+
+{{/* Generate DNS info */}}
+{{- define "cloudzero-agent.generateDNSInfo" -}}
+{{- $dnsPolicy := .defaults.policy -}}
+{{- $dnsConfig := .defaults.config -}}
+{{- if $dnsPolicy -}}
+dnsPolicy: {{ $dnsPolicy }}
+{{- end -}}
+{{- if $dnsConfig }}
+dnsConfig:
+{{ $dnsConfig | toYaml | indent 2 }}
+{{ end -}}
+{{- end -}}
+
+{{/*
+Generate labels for a component
+*/}}
+{{- define "cloudzero-agent.generateLabels" -}}
+{{- $labels := dict
+    "app.kubernetes.io/version" .globals.Chart.AppVersion
+    "helm.sh/chart" (include "cloudzero-agent.chart" .globals)
+    "app.kubernetes.io/managed-by" .globals.Release.Service
+    "app.kubernetes.io/part-of" (include "cloudzero-agent.name" .globals)
+-}}
+{{- if len $labels -}}
+labels:
+{{- (merge $labels (.labels | default (dict)) .globals.Values.defaults.labels .globals.Values.commonMetaLabels) | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate annotations
+*/}}
+{{- define "cloudzero-agent.generateAnnotations" -}}
+{{- if . -}}
+annotations:
+{{- . | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate affinity sections
+*/}}
+{{- define "cloudzero-agent.generateAffinity" -}}
+{{ $affinity := .default }}
+{{- if .affinity -}}
+{{ $affinity = merge .affinity .default }}
+{{- end -}}
+{{- if $affinity -}}
+affinity:
+{{- $affinity | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate tolerations sections
+*/}}
+{{- define "cloudzero-agent.generateTolerations" -}}
+{{- if . -}}
+tolerations:
+{{- . | toYaml | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate nodeSelector sections
+*/}}
+{{- define "cloudzero-agent.generateNodeSelector" -}}
+{{- $nodeSelector := .nodeSelector | default .default -}}
+{{if $nodeSelector }}
+nodeSelector:
+{{- $nodeSelector | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}

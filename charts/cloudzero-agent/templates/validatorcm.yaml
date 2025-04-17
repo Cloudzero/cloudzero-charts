@@ -5,10 +5,7 @@ metadata:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
   name: {{ include "cloudzero-agent.validatorConfigMapName" . }}
   namespace: {{ include "cloudzero-agent.namespace" . }}
-  {{- with .Values.prometheusConfig.configMapAnnotations }}
-  annotations:
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
+  {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations .Values.prometheusConfig.configMapAnnotations) | nindent 2 }}
 data:
   validator.yml: |-
     versions:
@@ -37,7 +34,7 @@ data:
       {{- end }}
       executable: /bin/prometheus
       kube_metrics:
-        {{- toYaml .Values.kubeMetrics | nindent 8 }}
+        {{- (include "cloudzero-agent.defaults" . | fromYaml).kubeMetrics | toYaml | nindent 8 }}
       configurations:
         - /etc/prometheus/prometheus.yml
         - /etc/config/prometheus/configmaps/prometheus.yml
@@ -47,7 +44,6 @@ data:
         - name: pre-start
           enforce: true
           checks:
-            - egress_reachable
             - api_key_valid
         - name: post-start
           enforce: false

@@ -5,10 +5,7 @@ metadata:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
   name: {{ include "cloudzero-agent.configMapName" . }}
   namespace: {{ include "cloudzero-agent.namespace" . }}
-  {{- with .Values.prometheusConfig.configMapAnnotations }}
-  annotations:
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
+  {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations .Values.prometheusConfig.configMapAnnotations) | nindent 2 }}
 data:
   prometheus.yml: |-
   {{- if .Values.prometheusConfig.configOverride }}
@@ -57,7 +54,7 @@ data:
           action: replace
         metric_relabel_configs:
         - source_labels: [__name__]
-          regex: "^({{ join "|" .Values.kubeMetrics }})$"
+          regex: "^({{ join "|" (include "cloudzero-agent.defaults" . | fromYaml).kubeMetrics }})$"
           action: keep
         - separator: ;
           regex: ^(board_asset_tag|container|created_by_kind|created_by_name|image|instance|name|namespace|node|node_kubernetes_io_instance_type|pod|product_name|provider_id|resource|unit|uid|_.*|label_.*|app.kubernetes.io/*|k8s.*)$
@@ -111,7 +108,7 @@ data:
         - action: labelkeep
           regex: "^({{ include "cloudzero-agent.requiredMetricLabels" . }})$"
         - source_labels: [__name__]
-          regex: "^({{ join "|" .Values.containerMetrics }})$"
+          regex: "^({{ join "|" (include "cloudzero-agent.defaults" . | fromYaml).containerMetrics }})$"
           action: keep
         kubernetes_sd_configs:
         - role: node
@@ -139,7 +136,19 @@ data:
             regex: {{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}-svc
         metric_relabel_configs:
           - source_labels: [__name__]
-            regex: "^({{ join "|" .Values.insightsMetrics }})$"
+            regex: "^({{ join "|" (include "cloudzero-agent.defaults" . | fromYaml).insightsMetrics }})$"
+            action: keep
+      {{- end }}
+      {{- if .Values.prometheusConfig.scrapeJobs.aggregator.enabled }}
+      - job_name: cloudzero-aggregator-job
+        scrape_interval: {{ .Values.prometheusConfig.scrapeJobs.prometheus.scrapeInterval }}
+        static_configs:
+          - targets:
+            - {{ include "cloudzero-agent.aggregator.name" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        metrics_path: /metrics
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: "{{ include "cloudzero-agent.generateMetricNameFilterRegex" .Values }}"
             action: keep
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.prometheus.enabled }}
@@ -151,7 +160,7 @@ data:
         metrics_path: /metrics
         metric_relabel_configs:
           - source_labels: [__name__]
-            regex: "^({{ join "|" .Values.prometheusMetrics }})$"
+            regex: "^({{ join "|" (include "cloudzero-agent.defaults" . | fromYaml).prometheusMetrics }})$"
             action: keep
       {{- end }}
       {{- if .Values.prometheusConfig.scrapeJobs.additionalScrapeJobs -}}
@@ -159,7 +168,7 @@ data:
       {{- end}}
   {{- end}}
     remote_write:
-      - url: 'https://{{ include "cloudzero-agent.cleanString" .Values.host }}/v1/container-metrics?cluster_name={{ include "cloudzero-agent.cleanString" .Values.clusterName | urlquery }}&cloud_account_id={{ include "cloudzero-agent.cleanString" .Values.cloudAccountId | urlquery }}&region={{ include "cloudzero-agent.cleanString" .Values.region | urlquery }}'
+      - url: {{ include "cloudzero-agent.metricsDestination" . }}
         authorization:
           credentials_file: {{ include "cloudzero-agent.secretFileFullPath" . }}
         write_relabel_configs:
@@ -171,7 +180,7 @@ data:
 
 {{- if .Values.insightsController.enabled }}
 {{- with .Values.insightsController }}
-{{- if not (and .labels.enabled .labels.patterns) }}
+{{- if and .labels.enabled (not .labels.patterns) }}
 {{- $msg := "\n\nThe required field(s) 'insightsController.labels.enabled' and/or 'insightsController.labels.patterns' is not set! See the README.md for more information." }}
 {{- $enabledMsg:=""}}
 {{- $patternMsg:=""}}
@@ -192,43 +201,19 @@ metadata:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
   name: {{ include "cloudzero-agent.webhookConfigMapName" . }}
   namespace: {{ include "cloudzero-agent.namespace" . }}
-  {{- with .Values.prometheusConfig.configMapAnnotations }}
-  annotations:
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
+  {{- include "cloudzero-agent.generateAnnotations" (merge .Values.defaults.annotations .Values.prometheusConfig.configMapAnnotations) | nindent 2 }}
 data:
   server-config.yaml: |-
-    cloud_account_id: {{ .Values.cloudAccountId }}
-    region: {{ .Values.region }}
-    cluster_name: {{ .Values.clusterName }}
-    host: {{ .Values.host }}
-    logging:
-      level: {{ .Values.insightsController.server.logging.level }}
-    remote_write:
-      send_interval: {{ .Values.insightsController.server.send_interval }}
-      max_bytes_per_send: 500000
-      send_timeout: {{ .Values.insightsController.server.send_timeout }}
-      max_retries: 3
-    k8s_client:
-      timeout: 30s
-    database:
-      retention_time: 24h
-      cleanup_interval: 3h
-      batch_update_size: 500
-    api_key_path: {{ include "cloudzero-agent.secretFileFullPath" . }}
-    {{- with .Values.insightsController }}
-    certificate:
-      key: {{ .tls.mountPath }}/tls.key
-      cert: {{ .tls.mountPath }}/tls.crt
-    server:
-      port: {{ .server.port }}
-      read_timeout: {{ .server.read_timeout }}
-      write_timeout: {{ .server.write_timeout }}
-      idle_timeout: {{ .server.idle_timeout }}
-    {{- end }}
-    filters:
-      labels:
-        {{- .Values.insightsController.labels | toYaml | nindent 8 }}
-      annotations:
-        {{- .Values.insightsController.annotations | toYaml | nindent 8 }}
+{{- include "cloudzero-agent.insightsController.configuration" . | nindent 4 -}}
 {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cloudzero-agent.aggregator.name" . }}
+  namespace: {{ .Release.Namespace }}
+  {{- include "cloudzero-agent.generateLabels" (dict "globals" . "labels" .Values.commonMetaLabels) | nindent 2 }}
+  {{- include "cloudzero-agent.generateAnnotations" .Values.defaults.annotations | nindent 2 }}
+data:
+  config.yml: |-
+{{- include "cloudzero-agent.aggregator.configuration" . | nindent 4 -}}
