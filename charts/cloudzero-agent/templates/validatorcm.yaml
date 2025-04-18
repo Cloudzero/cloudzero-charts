@@ -33,7 +33,7 @@ data:
 
     prometheus:
       {{- if .Values.validator.serviceEndpoints.kubeStateMetrics }}
-      kube_state_metrics_service_endpoint: http://{{ .Values.validator.serviceEndpoints.kubeStateMetrics }}/
+      kube_state_metrics_service_endpoint: http://{{ tpl .Values.validator.serviceEndpoints.kubeStateMetrics $ }}/
       {{- else }}
       kube_state_metrics_service_endpoint: http://{{ include "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" . }}
       {{- end }}
