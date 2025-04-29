@@ -17,44 +17,214 @@ existingSecretName: null
 # explicitly set per-component.
 defaults:
   # The default image settings which will be fallen back on for all components.
+  #
+  # Note that all image values (including repository, tag, etc.) are valid here,
+  # though for the most part they are overridden by the component-specific
+  # settings anyways.
   image:
     pullPolicy: IfNotPresent
     pullSecrets:
   # If set, these DNS settings will be attached to resources which support it.
   dns:
+    # DNS policy to use on all pods.
+    #
+    # Valid values include:
+    #
+    # - "Default"
+    # - "ClusterFirst"
+    # - "ClusterFirstWithHostNet"
+    # - "None"
+    #
+    # Somewhat counterintuitively, "Default" is not actually the default,
+    # "ClusterFirst" is.
+    #
+    # For details, see the Kubernetes documentation:
+    # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+    #
+    # Note that if you set this, you'll likely also want to set kubeStateMetrics.dnsPolicy
+    # to the same value.
     policy:
+    # DNS configuration to use on all pods.
+    #
+    # There are currently three properties which can be specified: nameservers,
+    # searches, and options.
+    #
+    # For details, see the Kubernetes documentation:
+    # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+    #
+    # Note that if you set this, you'll likely also want to set kubeStateMetrics.dnsConfig
+    # to the same value.
     config: {}
   # Labels to be added to all resources.
+  #
+  # Labels are organized as key/value pairs. For example, if you wanted to set a
+  # my.org/team label to the value "superstars":
+  #
+  #   labels:
+  #     my.org/team: superstars
+  #
+  # Note that this chart will unconditionally add the following labels:
+  #
+  #  - app.kubernetes.io/version
+  #  - helm.sh/chart
+  #  - app.kubernetes.io/managed-by
+  #  - app.kubernetes.io/part-of
+  #
+  # Additionally, certain components will add additional labels. Any labels
+  # specified here will be *in addition* to the labels added automatically, not
+  # instead of them.
+  #
+  # For more information, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  #
+  # You may also be interested in this list of well-known labels:
+  # https://kubernetes.io/docs/reference/labels-annotations-taints/
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.customLabels.
   labels: {}
   # Annotations to be added to all resources.
+  #
+  # Similar to labels, annotations are organized as key/value pairs, and
+  # annotations specified here will be merged into any annotations added
+  # automatically by the chart.
+  #
+  # For more information, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.annotations.
   annotations: {}
   # Affinity settings to be added to all resources.
+  #
+  # Affinity settings are used to control the scheduling of pods. For more
+  # information, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.affinity.
   affinity: {}
   # Tolerations to be added to all resources.
+  #
+  # Tolerations are used to control the scheduling of pods. For more
+  # information, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.tolerations.
   tolerations: []
   # Node Selector to be added to all resources.
+  #
+  # Node Selector is used to control the scheduling of pods. For more
+  # information, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.nodeSelector.
   nodeSelector: {}
   # If set, this priority class name will be used for all deployments and jobs.
+  #
+  # Note that, if used, you will need to create the PriorityClass resource
+  # yourself; this chart is only capable of referencing an existing priority
+  # class, not creating one from whole cloth.
+  #
+  # For more information, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.priorityClassName.
   priorityClassName:
 
+# Component-specific configuration settings.
 components:
+  # The agent here refers to the CloudZero Agent, which is the component that
+  # collects metrics from the cluster and sends them to the aggregator.
   agent:
+    # This is the image which contains most of the code that makes this chart
+    # work. Since 1.1, CloudZero uses a single container image, with multiple
+    # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.1.0-rc-1  # <- Software release corresponding to this chart version.
+      tag: 1.1.0  # <- Software release corresponding to this chart version.
+    podDisruptionBudget:
+      minAvailable:
+      maxUnavailable:
+
+  # kubectl contains details about where to find the kubectl image.  This chart
+  # uses the kubectl image as part of the job to initialize certificates.
   kubectl:
     image:
       repository: docker.io/bitnami/kubectl
       tag: "1.32.0"
+
+  # prometheus contains details about where to find the Prometheus image.
+  # Prometheus is critical to the functionality of this chart, and is used to
+  # scrape metrics.
   prometheus:
     image:
       repository: quay.io/prometheus/prometheus
       tag:  # This will fall back on .Chart.AppVersion if not set.
+
+  # prometheusReloader contains details about where to find the Prometheus
+  # reloader image.
+  #
+  # prometheus-config-reloader will watch the Prometheus configuration for
+  # changes and restart the Prometheus pod as necessary.
   prometheusReloader:
     image:
       repository: quay.io/prometheus-operator/prometheus-config-reloader
-      tag: "v0.70.0"
+      tag: "v0.82.0"
 
+  # Settings for the aggregator component. This is the piece which accepts
+  # metrics from the agent, webhook, etc., and sends them to the CloudZero API
+  # after some processing.
+  aggregator:
+    replicas: 3
+    podDisruptionBudget:
+      minAvailable:
+      maxUnavailable:
+
+  # Settings for the webhook server.
+  webhookServer:
+    replicas: 3
+    podDisruptionBudget:
+      minAvailable:
+      maxUnavailable:
+
+# Due to limitations of Helm, we are unfortunately not able to automatically configure the
+# kube-state-metrics subchart using the configuration above, and instead need to configure
+# it here, often duplicating things.
+#
+# For full documentation on configuring this subchart, see:
+# https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics
+# Specifically, the values.yaml file in that repository:
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml
+kubeStateMetrics:
+  enabled: true
+  affinity: {}
+  tolerations: []
+  customLabels: {}
+  dnsPolicy: ClusterFirst
+  dnsConfig: {}
+  annotations: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  podDisruptionBudget: {}
+  image:
+    registry: registry.k8s.io
+    repository: kube-state-metrics/kube-state-metrics
+    tag: "v2.10.1"
+    sha:
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  nameOverride: "cloudzero-state-metrics"
+  # Disable CloudZero KSM as a Scrape Target since the service endpoint is
+  # explicitly defined by the Validators config file.
+  prometheusScrape: false
+  # Set a default port other than 8080 to avoid collisions with any existing KSM
+  # services.
+  service:
+    port: 8080
 
 #######################################################################################
 #######################################################################################
@@ -140,21 +310,6 @@ initCertJob:
     clusterRoleName: ""
     clusterRoleBindingName: ""
 
-kubeStateMetrics:
-  enabled: true
-  image:
-    registry: registry.k8s.io
-    repository: kube-state-metrics/kube-state-metrics
-    tag: "v2.10.1"
-    digest:
-  nameOverride: "cloudzero-state-metrics"
-  # Disable CloudZero KSM as a Scrape Target since the service endpoint is explicitly defined
-  # by the Validators config file.
-  prometheusScrape: false
-  # Set a default port other than 8080 to avoid collisions with any existing KSM services.
-  service:
-    port: 8080
-
   # -- Overriding static scrape target address for an existing KSM.
   # -- Set to service <service-name>.<namespace>.svc.cluster.local:port if built-in is disabled (enable=false above)
   # targetOverride: kube-state-metrics.monitors.svc.cluster.local:8080
@@ -223,32 +378,42 @@ server:
 insightsController:
   enabled: true
   labels:
+    # (recommended) Enable collection of specific labels for cost attribution dimensions
     enabled: true
+    # List of Go-style regular expressions used to filter desired labels.
+    # Caution: The CloudZero system has a limit of 300 labels and annotations,
+    # so it is advisable to provide a specific list of required labels rather than a wildcard.
     patterns:
       - "app.kubernetes.io/component"
-      # - '.*'
+    # Specify which resources to collect labels from
     resources:
-      pods: true
-      namespaces: true
-      deployments: false
-      statefulsets: false
-      nodes: false
-      jobs: false
       cronjobs: false
       daemonsets: false
+      deployments: false
+      jobs: false
+      namespaces: true
+      nodes: false
+      pods: true
+      statefulsets: false
   annotations:
+    # Enable this section if your organization uses specific annotations for cost attribution or cost dimensions.
+    # This allows you to collect and analyze labels for selected resources.
     enabled: false
+    # List of Go-style regular expressions used to filter desired labels.
+    # Caution: The CloudZero system has a limit of 300 labels and annotations,
+    # so it is advisable to provide a specific list of required annotations rather than a wildcard.
     patterns:
-      - ".*"
+      - ".*"  # Use regex patterns to specify which annotations to collect. ".*" collects all annotations.
+    # Specify the resources from which annotations should be collected.
     resources:
-      pods: true
-      namespaces: true
-      deployments: false
-      statefulsets: false
-      nodes: false
-      jobs: false
       cronjobs: false
       daemonsets: false
+      deployments: false
+      jobs: false
+      namespaces: true
+      nodes: false
+      pods: true
+      statefulsets: false
   tls:
     # -- If disabled, the insights controller will not mount a TLS certificate from a Secret, and the user is responsible for configuring a method of providing TLS information to the webhook-server container.
     enabled: true
@@ -272,7 +437,7 @@ insightsController:
     useCertManager: false
   server:
     name: webhook-server
-    replicaCount: 3
+    replicaCount:
     # -- Uncomment to use a specific imagePullSecrets; otherwise, the default top level imagePullSecrets is used.
     # imagePullSecrets: []
     image:
@@ -311,31 +476,7 @@ insightsController:
   webhooks:
     annotations: {}
     namespaceSelector: {}
-    configurations:
-      pods:
-        path: /validate/pod
-        apiGroups: ['""']
-      namespaces:
-        path: /validate/namespace
-        apiGroups: ['""']
-      deployments:
-        path: /validate/deployment
-        apiGroups: ["apps"]
-      statefulsets:
-        path: /validate/statefulset
-        apiGroups: ["apps"]
-      nodes:
-        path: /validate/node
-        apiGroups: ['""']
-      jobs:
-        path: /validate/job
-        apiGroups: ["batch"]
-      cronjobs:
-        path: /validate/cronjob
-        apiGroups: ["batch"]
-      daemonsets:
-        path: /validate/daemonset
-        apiGroups: ["apps"]
+    path: /validate
 
 serviceAccount:
   create: true
@@ -375,7 +516,6 @@ configmapReload:
 # ensuring that there is no data loss in the event of any loss of communication with the CloudZero API,
 # even when a misconfiguration (such as an incorrect API key) prevents it.
 aggregator:
-  replicas: 1
   logging:
     # Logging level that will be posted to stdout.
     # Valid values are: 'debug', 'info', 'warn', 'error'
@@ -402,8 +542,10 @@ aggregator:
   database:
     # Max number of records per file. Use this to adjust file sizes uploaded to the server. The default value is good in most cases.
     maxRecords: 1500000
-    # Max interval to flush a metrics file. This is mostly useful for smaller clusters with little activity.
-    maxInterval: 10m
+    # Max interval to flush a cost metrics file. This is mostly useful for smaller clusters with little activity.
+    costMaxInterval: 10m
+    # Max interval to flush an observability metrics file. This is mostly useful for smaller clusters with little activity.
+    observabilityMaxInterval: 30m
     # Compression level to use when compressing metrics files on-disk.
     # Valid value range from 0-11, with higher values yielding improved compression ratios
     # at the expense of speed and memory usage.
@@ -443,6 +585,7 @@ aggregator:
         memory: "1024Mi"
         cpu: "2000m"
   shipper:
+    port: 8081
     resources:
       requests:
         memory: "64Mi"
