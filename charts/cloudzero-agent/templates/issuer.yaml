@@ -1,4 +1,5 @@
 {{ if .Values.insightsController.tls.useCertManager }}
+---
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:

@@ -27,7 +27,7 @@ certificate:
   cert: {{ .tls.mountPath }}/tls.crt
 server:
   namespace: {{ $namespace }}
-  domain: {{ include "cloudzero-agent.serviceName" $ }}
+  domain: {{ $namespace }}-{{ .server.name }}-svc
   port: {{ .server.port }}
   read_timeout: {{ .server.read_timeout }}
   write_timeout: {{ .server.write_timeout }}
