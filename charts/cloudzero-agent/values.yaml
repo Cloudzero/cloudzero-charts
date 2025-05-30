@@ -825,3 +825,5 @@ aggregator:
   # See the Kubernetes documentation for details:
   # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+  # Annotations to add to the aggregator Deployment.
+  deploymentAnnotations: {}
