@@ -16,6 +16,12 @@ existingSecretName: null
 # components within this chart, or used as defaults in case values are not
 # explicitly set per-component.
 defaults:
+  # Federated mode deploys the agent as a DaemonSet, with each node in the
+  # cluster running its own metrics collector.
+  federation:
+    # Whether to enable federated mode.
+    enabled: false
+
   # The default image settings which will be fallen back on for all components.
   #
   # Note that all image values (including repository, tag, etc.) are valid here,
@@ -122,6 +128,16 @@ defaults:
   # Note that if you set this, you'll likely also want to set
   # kubeStateMetrics.nodeSelector.
   nodeSelector: {}
+  # Pod Disruption Budget to be added to all resources.
+  #
+  # For information about PDBs, see the Kubernetes documentation:
+  # https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
+  #
+  # Note that if you set this, you'll likely also want to set
+  # kubeStateMetrics.podDisruptionBudget.
+  podDisruptionBudget:
+    minAvailable: 1
+    maxUnavailable:
   # If set, this priority class name will be used for all deployments and jobs.
   #
   # Note that, if used, you will need to create the PriorityClass resource
@@ -145,7 +161,7 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.1.2  # <- Software release corresponding to this chart version.
+      tag: 1.2.0  # <- Software release corresponding to this chart version.
     podDisruptionBudget:
       minAvailable:
       maxUnavailable:
@@ -155,7 +171,7 @@ components:
   kubectl:
     image:
       repository: docker.io/bitnami/kubectl
-      tag: "1.32.0"
+      tag: "1.33.1"
 
   # prometheus contains details about where to find the Prometheus image.
   # Prometheus is critical to the functionality of this chart, and is used to
@@ -173,7 +189,7 @@ components:
   prometheusReloader:
     image:
       repository: quay.io/prometheus-operator/prometheus-config-reloader
-      tag: "v0.82.0"
+      tag: "v0.83.0"
 
   # Settings for the aggregator component. This is the piece which accepts
   # metrics from the agent, webhook, etc., and sends them to the CloudZero API
@@ -183,6 +199,8 @@ components:
     podDisruptionBudget:
       minAvailable:
       maxUnavailable:
+    tolerations: []
+    annotations: {}
 
   # Settings for the webhook server.
   webhookServer:
@@ -209,11 +227,12 @@ kubeStateMetrics:
   annotations: {}
   podAnnotations: {}
   nodeSelector: {}
-  podDisruptionBudget: {}
+  podDisruptionBudget:
+    minAvailable: 1
   image:
     registry: registry.k8s.io
     repository: kube-state-metrics/kube-state-metrics
-    tag: "v2.10.1"
+    tag: "v2.15.0"
     sha:
     pullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -241,6 +260,7 @@ prometheusConfig:
   configMapAnnotations: {}
   configOverride: ""
   globalScrapeInterval: 60s
+  outOfOrderTimeWindow: 5m
   scrapeJobs:
     # -- Enables the kube-state-metrics scrape job.
     kubeStateMetrics:
@@ -321,9 +341,6 @@ initCertJob:
 secretAnnotations: {}
 imagePullSecrets: []
 
-scheme: https
-endpoint: /v1/container-metrics
-
 # environment validator image allows for CI to use a different image in testing
 validator:
   serviceEndpoints:
@@ -374,6 +391,8 @@ server:
     - --web.enable-lifecycle
     - --web.console.libraries=/etc/prometheus/console_libraries
     - --web.console.templates=/etc/prometheus/consoles
+  logging:
+    level:
   # Configuration for persistent storage.
   persistentVolume:
     existingClaim: ""
@@ -399,6 +418,24 @@ server:
   # See the Kubernetes documentation for details:
   # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   tolerations: []
+  # Topology spread constraints for pod scheduling
+  topologySpreadConstraints: []
+  # Termination grace period in seconds
+  terminationGracePeriodSeconds: 300
+  # Readiness probe configuration
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    timeoutSeconds: 4
+    failureThreshold: 3
+    successThreshold: 1
+  # Liveness probe configuration
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
 
 # Configuration for the webhook server (née Insights Controller), which collects
 # and processes Kubernetes resource metadata for cost attribution and analysis.
@@ -593,6 +630,9 @@ insightsController:
     namespaceSelector: {}
     # Path for the validating admission webhook.
     path: /validate
+    caInjection:
+  configurationMountPath:
+  ConfigMapNameOverride:
 
 # Configuration for the service account in the chart.
 serviceAccount:
@@ -660,6 +700,8 @@ aggregator:
     # Logging level that will be posted to stdout.
     # Valid values are: 'debug', 'info', 'warn', 'error'
     level: info
+    # Whether to persist logs to disk.
+    capture: true
   # Top-level directory containing CloudZero data. There will be subdirectories
   # for configuration (the mounted ConfigMap) and the API key (typically a
   # mounted Secret), and data to be uploaded to CloudZero, specifically metrics.
@@ -672,6 +714,13 @@ aggregator:
   # Whether to enable the profiling endpoint (/debug/pprof/). This should
   # generally be disabled in production.
   profiling: false
+  # Wether to enable rolling a debug container inside the aggregator pod.
+  # This should be disabled in production.
+  debugContainer: false
+  # Frequency to close HTTP connections from clients, to help distribute the
+  # load across the various collector replicas. 0=never, otherwise 1/N
+  # probability.
+  reconnectFrequency: 16
   # Container image configuration for the aggregator components.
   #
   # Deprecated. Please use components.aggregator.image instead.
@@ -685,17 +734,23 @@ aggregator:
     #
     # This is formatted as a Go duration string; see
     # https://pkg.go.dev/time#ParseDuration for details.
-    sendInterval: 1m
+    sendInterval: 10m
     # Max time the aggregator will spend attempting to ship metrics to the remote endpoint.
     #
     # This is formatted as a Go duration string; see
     # https://pkg.go.dev/time#ParseDuration for details.
-    sendTimeout: 30s
+    sendTimeout: 120s
     # Interval at which the aggregator will rotate its internal data structures.
     #
     # This is formatted as a Go duration string; see
     # https://pkg.go.dev/time#ParseDuration for details.
     rotateInterval: 30m
+    # The number of http retry attempts to use before failing.
+    # This is not a recommended option to change.
+    httpMaxRetries: 10
+    # The max wait time between http request retry attempts.
+    # This is not a recommended option to change.
+    httpMaxWait: 30s
   # Configuration for the aggregator's database and storage behavior.
   database:
     # Max number of records per file. Use this to adjust file sizes uploaded to
@@ -731,15 +786,16 @@ aggregator:
       # the storage required by the collector/shipper architecture on your
       # nodes.
       #
-      # `2160h` is 90 days, and is a reasonable default. This can reasonably be
-      # any value, as the application will force remove files if space is
-      # constrained.
+      # Note that, regardless of this option, if disk pressure is detected,
+      # files will be deleted (oldest first) to free space.
+      #
+      # `168h` is 7 days, and is a reasonable default for most clusters.
       #
       # `0s` is also a valid option and can signify that you do not want to keep
       # uploaded files at all. Though do note that this could possibly result in
       # data loss if there are transient upload failures during the lifecycle of
       # the application.
-      metricsOlderThan: 2160h
+      metricsOlderThan: 168h
       # If set to true (default), then files older than `metricsOlderThan` will
       # not be deleted unless there is detected storage pressure. For example,
       # if there are files older than `metricsOlderThan` but only 30% of storage
@@ -794,7 +850,7 @@ aggregator:
   #
   # See the Kubernetes documentation for details:
   # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  tolerations: {}
+  tolerations: []
   # Affinity rules for the aggregator pods.
   #
   # See the Kubernetes documentation for details:

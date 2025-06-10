@@ -1,0 +1,145 @@
+{{- if .Values.defaults.federation.enabled -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  {{- include "cloudzero-agent.generateAnnotations" .Values.server.deploymentAnnotations | nindent 2 }}
+  labels:
+    {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
+  {{- include "cloudzero-agent.generateAnnotations" .Values.defaults.annotations | nindent 2 }}
+  name: {{ .Release.Name }}-daemonset
+  namespace: {{ include "cloudzero-agent.namespace" . }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "cloudzero-agent.server.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- include "cloudzero-agent.generateAnnotations" .Values.server.podAnnotations | nindent 8 }}
+      labels:
+        {{- include "cloudzero-agent.server.labels" . | nindent 8 }}
+        {{- if .Values.server.podLabels}}
+        {{ toYaml .Values.server.podLabels | nindent 8 }}
+        {{- end}}
+    spec:
+      {{- include "cloudzero-agent.generatePriorityClassName" (.Values.defaults.priorityClassName | default .Values.server.priorityClassName) | nindent 6 }}
+      serviceAccountName: {{ template "cloudzero-agent.serviceAccountName" . }}
+      initContainers:
+        # Prometheus doesn't support environment variables where we need them in
+        # the prometheus.yml file so we use this job to replace the ${NODE_NAME}
+        # in the prometheus.yml.in file with the actual node name, then use that
+        # processed file in the container.
+        - name: config-subst
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.prometheusReloader.image "compat" .Values.configmapReload.prometheus.image) | nindent 10 }}
+          command:
+            - /bin/sh
+            - -c
+            - sed "s/\${NODE_NAME}/$NODE_NAME/g" /etc/config/prometheus/configmaps/unprocessed/prometheus.yml.in > /etc/config/prometheus/configmaps/processed/prometheus.yml
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: unprocessed-config-volume
+              mountPath: /etc/config/prometheus/configmaps/unprocessed/
+            - name: processed-config-volume
+              mountPath: /etc/config/prometheus/configmaps/processed/
+      containers:
+        {{- if .Values.configmapReload.prometheus.enabled }}
+        - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-configmap-reload
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.prometheusReloader.image "compat" .Values.configmapReload.prometheus.image) | nindent 10 }}
+          args:
+            - --watched-dir=/etc/config
+            - --reload-url=http://127.0.0.1:9090/-/reload
+          {{- with .Values.configmapReload.prometheus.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: processed-config-volume
+              mountPath: /etc/config
+              readOnly: true
+        {{- end }}
+        - name: {{ template "cloudzero-agent.name" . }}-server
+          {{/* This is a little special because we want to fall back on the .Chart.AppVersion */}}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.prometheus.image "compat" (dict "repository" .Values.server.image.repository "tag" (.Values.server.image.tag | default .Values.components.prometheus.image.tag | default .Chart.AppVersion) "digest" .Values.server.image.digest "pullPolicy" .Values.server.image.pullPolicy)) | nindent 10 }}
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- if .Values.server.env }}
+            {{- toYaml .Values.server.env | indent 12}}
+            {{- end }}
+          args:
+            - --config.file=/etc/config/prometheus.yml
+            - --web.enable-lifecycle
+            - --web.console.libraries=/etc/prometheus/console_libraries
+            - --web.console.templates=/etc/prometheus/consoles
+            - --enable-feature=agent
+          ports:
+            - containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 4
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          {{- with .Values.server.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: processed-config-volume
+              mountPath: /etc/config/prometheus.yml
+              subPath: prometheus.yml
+              readOnly: true
+            - name: cloudzero-agent-storage-volume
+              mountPath: /data
+              subPath: ""
+            {{- include "cloudzero-agent.apiKeyVolumeMount" . | nindent 12 }}
+      securityContext:
+        runAsUser: 65534
+        runAsNonRoot: true
+        runAsGroup: 65534
+        fsGroup: 65534
+      {{- include "cloudzero-agent.generateDNSInfo" (dict "defaults" .Values.defaults.dns) | nindent 6 }}
+      {{- include "cloudzero-agent.server.imagePullSecrets" . | nindent 6 -}}
+      {{- include "cloudzero-agent.generateNodeSelector" (dict "default" .Values.defaults.nodeSelector "nodeSelector" .Values.server.nodeSelector) | nindent 6 }}
+      {{- include "cloudzero-agent.generateTolerations" (concat .Values.defaults.tolerations .Values.server.tolerations) | nindent 6 }}
+      {{- include "cloudzero-agent.generateAffinity" (dict "default" .Values.defaults.affinity "affinity" .Values.server.affinity) | nindent 6 }}
+      {{- include "cloudzero-agent.maybeGenerateSection" (dict "name" "topologySpreadConstraints" "value" .Values.server.topologySpreadConstraints) | nindent 6 }}
+      terminationGracePeriodSeconds: 300
+      volumes:
+        - name: unprocessed-config-volume
+          configMap:
+            name: {{ .Release.Name }}-daemonset-cm
+        - name: processed-config-volume
+          emptyDir: {}
+        {{- if or .Values.existingSecretName .Values.apiKey }}
+        - name: cloudzero-api-key
+          secret:
+            secretName: {{ include "cloudzero-agent.secretName" . }}
+        {{- end }}
+        - name: cloudzero-agent-storage-volume
+          emptyDir:
+          {{- if .Values.server.emptyDir.sizeLimit }}
+            sizeLimit: {{ .Values.server.emptyDir.sizeLimit }}
+          {{- else }}
+            {}
+          {{- end }}
+{{- end }}{{/* End if .Values.defaults.federation.enabled */}}

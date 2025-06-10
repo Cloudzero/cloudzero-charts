@@ -1,8 +1,6 @@
 name: Ensure no changes to Agent chart
 on:
-  push:
-    branches-ignore:
-    - develop
+  pull_request:
 
 jobs:
   check-for-agent-chart-changes:

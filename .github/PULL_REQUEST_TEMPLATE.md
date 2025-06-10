@@ -1,5 +1,7 @@
 By submitting a PR to this repository, you agree to the terms within the [CloudZero Code of Conduct](https://github.com/cloudzero/template-cloudzero-open-source/blob/master/CODE-OF-CONDUCT.md). Please see the [contributing guidelines](https://github.com/cloudzero/template-cloudzero-open-source/blob/master/CONTRIBUTING.md) for how to create and submit a high-quality PR for this repo.
 
+Please note that changes to the `cloudzero-agent` Helm chart should be made instead in the [`helm directory`](https://github.com/Cloudzero/cloudzero-agent/tree/develop/helm) in the [cloudzero-agent repository](https://github.com/Cloudzero/cloudzero-agent/), and will automatically be mirrored to this repository as soon as they are merged.
+
 ### Description
 
 > Describe the purpose of this PR along with any background information and the impacts of the proposed change. For the benefit of the community, please do not assume prior context.

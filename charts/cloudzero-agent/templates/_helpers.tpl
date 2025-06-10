@@ -6,6 +6,13 @@ Expand the name of the chart.
 {{- end -}}
 
 {{/*
+The version number of the chart.
+*/}}
+{{- define "cloudzero-agent.versionNumber" -}}
+version: 1.2.0  # <- Software release corresponding to this chart version.
+{{- end -}}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "cloudzero-agent.chart" -}}
@@ -45,6 +52,19 @@ Name for the validating webhook
 
 {{ define "cloudzero-agent.validatorConfigMapName" -}}
 {{- printf "%s-validator-configuration" .Release.Name -}}
+{{- end}}
+
+{{ define "cloudzero-agent.configLoaderJobName" -}}
+{{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "confload" "Version" .Chart.Version "Values" .Values) -}}
+{{- end}}
+
+{{ define "cloudzero-agent.validatorEnv" -}}
+- name: K8S_NAMESPACE
+  value: {{ .Release.Namespace }}
+- name: K8S_POD_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.name
 {{- end}}
 
 {{/*
@@ -348,6 +368,11 @@ app.kubernetes.io/component: {{ include "cloudzero-agent.initCertJobName" . }}
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
+{{- define "cloudzero-agent.insightsController.validatorJob.matchLabels" -}}
+app.kubernetes.io/component: {{ include "cloudzero-agent.configLoaderJobName" . }}
+{{ include "cloudzero-agent.common.matchLabels" . }}
+{{- end -}}
+
 {{/*
 Create common matchLabels for aggregator
 */}}
@@ -500,8 +525,20 @@ Map for initBackfillJob values; this allows us to preferably use initBackfillJob
 Name for a job resource
 */}}
 {{- define "cloudzero-agent.jobName" -}}
-{{- printf "%s-%s-%s" .Release .Name (.Values.jobConfigID | default (. | toYaml | sha256sum)) | trunc 61 -}}
+{{- printf "%s-%s-%s" .Release .Name (include "cloudzero-agent.configurationChecksum" .) | trunc 61 -}}
 {{- end }}
+
+{{/*
+Return a hash of the configuration, unless overridden.
+
+Note that jobConfigID *only* exists so we can avoid lots of commit noise when
+regenerating the manifests in tests/helm/template. It should never be set in
+production, as it will break important functionality to automatically reload
+things when a ConfigMap changes.
+*/}}
+{{- define "cloudzero-agent.configurationChecksum" -}}
+{{ .Values.jobConfigID | default (. | toYaml | sha256sum) }}
+{{- end -}}
 
 {{/*
 Name for the backfill job resource
@@ -577,6 +614,13 @@ Otherwise, it will be the CloudZero API endpoint.
 */}}
 {{- define "cloudzero-agent.metricsDestination" -}}
 'http://{{ include "cloudzero-agent.aggregator.name" . }}.{{ .Release.Namespace }}.svc.cluster.local/collector'
+{{- end -}}
+
+{{- define "cloudzero-agent.maybeGenerateSection" -}}
+{{- if .value -}}
+{{- .name }}:
+  {{- toYaml .value | nindent 2 }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -687,10 +731,7 @@ Generate nodeSelector sections
 */}}
 {{- define "cloudzero-agent.generateNodeSelector" -}}
 {{- $nodeSelector := .nodeSelector | default .default -}}
-{{if $nodeSelector }}
-nodeSelector:
-{{- $nodeSelector | toYaml | nindent 2 -}}
-{{- end -}}
+{{- include "cloudzero-agent.maybeGenerateSection" (dict "name" "nodeselector" "value" $nodeSelector) -}}
 {{- end -}}
 
 {{/*
@@ -698,24 +739,41 @@ Generate a pod disruption budget
 */}}
 {{- define "cloudzero-agent.generatePodDisruptionBudget" -}}
 {{- $replicas := int (.replicas | default .component.replicas | default 99999) -}}
-{{- if (.component.podDisruptionBudget.minAvailable | default .component.podDisruptionBudget.maxUnavailable) }}
+{{- $pdb := merge .component.podDisruptionBudget .root.Values.defaults.podDisruptionBudget -}}
+{{- if ($pdb.minAvailable | default $pdb.maxUnavailable) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ .name }}
   namespace: {{ .root.Release.Namespace }}
 spec:
-  {{- if .component.podDisruptionBudget.minAvailable }}
-  {{- if le $replicas (int .component.podDisruptionBudget.minAvailable) -}}
-  {{- fail (printf "Insufficient replicas in %s (%d) for pod disruption budget minAvailable (%v)" .name $replicas .component.podDisruptionBudget.minAvailable) -}}
+  {{- if $pdb.minAvailable }}
+  {{- if lt $replicas (int $pdb.minAvailable) -}}
+  {{- fail (printf "Insufficient replicas in %s (%d) for pod disruption budget minAvailable (%v)" .name $replicas $pdb.minAvailable) -}}
   {{- end }}
-  minAvailable: {{ .component.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ $pdb.minAvailable }}
   {{- end }}
-  {{- if .component.podDisruptionBudget.maxUnavailable }}
-  maxUnavailable: {{ .component.podDisruptionBudget.maxUnavailable }}
+  {{- if $pdb.maxUnavailable }}
+  maxUnavailable: {{ $pdb.maxUnavailable }}
   {{- end }}
   selector:
     matchLabels:
       {{- .matchLabels | nindent 6 }}
 {{- end }}
+{{- end -}}
+
+{{/*
+Generate imagePullSecrets block
+Accepts a dictionary with "root" (the top-level chart context) and "image" (the component's image configuration object)
+Example usage:
+{{- include "cloudzero-agent.generateImagePullSecrets" (dict
+      "root" .
+      "image" .Values.components.foo.image
+    ) | nindent 6 }}
+*/}}
+{{- define "cloudzero-agent.generateImagePullSecrets" -}}
+{{- include "cloudzero-agent.maybeGenerateSection" (dict
+      "name" "imagePullSecrets"
+      "value" (.image.pullSecrets | default .root.Values.defaults.image.pullSecrets)
+    ) -}}
 {{- end -}}

@@ -1,10 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-{{- if .Values.server.deploymentAnnotations }}
-  annotations:
-    {{- toYaml .Values.server.deploymentAnnotations | nindent 4 }}
-{{- end }}
+  {{- include "cloudzero-agent.generateAnnotations" .Values.server.deploymentAnnotations | nindent 2 }}
   labels:
     {{- include "cloudzero-agent.server.labels" . | nindent 4 }}
   {{- include "cloudzero-agent.generateAnnotations" .Values.defaults.annotations | nindent 2 }}
@@ -17,10 +14,7 @@ spec:
   replicas: 1
   template:
     metadata:
-    {{- if .Values.server.podAnnotations }}
-      annotations:
-        {{ toYaml .Values.server.podAnnotations | nindent 8 }}
-    {{- end }}
+      {{- include "cloudzero-agent.generateAnnotations" .Values.server.podAnnotations | nindent 8 }}
       labels:
         {{- include "cloudzero-agent.server.labels" . | nindent 8 }}
         {{- if .Values.server.podLabels}}
@@ -32,6 +26,8 @@ spec:
       initContainers:
         - name: {{ .Values.validator.name }}-copy
           {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.validator.image) | nindent 10 }}
+          env:
+            {{- include "cloudzero-agent.validatorEnv" . | nindent 12 }}
           command:
             - /app/cloudzero-agent-validator
             - install
@@ -49,6 +45,8 @@ spec:
               mountPath: /checks/config/
         - name: {{ .Values.validator.name }}-run
           {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image "compat" .Values.validator.image) | nindent 10 }}
+          env:
+            {{- include "cloudzero-agent.validatorEnv" . | nindent 12 }}
           command:
             - /checks/bin/cloudzero-agent-validator
             - diagnose
@@ -87,6 +85,7 @@ spec:
           {{- if .Values.server.env }}
           env:
 {{ toYaml .Values.server.env | indent 12}}
+            {{- include "cloudzero-agent.validatorEnv" . | nindent 12 }}
           {{- end }}
           lifecycle:
             postStart:
@@ -110,6 +109,7 @@ spec:
             {{- if .Values.server.agentMode }}
             - --enable-feature=agent
             {{- end }}
+            - --log.level={{ .Values.server.logging.level | default "info" }}
           ports:
             - containerPort: 9090
           readinessProbe:
