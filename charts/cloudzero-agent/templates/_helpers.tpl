@@ -9,7 +9,7 @@ Expand the name of the chart.
 The version number of the chart.
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.0  # <- Software release corresponding to this chart version.
+version: 1.2.1  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -562,6 +562,13 @@ Name for the certificate init job resource. Should be a new name each installati
 */}}
 {{- define "cloudzero-agent.initCertJobName" -}}
 {{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "init-cert" "Version" .Chart.Version "Values" .Values) -}}
+{{- end }}
+
+{{/*
+Name for the helmless job resource. Should be a new name each installation/upgrade.
+*/}}
+{{- define "cloudzero-agent.helmlessJobName" -}}
+{{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "helmless" "Version" .Chart.Version "Values" .Values) -}}
 {{- end }}
 
 {{/*
