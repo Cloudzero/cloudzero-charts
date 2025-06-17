@@ -13,7 +13,6 @@ on:
 
 jobs:
   build-and-publish-beta-chart:
-    environment: release
     permissions:
       contents: 'write'
       packages: 'write'
