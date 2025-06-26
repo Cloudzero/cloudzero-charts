@@ -9,7 +9,7 @@ Expand the name of the chart.
 The version number of the chart.
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.1  # <- Software release corresponding to this chart version.
+version: 1.2.2  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -54,6 +54,10 @@ Name for the validating webhook
 {{- printf "%s-validator-configuration" .Release.Name -}}
 {{- end}}
 
+{{ define "cloudzero-agent.helmlessConfigMapName" -}}
+{{- printf "%s-helmless-cm" .Release.Name -}}
+{{- end}}
+
 {{ define "cloudzero-agent.configLoaderJobName" -}}
 {{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "confload" "Version" .Chart.Version "Values" .Values) -}}
 {{- end}}
@@ -91,21 +95,37 @@ app.kubernetes.io/component: {{ .Values.server.name }}
 {{- end -}}
 
 {{/*
-Create unified labels for prometheus components
+Common base labels for all Kubernetes resources
 */}}
-{{- define "cloudzero-agent.common.metaLabels" -}}
-{{- $labels := dict
+{{- define "cloudzero-agent.baseLabels" -}}
+{{- dict
+    "app.kubernetes.io/name" (include "cloudzero-agent.name" .)
+    "app.kubernetes.io/instance" .Release.Name
     "app.kubernetes.io/version" .Chart.AppVersion
     "helm.sh/chart" (include "cloudzero-agent.chart" .)
     "app.kubernetes.io/managed-by" .Release.Service
     "app.kubernetes.io/part-of" (include "cloudzero-agent.name" .)
--}}
-{{- (merge $labels .Values.defaults.labels .Values.commonMetaLabels) | toYaml -}}
+| toYaml -}}
+{{- end -}}
+
+{{/*
+Create unified labels for prometheus components
+*/}}
+{{- define "cloudzero-agent.common.metaLabels" -}}
+{{ (mergeOverwrite
+     (include "cloudzero-agent.baseLabels" . | fromYaml)
+     (.Values.defaults.labels | default (dict))
+     (.Values.commonMetaLabels | default (dict))
+   ) | toYaml }}
 {{- end -}}
 
 {{- define "cloudzero-agent.server.labels" -}}
-{{ include "cloudzero-agent.server.matchLabels" . }}
-{{ include "cloudzero-agent.common.metaLabels" . }}
+{{ (mergeOverwrite
+     (include "cloudzero-agent.baseLabels" . | fromYaml)
+     (dict "app.kubernetes.io/component" .Values.server.name)
+     (.Values.defaults.labels | default (dict))
+     (.Values.commonMetaLabels | default (dict))
+   ) | toYaml }}
 {{- end -}}
 
 {{/*
@@ -439,8 +459,12 @@ Service selector labels
 {{- end }}
 
 {{- define "cloudzero-agent.insightsController.labels" -}}
-{{ include "cloudzero-agent.insightsController.server.matchLabels" . }}
-{{ include "cloudzero-agent.common.metaLabels" . }}
+{{ (mergeOverwrite
+     (include "cloudzero-agent.baseLabels" . | fromYaml)
+     (dict "app.kubernetes.io/component" .Values.insightsController.server.name)
+     (.Values.defaults.labels | default (dict))
+     (.Values.commonMetaLabels | default (dict))
+   ) | toYaml }}
 {{- end -}}
 
 {{- define "cloudzero-agent.aggregator.selectorLabels" -}}
@@ -449,8 +473,13 @@ Service selector labels
 {{- end }}
 
 {{- define "cloudzero-agent.aggregator.labels" -}}
-{{ include "cloudzero-agent.aggregator.matchLabels" . }}
-{{ include "cloudzero-agent.common.metaLabels" . }}
+{{ (mergeOverwrite
+     (include "cloudzero-agent.baseLabels" . | fromYaml)
+     (dict "app.kubernetes.io/component" "aggregator")
+     (.Values.defaults.labels | default (dict))
+     (.Values.commonMetaLabels | default (dict))
+     (dict "app.kubernetes.io/name" (include "cloudzero-agent.aggregator.name" .))
+   ) | toYaml }}
 {{- end -}}
 
 {{/*
@@ -518,7 +547,7 @@ Name for the issuer resource
 Map for initBackfillJob values; this allows us to preferably use initBackfillJob, but if users are still using the deprecated initScrapeJob, we will accept those as well
 */}}
 {{- define "cloudzero-agent.backFill" -}}
-{{- merge .Values.initBackfillJob (.Values.initScrapeJob | default (dict)) | toYaml }}
+{{- merge (deepCopy .Values.initBackfillJob) (.Values.initScrapeJob | default (dict)) | toYaml }}
 {{- end }}
 
 {{/*
@@ -578,7 +607,7 @@ Annotations for the webhooks
 {{- if or .Values.insightsController.tls.useCertManager .Values.insightsController.webhooks.annotations }}
 annotations:
 {{- if .Values.insightsController.webhooks.annotations }}
-{{ toYaml .Values.insightsController.webhook.annotations | nindent 2}}
+{{ toYaml .Values.insightsController.webhooks.annotations | nindent 2}}
 {{- end }}
 {{- if .Values.insightsController.tls.useCertManager }}
   cert-manager.io/inject-ca-from: {{ .Values.insightsController.webhooks.caInjection | default (printf "%s/%s" .Release.Namespace (include "cloudzero-agent.certificateName" .)) }}
@@ -638,13 +667,11 @@ Generate image configuration with defaults.
 {{- $tag         := (.image.tag         | default .defaults.tag) -}}
 {{- $repository  := (.image.repository  | default .defaults.repository) -}}
 {{- $pullPolicy  := (.image.pullPolicy  | default .defaults.pullPolicy) -}}
-{{- $pullSecrets := (.image.pullSecrets | default .defaults.pullSecrets) -}}
 {{- if .compat -}}
 {{- $digest      = (.compat.digest      | default .image.digest      | default .defaults.digest) -}}
 {{- $tag         = (.compat.tag         | default .image.tag         | default .defaults.tag) -}}
 {{- $repository  = (.compat.repository  | default .image.repository  | default .defaults.repository) -}}
 {{- $pullPolicy  = (.compat.pullPolicy  | default .image.pullPolicy  | default .defaults.pullPolicy) -}}
-{{- $pullSecrets = (.compat.pullSecrets | default .image.pullSecrets | default .defaults.pullSecrets) -}}
 {{- end -}}
 {{- if $digest -}}
 image: "{{ $repository }}@{{ $digest }}"
@@ -653,10 +680,6 @@ image: "{{ $repository }}:{{ $tag }}"
 {{- end }}
 {{ if $pullPolicy -}}
 imagePullPolicy: "{{ $pullPolicy }}"
-{{- end }}
-{{ if $pullSecrets -}}
-imagePullSecrets:
-{{ toYaml $pullSecrets | indent 2 }}
 {{- end }}
 {{- end -}}
 
@@ -684,18 +707,29 @@ dnsConfig:
 Generate labels for a component
 */}}
 {{- define "cloudzero-agent.generateLabels" -}}
-{{- $labels := dict
-    "app.kubernetes.io/version" .globals.Chart.AppVersion
-    "helm.sh/chart" (include "cloudzero-agent.chart" .globals)
-    "app.kubernetes.io/managed-by" .globals.Release.Service
-    "app.kubernetes.io/part-of" (include "cloudzero-agent.name" .globals)
--}}
 {{- if .component -}}
-{{- $labels = merge (dict "app.kubernetes.io/component" .component) $labels -}}
-{{- end -}}
-{{- if len $labels -}}
+{{- $merged := mergeOverwrite
+     (include "cloudzero-agent.baseLabels" .globals | fromYaml)
+     (dict "app.kubernetes.io/component" .component)
+     (.globals.Values.defaults.labels | default (dict))
+     (.globals.Values.commonMetaLabels | default (dict))
+     (.labels | default (dict))
+-}}
+{{- if len $merged -}}
 labels:
-{{- (merge $labels (.labels | default (dict)) .globals.Values.defaults.labels .globals.Values.commonMetaLabels) | toYaml | nindent 2 -}}
+{{- $merged | toYaml | nindent 2 -}}
+{{- end -}}
+{{- else -}}
+{{- $merged := mergeOverwrite
+     (include "cloudzero-agent.baseLabels" .globals | fromYaml)
+     (.globals.Values.defaults.labels | default (dict))
+     (.globals.Values.commonMetaLabels | default (dict))
+     (.labels | default (dict))
+-}}
+{{- if len $merged -}}
+labels:
+{{- $merged | toYaml | nindent 2 -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -715,7 +749,7 @@ Generate affinity sections
 {{- define "cloudzero-agent.generateAffinity" -}}
 {{ $affinity := .default }}
 {{- if .affinity -}}
-{{ $affinity = merge .affinity .default }}
+{{ $affinity = merge (deepCopy .affinity) .default }}
 {{- end -}}
 {{- if $affinity -}}
 affinity:
@@ -738,7 +772,7 @@ Generate nodeSelector sections
 */}}
 {{- define "cloudzero-agent.generateNodeSelector" -}}
 {{- $nodeSelector := .nodeSelector | default .default -}}
-{{- include "cloudzero-agent.maybeGenerateSection" (dict "name" "nodeselector" "value" $nodeSelector) -}}
+{{- include "cloudzero-agent.maybeGenerateSection" (dict "name" "nodeSelector" "value" $nodeSelector) -}}
 {{- end -}}
 
 {{/*
@@ -746,7 +780,7 @@ Generate a pod disruption budget
 */}}
 {{- define "cloudzero-agent.generatePodDisruptionBudget" -}}
 {{- $replicas := int (.replicas | default .component.replicas | default 99999) -}}
-{{- $pdb := merge .component.podDisruptionBudget .root.Values.defaults.podDisruptionBudget -}}
+{{- $pdb := merge (deepCopy .component.podDisruptionBudget) .root.Values.defaults.podDisruptionBudget -}}
 {{- if ($pdb.minAvailable | default $pdb.maxUnavailable) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
