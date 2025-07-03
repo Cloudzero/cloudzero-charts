@@ -96,25 +96,24 @@ $defs:
 type: object
 additionalProperties: false
 required:
-  - cloudAccountId
-  - clusterName
-  - region
   - host
 
 properties:
   cloudAccountId:
-    type: string
-    minLength: 1
+    type:
+      - string
+      - "null"
     description: |
       The CloudZero Cloud Account ID.
   clusterName:
     type: string
-    pattern: ^[a-zA-Z0-9](?:[a-zA-Z0-9._-]{0,251}[a-zA-Z0-9])?$
+    pattern: ^(|[a-zA-Z0-9](?:[a-zA-Z0-9._-]{0,251}[a-zA-Z0-9])?)$
     description: |
       The name of the Kubernetes cluster.
   region:
-    type: string
-    minLength: 1
+    type:
+      - string
+      - "null"
     description: |
       The cloud provider region.
   apiKey:
@@ -213,7 +212,7 @@ properties:
       podDisruptionBudget:
         description: |
           Pod Disruption Budget to be added to all resources.
-        $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudget"
+        $ref: "#/definitions/io.k8s.api.policy.v1.PodDisruptionBudgetSpec"
       priorityClassName:
         description: |
           Priority class name to be used for all deployments and jobs.
@@ -245,7 +244,9 @@ properties:
 
               See the Kubernetes documentation for details:
               https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
-            $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudget"
+            oneOf:
+              - $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudgetSpec"
+              - type: "null"
           replicas:
             description: |
               Number of replicas to deploy.
@@ -277,7 +278,9 @@ properties:
 
               See the Kubernetes documentation for details:
               https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
-            $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudget"
+            oneOf:
+              - $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudgetSpec"
+              - type: "null"
           replicas:
             description: |
               Number of replicas to deploy.
@@ -340,7 +343,9 @@ properties:
 
               See the Kubernetes documentation for details:
               https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
-            $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudget"
+            oneOf:
+              - $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudgetSpec"
+              - type: "null"
           replicas:
             description: |
               Number of replicas to deploy.
@@ -451,7 +456,21 @@ properties:
                 type: integer
           # emptyDir volume configuration
           emptyDir:
-            $ref: "#/$defs/io.k8s.api.core.v1.EmptyDirVolumeSource"
+            type: object
+            additionalProperties: false
+            properties:
+              enabled:
+                type: boolean
+                description: |
+                  Whether to enable the emptyDir volume for the aggregator.
+              medium:
+                $ref: "#/$defs/io.k8s.api.core.v1.EmptyDirVolumeSource/properties/medium"
+                description: |
+                  Storage medium for the emptyDir volume.
+              sizeLimit:
+                $ref: "#/$defs/io.k8s.api.core.v1.EmptyDirVolumeSource/properties/sizeLimit"
+                description: |
+                  Size limit for the emptyDir volume.
       collector:
         type: object
         additionalProperties: false
@@ -1021,6 +1040,14 @@ properties:
               Timeout for idle connections.
             $ref: "#/$defs/com.cloudzero.agent.duration"
             default: "120s"
+          reconnectFrequency:
+            type: integer
+            minimum: 0
+            default: 16
+            description: |
+              How frequently to close HTTP connections from clients, to help
+              distribute the load across the various webhook replicas. 0=never,
+              otherwise 1/N probability.
           logging:
             description: |
               Configuration for logging in the webhook server.
@@ -1099,6 +1126,14 @@ properties:
             description: |
               Annotations to add to the webhook server pods.
             $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+          suppressIstioAnnotations:
+            description: |
+              Whether to suppress Istio-related annotations on webhook server pods.
+              When false (default), the sidecar.istio.io/inject: "false" annotation is added
+              to prevent Istio sidecar injection which can interfere with webhook TLS.
+              Set to true to disable this behavior and allow Istio sidecar injection.
+            type: boolean
+            default: false
       volumeMounts:
         description: |
           Additional volume mounts to add to the insights controller pods.
@@ -1153,6 +1188,12 @@ properties:
               Path for the validating admission webhook.
             type: string
             default: "/validate"
+          timeoutSeconds:
+            description: |
+              Timeout for the validating admission webhook.
+            type: integer
+            default: 1
+            $ref: "#/$defs/io.k8s.api.admissionregistration.v1.ValidatingWebhook/properties/timeoutSeconds"
           caInjection:
             type:
               - string

@@ -1,10 +1,38 @@
 # -- CloudZero host to send metrics to.
 host: api.cloudzero.com
-# -- Account ID of the account the cluster is running in. This must be a string - even if it is a number in your system.
+
+# Account ID of the account the cluster is running in.
+#
+# This value can be automatically detected by the CloudZero Agent on AWS (EKS),
+# Google Cloud (GKE), and Azure (AKS), but if specified explicitly the specified
+# value will be used instead of the detected value. If you wish to use the
+# detected value, leave this property set to null.
+#
+# Note also that this must be a string value, even where the account ID may be
+# numeric (e.g., an AWS account ID). i.e., `"123456789012"` not `123456789012`.
+# If you are passing this as a parameter to the Helm CLI, you should generally
+# use --set-string (e.g., "cloudAccountId=123456789012").
 cloudAccountId: null
-# -- Name of the clusters.
-clusterName: null
-# -- Region the cluster is running in.
+
+# Name of the Kubernetes cluster.
+#
+# This value can be automatically detected reliably by the CloudZero Agent on
+# GKE. On Azure, due to Azure API limitations the cluster name can be detected
+# only if it does not contain any underscores, otherwise it may be detected
+# incorrectly. On AWS, the cluster name cannot be detected at all and you'll
+# need to pass it explicitly.
+#
+# If specified explicitly the specified value will be used instead of the
+# detected value. If you wish to use the detected value, leave this property set
+# to null.
+clusterName: ""
+
+# Region the cluster is running in.
+#
+# This value can be automatically detected by the CloudZero Agent on AWS (EKS),
+# Google Cloud (GKE), and Azure (AKS), but if specified explicitly the specified
+# value will be used instead of the detected value. If you wish to use the
+# detected value, leave this property set to null.
 region: null
 
 # -- CloudZero API key. Required if existingSecretName is null.
@@ -136,8 +164,9 @@ defaults:
   # Note that if you set this, you'll likely also want to set
   # kubeStateMetrics.podDisruptionBudget.
   podDisruptionBudget:
+    enabled: true
     minAvailable: 1
-    maxUnavailable:
+    # maxUnavailable:
   # If set, this priority class name will be used for all deployments and jobs.
   #
   # Note that, if used, you will need to create the PriorityClass resource
@@ -161,10 +190,11 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.2.2  # <- Software release corresponding to this chart version.
+      tag: 1.2.3  # <- Software release corresponding to this chart version.
     podDisruptionBudget:
-      minAvailable:
-      maxUnavailable:
+      # enabled:
+      # minAvailable:
+      # maxUnavailable:
 
   # kubectl contains details about where to find the kubectl image.  This chart
   # uses the kubectl image as part of the job to initialize certificates.
@@ -197,8 +227,9 @@ components:
   aggregator:
     replicas: 3
     podDisruptionBudget:
-      minAvailable:
-      maxUnavailable:
+      # enabled:
+      # minAvailable:
+      # maxUnavailable:
     tolerations: []
     annotations: {}
 
@@ -206,8 +237,9 @@ components:
   webhookServer:
     replicas: 3
     podDisruptionBudget:
-      minAvailable:
-      maxUnavailable:
+      # enabled:
+      # minAvailable:
+      # maxUnavailable:
 
 # Due to limitations of Helm, we are unfortunately not able to automatically configure the
 # kube-state-metrics subchart using the configuration above, and instead need to configure
@@ -627,6 +659,10 @@ insightsController:
     # This is formatted as a Go duration string; see
     # https://pkg.go.dev/time#ParseDuration for details.
     idle_timeout: 120s
+    # Frequency to close HTTP connections from clients, to help distribute the
+    # load across the various webhook replicas. 0=never, otherwise 1/N
+    # probability.
+    reconnectFrequency: 16
     # Configuration for logging in the webhook server.
     logging:
       # Logging level for the webhook server.
@@ -668,6 +704,13 @@ insightsController:
     deploymentAnnotations: {}
     # Annotations to add to the webhook server pods.
     podAnnotations: {}
+    # Whether to suppress Istio-related annotations on webhook server pods. When
+    # false (default), the sidecar.istio.io/inject: "false" annotation is added
+    # to prevent Istio sidecar injection which can interfere with webhook TLS.
+    # Set to true to disable this behavior and allow Istio sidecar injection.
+    # For additional information, see:
+    # https://github.com/Cloudzero/cloudzero-charts/blob/develop/charts/cloudzero-agent/docs/istio.md
+    suppressIstioAnnotations: false
   # Additional volume mounts to add to the insights controller pods.
   volumeMounts: []
   # Additional volumes to add to the insights controller pods.
@@ -690,6 +733,8 @@ insightsController:
     namespaceSelector: {}
     # Path for the validating admission webhook.
     path: /validate
+    # Timeout for the validating admission webhook.
+    timeoutSeconds: 1
     caInjection:
   configurationMountPath:
   ConfigMapNameOverride:
