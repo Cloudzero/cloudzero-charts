@@ -39,6 +39,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          {{- include "cloudzero-agent.generateResources" (include "cloudzero-agent.mergeStringOverwrite" (list
+              (.Values.components.agent.reloader.resources | default (dict))
+              (.Values.configmapReload.prometheus.resources | default (dict))
+            ) | fromYaml) | nindent 10 }}
+          {{- include "cloudzero-agent.generateContainerSecurityContext" (mergeOverwrite
+              (.Values.defaults.securityContext | default (dict))
+              (.Values.components.agent.reloader.securityContext | default (dict))
+            ) | nindent 10 }}
           volumeMounts:
             - name: unprocessed-config-volume
               mountPath: /etc/config/prometheus/configmaps/unprocessed/
@@ -51,10 +59,37 @@ spec:
           args:
             - --watched-dir=/etc/config
             - --reload-url=http://127.0.0.1:9090/-/reload
-          {{- with .Values.configmapReload.prometheus.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - --listen-address=:8080
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 4
+            failureThreshold: 3
+            successThreshold: 1
+          {{- include "cloudzero-agent.generateResources" (include "cloudzero-agent.mergeStringOverwrite" (list
+              (.Values.components.agent.reloader.resources | default (dict))
+              (.Values.configmapReload.prometheus.resources | default (dict))
+            ) | fromYaml) | nindent 10 }}
+          {{- include "cloudzero-agent.generateContainerSecurityContext" (mergeOverwrite
+              (.Values.defaults.securityContext | default (dict))
+              (.Values.components.agent.reloader.securityContext | default (dict))
+            ) | nindent 10 }}
           volumeMounts:
             - name: processed-config-volume
               mountPath: /etc/config
@@ -99,10 +134,11 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
             successThreshold: 1
-          {{- with .Values.server.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+          {{- include "cloudzero-agent.generateResources" .Values.components.agent.federatedNode.resources | nindent 10 }}
+          {{- include "cloudzero-agent.generateContainerSecurityContext" (mergeOverwrite
+                (.Values.defaults.securityContext | default (dict))
+                (.Values.components.agent.federatedNode.securityContext | default (dict))
+              ) | nindent 10 }}
           volumeMounts:
             - name: processed-config-volume
               mountPath: /etc/config/prometheus.yml
@@ -111,12 +147,11 @@ spec:
             - name: cloudzero-agent-storage-volume
               mountPath: /data
               subPath: ""
-            {{- include "cloudzero-agent.apiKeyVolumeMount" . | nindent 12 }}
-      securityContext:
-        runAsUser: 65534
-        runAsNonRoot: true
-        runAsGroup: 65534
-        fsGroup: 65534
+            {{- include "cloudzero-agent.apiKeyVolumeMount" . | nindent 12 }}  
+      {{- include "cloudzero-agent.generatePodSecurityContext" (mergeOverwrite
+          (.Values.defaults.securityContext | default (dict))
+          (.Values.components.agent.federatedNode.securityContext | default (dict))
+        ) | nindent 6 }}
       {{- include "cloudzero-agent.generateDNSInfo" (dict "defaults" .Values.defaults.dns) | nindent 6 }}
       {{- include "cloudzero-agent.server.imagePullSecrets" . | nindent 6 -}}
       {{- include "cloudzero-agent.generateNodeSelector" (dict "default" .Values.defaults.nodeSelector "nodeSelector" .Values.server.nodeSelector) | nindent 6 }}

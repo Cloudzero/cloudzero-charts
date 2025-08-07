@@ -9,7 +9,7 @@ Expand the name of the chart.
 The version number of the chart.
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.5  # <- Software release corresponding to this chart version.
+version: 1.2.6  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -578,7 +578,14 @@ things when a ConfigMap changes.
 Name for the backfill job resource
 */}}
 {{- define "cloudzero-agent.initBackfillJobName" -}}
-{{- include "cloudzero-agent.jobName" (dict "Release" .Release.Name "Name" "backfill" "Version" .Chart.Version "Values" .Values) -}}
+{{- printf "%s-backfill-%s" .Release.Name (include "cloudzero-agent.configurationChecksum" .) | trunc 52 -}}
+{{- end }}
+
+{{/*
+Name for the backfill cronjob resource (without unique ID since it's persistent)
+*/}}
+{{- define "cloudzero-agent.initBackfillCronJobName" -}}
+{{- printf "%s-backfill" .Release.Name -}}
 {{- end }}
 
 {{/*
@@ -657,8 +664,47 @@ Otherwise, it will be the CloudZero API endpoint.
 'http://{{ include "cloudzero-agent.aggregator.name" . }}.{{ .Release.Namespace }}.svc.cluster.local/collector'
 {{- end -}}
 
+{{/*
+Merge multiple dictionaries with string-aware overwrite logic.
+Similar to mergeOverwrite, but treats empty strings as "unset" values (like null).
+This is useful for merging resource configurations where empty strings indicate
+that a value should not be set, allowing fallback to other sources.
+
+Accepts a list of dictionaries to merge, with later dictionaries taking precedence
+over earlier ones, but only for non-empty string values.
+
+Example usage:
+{{- include "cloudzero-agent.mergeStringOverwrite" (list
+      .Values.components.aggregator.collector.resources
+      .Values.aggregator.collector.resources
+    ) }}
+
+This will merge the two resource configurations, with the second one taking
+precedence for any non-empty string values, but empty strings in the second
+configuration will not overwrite values from the first configuration.
+*/}}
+{{- define "cloudzero-agent.mergeStringOverwrite" -}}
+{{- $result := (dict) -}}
+{{- range $dict := . -}}
+  {{- if $dict -}}
+    {{- range $key, $value := $dict -}}
+      {{- if kindIs "map" $value -}}
+        {{- /* Recursively merge nested dictionaries */ -}}
+        {{- $existing := (get $result $key | default (dict)) -}}
+        {{- $merged := (include "cloudzero-agent.mergeStringOverwrite" (list $existing $value) | fromYaml) -}}
+        {{- $_ := set $result $key $merged -}}
+      {{- else if and $value (ne $value "") -}}
+        {{- /* Only set non-empty string values */ -}}
+        {{- $_ := set $result $key $value -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $result | toYaml -}}
+{{- end -}}
+
 {{- define "cloudzero-agent.maybeGenerateSection" -}}
-{{- if .value -}}
+{{- if and .value (not (empty .value)) -}}
 {{- .name }}:
   {{- toYaml .value | nindent 2 }}
 {{- end -}}
@@ -829,6 +875,46 @@ spec:
 {{- end -}}
 
 {{/*
+Generate resources block
+Accepts a resources configuration object directly
+Example usage:
+{{- include "cloudzero-agent.generateResources" .Values.server.resources | nindent 12 }}
+*/}}
+{{- define "cloudzero-agent.generateResources" -}}
+{{- if . -}}
+  {{- $resources := . -}}
+  {{- $cleanResources := dict -}}
+  {{- if $resources.requests -}}
+    {{- $cleanRequests := dict -}}
+    {{- if and $resources.requests.cpu (ne $resources.requests.cpu "") -}}
+      {{- $_ := set $cleanRequests "cpu" $resources.requests.cpu -}}
+    {{- end -}}
+    {{- if and $resources.requests.memory (ne $resources.requests.memory "") -}}
+      {{- $_ := set $cleanRequests "memory" $resources.requests.memory -}}
+    {{- end -}}
+    {{- if $cleanRequests -}}
+      {{- $_ := set $cleanResources "requests" $cleanRequests -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $resources.limits -}}
+    {{- $cleanLimits := dict -}}
+    {{- if and $resources.limits.cpu (ne $resources.limits.cpu "") -}}
+      {{- $_ := set $cleanLimits "cpu" $resources.limits.cpu -}}
+    {{- end -}}
+    {{- if and $resources.limits.memory (ne $resources.limits.memory "") -}}
+      {{- $_ := set $cleanLimits "memory" $resources.limits.memory -}}
+    {{- end -}}
+    {{- if $cleanLimits -}}
+      {{- $_ := set $cleanResources "limits" $cleanLimits -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $cleanResources -}}
+    {{- include "cloudzero-agent.maybeGenerateSection" (dict "name" "resources" "value" $cleanResources) -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Generate imagePullSecrets block
 Accepts a dictionary with "root" (the top-level chart context) and "image" (the component's image configuration object)
 Example usage:
@@ -842,4 +928,127 @@ Example usage:
       "name" "imagePullSecrets"
       "value" (.image.pullSecrets | default .root.Values.defaults.image.pullSecrets)
     ) -}}
+{{- end -}}
+
+{{/*
+Generate securityContext block from a merged configuration dictionary.
+Accepts a dictionary containing the merged security context configuration.
+
+For merging with defaults fallback (null values fall back to defaults):
+{{- include "cloudzero-agent.generateSecurityContext" (mergeOverwrite
+      (.Values.defaults.securityContext | default (dict))
+      (.Values.components.miscellaneous.configLoader.securityContext | default (dict))
+    ) | nindent 6 }}
+*/}}
+{{- define "cloudzero-agent.generateSecurityContext" -}}
+{{- include "cloudzero-agent.maybeGenerateSection" (dict "name" "securityContext" "value" .) -}}
+{{- end -}}
+
+{{/*
+Security Context Helper Functions
+
+Kubernetes has two distinct security context types with different schemas:
+
+1. Pod SecurityContext (spec.securityContext) - includes fsGroup,
+   supplementalGroups, etc.
+2. Container SecurityContext (spec.containers[].securityContext) - includes
+   allowPrivilegeEscalation, capabilities, etc.
+
+Rather than maintaining separate configuration properties for each type (which
+would be heavy-handed and prevent container-specific overrides), these helper
+functions filter a common security context object to include only properties
+valid for each level.
+
+This approach allows:
+
+- Single configuration source (defaults.securityContext +
+  components.*.securityContext)
+- Proper schema validation (no fsGroup in containers, no capabilities in pods)
+- Future flexibility for container-specific security contexts
+- Clean separation of concerns
+
+This is considered a temporary approach while we evaluate better patterns for
+container-specific security context configuration. We may eventually implement a
+system that allows per-container security context overrides.
+*/}}
+
+{{/*
+Filter a map to only include specified properties.
+Returns a JSON string containing only the properties that exist in the input map.
+*/}}
+{{- define "cloudzero-agent.filterProperties" -}}
+  {{- $input := .input -}}
+  {{- $properties := .properties -}}
+  {{- $result := dict -}}
+  {{- range $property := $properties -}}
+    {{- if hasKey $input $property -}}
+      {{- $_ := set $result $property (get $input $property) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $result | toJson -}}
+{{- end -}}
+
+{{/*
+Generate pod security context configuration.
+Filters the input to only include properties valid for pod-level security contexts.
+
+Pod-level security context properties (from k8s.json schema):
+- appArmorProfile, fsGroup, fsGroupChangePolicy, runAsGroup, runAsNonRoot, runAsUser
+- seLinuxChangePolicy, seLinuxOptions, seccompProfile, supplementalGroups
+- supplementalGroupsPolicy, sysctls, windowsOptions
+*/}}
+{{- define "cloudzero-agent.generatePodSecurityContext" -}}
+{{- if . -}}
+{{- $podProperties := list
+      "appArmorProfile"
+      "fsGroup"
+      "fsGroupChangePolicy"
+      "runAsGroup"
+      "runAsNonRoot"
+      "runAsUser"
+      "seLinuxChangePolicy"
+      "seLinuxOptions"
+      "seccompProfile"
+      "supplementalGroups"
+      "supplementalGroupsPolicy"
+      "sysctls"
+      "windowsOptions"
+-}}
+{{- include "cloudzero-agent.maybeGenerateSection" (dict
+      "name" "securityContext"
+      "value" ((include "cloudzero-agent.filterProperties" (dict "input" . "properties" $podProperties)) | fromJson)
+    ) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate container security context configuration.
+Filters the input to only include properties valid for container-level security contexts.
+
+Container-level security context properties (from k8s.json schema):
+- allowPrivilegeEscalation, appArmorProfile, capabilities, privileged, procMount
+- readOnlyRootFilesystem, runAsGroup, runAsNonRoot, runAsUser, seLinuxOptions
+- seccompProfile, windowsOptions
+*/}}
+{{- define "cloudzero-agent.generateContainerSecurityContext" -}}
+{{- if . -}}
+{{- $containerProperties := list
+      "allowPrivilegeEscalation"
+      "appArmorProfile"
+      "capabilities"
+      "privileged"
+      "procMount"
+      "readOnlyRootFilesystem"
+      "runAsGroup"
+      "runAsNonRoot"
+      "runAsUser"
+      "seLinuxOptions"
+      "seccompProfile"
+      "windowsOptions"
+  -}}
+{{- include "cloudzero-agent.maybeGenerateSection" (dict
+      "name" "securityContext"
+      "value" ((include "cloudzero-agent.filterProperties" (dict "input" . "properties" $containerProperties)) | fromJson)
+    ) -}}
+{{- end -}}
 {{- end -}}

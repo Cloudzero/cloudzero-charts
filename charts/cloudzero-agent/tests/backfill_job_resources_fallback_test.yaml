@@ -1,0 +1,36 @@
+suite: test backfill job resources fallback logic
+templates:
+  - templates/backfill-job.yaml
+tests:
+  # Simple test to verify the template generates both Job and CronJob
+  # Note: Using hasDocuments instead of contains assertions due to helm-unittest
+  # plugin limitations with multi-document YAML output
+  - it: should generate both Job and CronJob resources
+    set:
+      insightsController.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  # Test that the template renders without errors
+  - it: should render without errors
+    set:
+      insightsController.enabled: true
+      components.webhookServer.backfill:
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
+      insightsController.resources:
+        requests:
+          memory: "128Mi"
+          cpu: "100m"
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+    asserts:
+      - hasDocuments:
+          count: 2

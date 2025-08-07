@@ -115,11 +115,14 @@ required:
 
 properties:
   cloudAccountId:
-    type:
-      - string
-      - "null"
+    type: "string"
+    # Empty string or numeric string or UUID
+    pattern: "^$|^[0-9]+$|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
     description: |
-      The CloudZero Cloud Account ID.
+      The cloud account ID. Must be either:
+        - Empty string (use auto-detected value)
+        - Numeric string (AWS account ID or Google Cloud project number)
+        - UUID (Azure subscription ID)
   clusterName:
     type: string
     pattern: ^(|[a-zA-Z0-9](?:[a-zA-Z0-9._-]{0,251}[a-zA-Z0-9])?)$
@@ -236,6 +239,14 @@ properties:
         type:
           - string
           - "null"
+      securityContext:
+        description: |
+          Default security context for all pods. Component-specific security contexts
+          will be merged with these defaults, with component settings taking precedence.
+
+          For more information, see the Kubernetes documentation:
+          https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+        $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
 
   components:
     description: |
@@ -275,6 +286,142 @@ properties:
               See the Kubernetes documentation for details:
               https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
             $ref: "#/$defs/com.cloudzero.agent.tolerations"
+          resources:
+            description: |
+              Resource requirements and limits for the agent component.
+
+              For details, see the Kubernetes documentation on resource management:
+              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+            $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+          securityContext:
+            description: |
+              Security context for the agent pods.
+
+              For details, see the Kubernetes documentation on security contexts:
+              https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+            $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          federatedNode:
+            description: |
+              The agent federated node component runs on each node for federation.
+            additionalProperties: false
+            type: object
+            properties:
+              resources:
+                description: |
+                  Resource requirements and limits for the agent federated node component.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+              securityContext:
+                description: |
+                  Security context for the agent federated node pods.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          reloader:
+            description: |
+              The agent configmap reloader component watches for configuration changes.
+            additionalProperties: false
+            type: object
+            properties:
+              securityContext:
+                description: |
+                  Security context for the agent configmap reloader container.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+              resources:
+                description: |
+                  Resource requirements and limits for the agent configmap reloader component.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+
+      validator:
+        description: |
+          The validator component performs validation checks and notifies the platform
+          of installation status changes.
+        additionalProperties: false
+        type: object
+        properties:
+          resources:
+            description: |
+              Resource requirements and limits for the validator component.
+
+              For details, see the Kubernetes documentation on resource management:
+              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+            $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+
+      miscellaneous:
+        description: |
+          Miscellaneous components that don't fit into other categories.
+        additionalProperties: false
+        type: object
+        properties:
+          configLoader:
+            description: |
+              The config loader job component loads configuration and validates settings.
+            additionalProperties: false
+            type: object
+            properties:
+              resources:
+                description: |
+                  Resource requirements and limits for the config loader job component.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+              securityContext:
+                description: |
+                  Security context for the config loader job pods.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          helmless:
+            description: |
+              The helmless job component generates configuration without Helm.
+            additionalProperties: false
+            type: object
+            properties:
+              resources:
+                description: |
+                  Resource requirements and limits for the helmless job component.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+              securityContext:
+                description: |
+                  Security context for the helmless job pods.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          initCert:
+            description: |
+              The init cert job component initializes TLS certificates.
+            additionalProperties: false
+            type: object
+            properties:
+              resources:
+                description: |
+                  Resource requirements and limits for the init cert job component.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+              securityContext:
+                description: |
+                  Security context for the init cert job pods.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
 
       aggregator:
         description: |
@@ -289,6 +436,50 @@ properties:
             description: |
               Annotations to be added to the aggregator deployment.
             $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+          collector:
+            description: |
+              Configuration for the collector component of the aggregator.
+            oneOf:
+              - type: object
+                properties:
+                  resources:
+                    description: |
+                      Resource requirements and limits for the collector component.
+
+                      For details, see the Kubernetes documentation on resource management:
+                      https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+                  securityContext:
+                    description: |
+                      Security context for the aggregator collector container.
+
+                      For details, see the Kubernetes documentation on security contexts:
+                      https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                    $ref: "#/$defs/io.k8s.api.core.v1.SecurityContext"
+                additionalProperties: false
+              - type: "null"
+          shipper:
+            description: |
+              Configuration for the shipper component of the aggregator.
+            oneOf:
+              - type: object
+                properties:
+                  resources:
+                    description: |
+                      Resource requirements and limits for the shipper component.
+
+                      For details, see the Kubernetes documentation on resource management:
+                      https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+                  securityContext:
+                    description: |
+                      Security context for the aggregator shipper container.
+
+                      For details, see the Kubernetes documentation on security contexts:
+                      https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                    $ref: "#/$defs/io.k8s.api.core.v1.SecurityContext"
+                additionalProperties: false
+              - type: "null"
           podDisruptionBudget:
             description: |
               Pod disruption budget configuration for the aggregator.
@@ -305,6 +496,7 @@ properties:
             type:
               - integer
               - "null"
+
           tolerations:
             description: |
               Tolerations configuration for the aggregator pods.
@@ -312,6 +504,13 @@ properties:
               See the Kubernetes documentation for details:
               https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
             $ref: "#/$defs/com.cloudzero.agent.tolerations"
+          securityContext:
+            description: |
+              Security context for the aggregator pods.
+
+              For details, see the Kubernetes documentation on security contexts:
+              https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+            $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
 
       kubectl:
         description: |
@@ -370,6 +569,45 @@ properties:
             type:
               - integer
               - "null"
+          resources:
+            description: |
+              Resource requirements and limits for the webhook server component.
+
+              For details, see the Kubernetes documentation on resource management:
+              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+            $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+          securityContext:
+            description: |
+              Security context for the webhook server pods.
+
+              For details, see the Kubernetes documentation on security contexts:
+              https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+            $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          backfill:
+            description: |
+              The backfill job component performs initial data backfilling.
+            additionalProperties: false
+            type: object
+            properties:
+              schedule:
+                description: |
+                  Schedule for the backfill CronJob. Defaults to every 3 hours. Use standard cron format.
+                $ref: "#/$defs/io.k8s.api.batch.v1.CronJobSpec/properties/schedule"
+                default: "0 */3 * * *"
+              resources:
+                description: |
+                  Resource requirements and limits for the backfill job component.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+              securityContext:
+                description: |
+                  Security context for the backfill job pods.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
 
   #######################################################################################
   #######################################################################################
@@ -410,8 +648,6 @@ properties:
       mountRoot:
         type: string
       profiling:
-        type: boolean
-      debugContainer:
         type: boolean
       reconnectFrequency:
         type: integer
@@ -503,7 +739,12 @@ properties:
         properties:
           port:
             type: integer
-          # Resource requirements for the collector
+          # Resource requirements for the shipper
+          #
+          # **DEPRECATED**: This field is deprecated. Please use `components.aggregator.shipper.resources` instead.
+          #
+          # For details, see the Kubernetes documentation on resource management:
+          # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
           resources:
             $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
       # Node selector for the aggregator
@@ -726,6 +967,10 @@ properties:
         description: |
           Container image configuration for the init-cert-job.
         $ref: "#/$defs/com.cloudzero.agent.image"
+      resources:
+        description: |
+          Resource requirements and limits for the init-cert-job.
+        $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
       rbac:
         description: |
           RBAC configuration for the init-cert-job.
@@ -1166,6 +1411,11 @@ properties:
       resources:
         description: |
           Resource requirements and limits for the insights controller.
+
+          **DEPRECATED**: This field is deprecated. Please use `components.webhookServer.resources` instead.
+
+          For details, see the Kubernetes documentation on resource management:
+          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
       podAnnotations:
         description: |
@@ -1332,6 +1582,8 @@ properties:
         $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
         description: |
           Resource requirements and limits for the server.
+
+          **DEPRECATED**: This field is deprecated. Please use `components.agent.resources` instead.
 
           For details, see the Kubernetes documentation on resource management:
           https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -1706,6 +1958,11 @@ properties:
       resources:
         description: |
           Resource requirements and limits for the validator.
+
+          **DEPRECATED**: This field is deprecated. Please use `components.validator.resources` instead.
+
+          For details, see the Kubernetes documentation on resource management:
+          https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
 
   jobConfigID:
@@ -1723,6 +1980,17 @@ properties:
       (see tests/helm/template/), so jobConfig ID provides a way to override
       this behavior and instead generate the same hash every time. It shouldn't
       really be used anywhere else.
+
+  helmless:
+    description: |
+      Configuration for the helmless job.
+    type: object
+    additionalProperties: false
+    properties:
+      resources:
+        description: |
+          Resource requirements and limits for the helmless job.
+        $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
 
   global:
     type: object
