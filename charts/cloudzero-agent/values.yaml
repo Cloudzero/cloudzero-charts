@@ -1259,3 +1259,23 @@ helmless:
     limits:
       memory: 32Mi
       cpu: 50m
+
+# Global configuration for additional volumes and volume mounts
+# These will be added to all deployments (agent, aggregator, webhook)
+extraVolumes: []
+  # Example:
+  # - name: custom-config
+  #   configMap:
+  #     name: my-custom-config
+  # - name: custom-secret
+  #   secret:
+  #     secretName: my-custom-secret
+
+extraVolumeMounts: []
+  # Example:
+  # - name: custom-config
+  #   mountPath: /etc/custom-config
+  #   readOnly: true
+  # - name: custom-secret
+  #   mountPath: /etc/custom-secret
+  #   readOnly: true

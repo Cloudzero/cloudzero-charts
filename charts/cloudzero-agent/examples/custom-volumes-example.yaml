@@ -1,0 +1,48 @@
+# Example configuration showing how to add custom volumes to all CloudZero Agent deployments
+# This configuration adds a custom ConfigMap and Secret as volumes to all deployments
+
+# Required CloudZero configuration
+cloudAccountId: "123456789012"
+clusterName: "my-cluster"
+region: "us-east-1"
+apiKey: "your-cloudzero-api-key"
+
+# Global custom volumes that will be added to all deployments (agent, aggregator, webhook)
+extraVolumes:
+  # Example: Add a custom ConfigMap as a volume
+  - name: custom-config
+    configMap:
+      name: my-custom-config
+      defaultMode: 0644
+  
+  # Example: Add a custom Secret as a volume
+  - name: custom-secret
+    secret:
+      secretName: my-custom-secret
+      defaultMode: 0600
+  
+  # Example: Add an emptyDir volume for temporary storage
+  - name: temp-storage
+    emptyDir:
+      sizeLimit: 1Gi
+
+# Global custom volume mounts that will be added to all containers
+extraVolumeMounts:
+  # Mount the custom ConfigMap
+  - name: custom-config
+    mountPath: /etc/custom-config
+    readOnly: true
+  
+  # Mount the custom Secret
+  - name: custom-secret
+    mountPath: /etc/custom-secret
+    readOnly: true
+  
+  # Mount the temporary storage
+  - name: temp-storage
+    mountPath: /tmp/custom-temp
+
+# Note: The webhook deployment also supports deployment-specific volumes via:
+# insightsController:
+#   volumes: []
+#   volumeMounts: []

@@ -48,6 +48,9 @@ spec:
               readOnly: true
             - name: aggregator-persistent-storage
               mountPath: {{ .Values.aggregator.mountRoot }}/data
+            {{- with .Values.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /healthz
@@ -87,6 +90,9 @@ spec:
               readOnly: true
             - name: aggregator-persistent-storage
               mountPath: {{ .Values.aggregator.mountRoot }}/data
+            {{- with .Values.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /healthz
@@ -148,5 +154,8 @@ spec:
             sizeLimit: {{ .Values.aggregator.database.emptyDir.sizeLimit }}
           {{- else}}
             {}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
 {{- end }}

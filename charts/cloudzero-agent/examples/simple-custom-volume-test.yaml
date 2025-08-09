@@ -1,0 +1,16 @@
+# Simple test configuration for custom volumes
+cloudAccountId: "123456789012"
+clusterName: "test-cluster"
+region: "us-east-1"
+apiKey: "test-api-key"
+
+# Add a simple custom volume
+extraVolumes:
+  - name: test-config
+    configMap:
+      name: test-configmap
+
+extraVolumeMounts:
+  - name: test-config
+    mountPath: /etc/test-config
+    readOnly: true

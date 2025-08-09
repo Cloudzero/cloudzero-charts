@@ -3969,6 +3969,20 @@
     "existingSecretName": {
       "type": ["string", "null"]
     },
+    "extraVolumes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/io.k8s.api.core.v1.Volume"
+      },
+      "description": "Additional volumes to add to all deployments (agent, aggregator, webhook)"
+    },
+    "extraVolumeMounts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/io.k8s.api.core.v1.VolumeMount"
+      },
+      "description": "Additional volume mounts to add to all containers"
+    },
     "forceNamespace": {
       "deprecated": true,
       "type": ["string", "null"]
