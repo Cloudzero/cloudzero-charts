@@ -200,7 +200,7 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.2.6  # <- Software release corresponding to this chart version.
+      tag: 1.2.7  # <- Software release corresponding to this chart version.
     podDisruptionBudget:
       # enabled:
       # minAvailable:
@@ -329,13 +329,6 @@ components:
       # For details, see the Kubernetes documentation on security contexts:
       # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
       securityContext: {}
-
-  # kubectl contains details about where to find the kubectl image.  This chart
-  # uses the kubectl image as part of the job to initialize certificates.
-  kubectl:
-    image:
-      repository: docker.io/bitnami/kubectl
-      tag: "1.33.3"
 
   # prometheus contains details about where to find the Prometheus image.
   # Prometheus is critical to the functionality of this chart, and is used to

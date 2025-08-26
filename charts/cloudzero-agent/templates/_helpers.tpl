@@ -9,7 +9,7 @@ Expand the name of the chart.
 The version number of the chart.
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.6  # <- Software release corresponding to this chart version.
+version: 1.2.7  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -172,8 +172,10 @@ Create the name of the ClusterRoleBinding to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.clusterRoleBindingName" -}}
 {{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
-{{ .Values.initCertJob.rbac.clusterRoleBinding | default $defaultName }}
+{{ .Values.initCertJob.rbac.clusterRoleBindingName | default $defaultName }}
 {{- end -}}
+
+
 
 {{/*
 init-cert Job annotations
