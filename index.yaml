@@ -3,7 +3,7 @@ entries:
   cloudzero-agent:
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.28288532Z"
+    created: "2025-08-27T10:47:47.861831-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -24,7 +24,7 @@ entries:
     version: 1.2.7
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.273035787Z"
+    created: "2025-08-27T10:47:47.856155-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -45,7 +45,7 @@ entries:
     version: 1.2.6
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.263122717Z"
+    created: "2025-08-27T10:47:47.850625-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -66,7 +66,7 @@ entries:
     version: 1.2.5
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.253005736Z"
+    created: "2025-08-27T10:47:47.845966-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -87,7 +87,7 @@ entries:
     version: 1.2.4
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.243312943Z"
+    created: "2025-08-27T10:47:47.840835-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -108,7 +108,7 @@ entries:
     version: 1.2.3
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.234430059Z"
+    created: "2025-08-27T10:47:47.835941-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -129,7 +129,7 @@ entries:
     version: 1.2.2
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.21920357Z"
+    created: "2025-08-27T10:47:47.828235-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -150,7 +150,7 @@ entries:
     version: 1.2.1
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.203782797Z"
+    created: "2025-08-27T10:47:47.82023-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -171,7 +171,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.187062845Z"
+    created: "2025-08-27T10:47:47.812223-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -192,7 +192,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.183437041Z"
+    created: "2025-08-27T10:47:47.810583-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -213,7 +213,7 @@ entries:
     version: 1.1.1
   - apiVersion: v2
     appVersion: v2.55.1
-    created: "2025-08-27T00:15:54.18057939Z"
+    created: "2025-08-27T10:47:47.80911-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -234,7 +234,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.177721309Z"
+    created: "2025-08-27T10:47:47.807751-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -255,7 +255,7 @@ entries:
     version: 1.1.0-rc-1
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.338980524Z"
+    created: "2025-08-27T10:47:47.890305-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -275,7 +275,7 @@ entries:
     version: 1.1.0-beta-2
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.335855842Z"
+    created: "2025-08-27T10:47:47.88875-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -295,7 +295,7 @@ entries:
     version: 1.1.0-beta-1
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.174179455Z"
+    created: "2025-08-27T10:47:47.806045-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -315,7 +315,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.171677904Z"
+    created: "2025-08-27T10:47:47.804463-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -335,7 +335,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.332676777Z"
+    created: "2025-08-27T10:47:47.886505-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -360,7 +360,7 @@ entries:
     version: 1.0.2-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.16918042Z"
+    created: "2025-08-27T10:47:47.803186-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -380,7 +380,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.166512546Z"
+    created: "2025-08-27T10:47:47.801866-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -400,7 +400,7 @@ entries:
     version: 1.0.1-rc1
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.325498253Z"
+    created: "2025-08-27T10:47:47.88307-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -424,7 +424,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.162561106Z"
+    created: "2025-08-27T10:47:47.80019-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -433,7 +433,7 @@ entries:
       version: 5.15.*
     description: A chart for using Prometheus in agent mode to send cluster metrics
       to the CloudZero platform.
-    digest: 9b76e266bf5a888fe9d685aaed22d70ff06ca3fd7af76d4306cbc6e3f5ed5888
+    digest: 94b37756eee48997864d3a9546b0e521c518ed9366fe1af6b3b8fdafcee8a0e6
     maintainers:
     - email: support@cloudzero.com
       name: CloudZero
@@ -444,7 +444,7 @@ entries:
     version: 1.0.0
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.160002527Z"
+    created: "2025-08-27T10:47:47.798477-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -464,7 +464,7 @@ entries:
     version: 1.0.0-rc4
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.157485697Z"
+    created: "2025-08-27T10:47:47.797206-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -484,7 +484,7 @@ entries:
     version: 1.0.0-rc3
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.154935044Z"
+    created: "2025-08-27T10:47:47.795942-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -504,7 +504,7 @@ entries:
     version: 1.0.0-rc2
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.151721677Z"
+    created: "2025-08-27T10:47:47.794359-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -524,7 +524,47 @@ entries:
     version: 1.0.0-rc1
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.309916348Z"
+    created: "2025-08-27T10:47:47.792954-07:00"
+    dependencies:
+    - alias: kubeStateMetrics
+      condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: 2ab1eb17fb230c69686d973d5d7c0e3f0278ab11eaa5a2e977fad3394ef5632e
+    maintainers:
+    - email: support@cloudzero.com
+      name: CloudZero
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-1.0.0-patch1.tgz
+    version: 1.0.0-patch1
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2025-08-27T10:47:47.791674-07:00"
+    dependencies:
+    - alias: kubeStateMetrics
+      condition: kubeStateMetrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.15.*
+    description: A chart for using Prometheus in agent mode to send cluster metrics
+      to the CloudZero platform.
+    digest: bcd93d2cc8827b7f72786ce1049d77e774ed6a2c1ec01c412b689dd77deefc73
+    maintainers:
+    - email: support@cloudzero.com
+      name: CloudZero
+    name: cloudzero-agent
+    type: application
+    urls:
+    - https://cloudzero.github.io/cloudzero-charts/cloudzero-agent-1.0.0-legacy1.tgz
+    version: 1.0.0-legacy1
+  - apiVersion: v2
+    appVersion: v2.50.1
+    created: "2025-08-27T10:47:47.875589-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -544,7 +584,7 @@ entries:
     version: 1.0.0-beta-9
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.305882677Z"
+    created: "2025-08-27T10:47:47.874421-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -564,7 +604,7 @@ entries:
     version: 1.0.0-beta-8
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.303610918Z"
+    created: "2025-08-27T10:47:47.872973-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -584,7 +624,7 @@ entries:
     version: 1.0.0-beta-7
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.300644017Z"
+    created: "2025-08-27T10:47:47.871796-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -608,7 +648,7 @@ entries:
     version: 1.0.0-beta-5
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.294878271Z"
+    created: "2025-08-27T10:47:47.868568-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -632,7 +672,7 @@ entries:
     version: 1.0.0-beta-4
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.288140997Z"
+    created: "2025-08-27T10:47:47.864725-07:00"
     dependencies:
     - alias: kubeStateMetrics
       condition: kubeStateMetrics.enabled
@@ -652,7 +692,7 @@ entries:
     version: 1.0.0-beta-10
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.318203938Z"
+    created: "2025-08-27T10:47:47.879324-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -676,7 +716,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.285804977Z"
+    created: "2025-08-27T10:47:47.863486-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -699,7 +739,7 @@ entries:
     version: 0.0.29-beta
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.12886679Z"
+    created: "2025-08-27T10:47:47.779836-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -722,7 +762,7 @@ entries:
     version: 0.0.28
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.126072869Z"
+    created: "2025-08-27T10:47:47.778266-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -745,7 +785,7 @@ entries:
     version: 0.0.27
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.122521308Z"
+    created: "2025-08-27T10:47:47.776694-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -768,7 +808,7 @@ entries:
     version: 0.0.26
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.119174257Z"
+    created: "2025-08-27T10:47:47.775248-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -791,7 +831,7 @@ entries:
     version: 0.0.25
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.116385527Z"
+    created: "2025-08-27T10:47:47.773758-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -814,7 +854,7 @@ entries:
     version: 0.0.24
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.113613106Z"
+    created: "2025-08-27T10:47:47.772015-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -837,7 +877,7 @@ entries:
     version: 0.0.23
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.109752794Z"
+    created: "2025-08-27T10:47:47.770518-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -860,7 +900,7 @@ entries:
     version: 0.0.22
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.107029325Z"
+    created: "2025-08-27T10:47:47.768999-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -883,7 +923,7 @@ entries:
     version: 0.0.21
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.104329071Z"
+    created: "2025-08-27T10:47:47.76714-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -906,7 +946,7 @@ entries:
     version: 0.0.20
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.098073987Z"
+    created: "2025-08-27T10:47:47.764309-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -929,7 +969,7 @@ entries:
     version: 0.0.19
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.095272713Z"
+    created: "2025-08-27T10:47:47.762768-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -952,7 +992,7 @@ entries:
     version: 0.0.18
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.092156236Z"
+    created: "2025-08-27T10:47:47.760837-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -975,7 +1015,7 @@ entries:
     version: 0.0.17
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.088356017Z"
+    created: "2025-08-27T10:47:47.759296-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -998,7 +1038,7 @@ entries:
     version: 0.0.16
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.085731685Z"
+    created: "2025-08-27T10:47:47.757712-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1021,7 +1061,7 @@ entries:
     version: 0.0.15
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.083027393Z"
+    created: "2025-08-27T10:47:47.755838-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1044,7 +1084,7 @@ entries:
     version: 0.0.14
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.079166604Z"
+    created: "2025-08-27T10:47:47.754213-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1067,7 +1107,7 @@ entries:
     version: 0.0.13
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.076448937Z"
+    created: "2025-08-27T10:47:47.752518-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1090,7 +1130,7 @@ entries:
     version: 0.0.12
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.073727492Z"
+    created: "2025-08-27T10:47:47.750188-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1113,7 +1153,7 @@ entries:
     version: 0.0.11
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.07013456Z"
+    created: "2025-08-27T10:47:47.748448-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1136,7 +1176,7 @@ entries:
     version: 0.0.10
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.149058612Z"
+    created: "2025-08-27T10:47:47.790301-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1159,7 +1199,7 @@ entries:
     version: 0.0.9
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.146248742Z"
+    created: "2025-08-27T10:47:47.788633-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1182,7 +1222,7 @@ entries:
     version: 0.0.8
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.142724644Z"
+    created: "2025-08-27T10:47:47.787227-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1202,7 +1242,7 @@ entries:
     version: 0.0.7
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.140148893Z"
+    created: "2025-08-27T10:47:47.785922-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1222,7 +1262,7 @@ entries:
     version: 0.0.6
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.137422098Z"
+    created: "2025-08-27T10:47:47.784488-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1242,7 +1282,7 @@ entries:
     version: 0.0.5
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.134830989Z"
+    created: "2025-08-27T10:47:47.782591-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1262,7 +1302,7 @@ entries:
     version: 0.0.4
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.131373732Z"
+    created: "2025-08-27T10:47:47.781234-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1282,7 +1322,7 @@ entries:
     version: 0.0.3
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.100776937Z"
+    created: "2025-08-27T10:47:47.765681-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1302,7 +1342,7 @@ entries:
     version: 0.0.2
   - apiVersion: v2
     appVersion: v2.50.1
-    created: "2025-08-27T00:15:54.067215274Z"
+    created: "2025-08-27T10:47:47.74667-07:00"
     dependencies:
     - condition: kube-state-metrics.enabled
       name: kube-state-metrics
@@ -1323,7 +1363,7 @@ entries:
   cloudzero-insights-controller:
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2025-08-27T00:15:54.372062241Z"
+    created: "2025-08-27T10:47:47.905382-07:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -1340,7 +1380,7 @@ entries:
     version: 1.0.2-beta
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2025-08-27T00:15:54.364078398Z"
+    created: "2025-08-27T10:47:47.90289-07:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -1357,7 +1397,7 @@ entries:
     version: 1.0.1-beta
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2025-08-27T00:15:54.354244921Z"
+    created: "2025-08-27T10:47:47.898082-07:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -1374,7 +1414,7 @@ entries:
     version: 1.0.0-beta-5
   - apiVersion: v2
     appVersion: 0.0.3
-    created: "2025-08-27T00:15:54.348867222Z"
+    created: "2025-08-27T10:47:47.895297-07:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -1391,7 +1431,7 @@ entries:
     version: 1.0.0-beta-4
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-08-27T00:15:54.358511129Z"
+    created: "2025-08-27T10:47:47.900602-07:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -1408,7 +1448,7 @@ entries:
     version: 1.0.0-beta
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-08-27T00:15:54.344634617Z"
+    created: "2025-08-27T10:47:47.893026-07:00"
     dependencies:
     - alias: cert-manager
       condition: cert-manager.enabled
@@ -1423,4 +1463,4 @@ entries:
     urls:
     - https://cloudzero.github.io/cloudzero-charts/beta/cloudzero-insights-controller-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-27T00:15:54.064367151Z"
+generated: "2025-08-27T10:47:47.744439-07:00"
