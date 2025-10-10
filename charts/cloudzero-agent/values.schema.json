@@ -3471,6 +3471,37 @@
   "$id": "https://raw.githubusercontent.com/Cloudzero/cloudzero-agent/refs/heads/develop/helm/values.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "anyOf": [
+    {
+      "required": ["apiKey"]
+    },
+    {
+      "required": ["existingSecretName"]
+    }
+  ],
+  "oneOf": [
+    {
+      "properties": {
+        "apiKey": {
+          "pattern": "^[a-zA-Z0-9-_.~!*'();]+$",
+          "type": "string"
+        },
+        "existingSecretName": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "apiKey": {
+          "type": "null"
+        },
+        "existingSecretName": {
+          "type": "string"
+        }
+      }
+    }
+  ],
   "properties": {
     "aggregator": {
       "additionalProperties": false,
@@ -3780,6 +3811,12 @@
             "configLoader": {
               "additionalProperties": false,
               "properties": {
+                "annotations": {
+                  "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+                },
+                "labels": {
+                  "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+                },
                 "resources": {
                   "$ref": "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
                 },
@@ -3792,6 +3829,12 @@
             "helmless": {
               "additionalProperties": false,
               "properties": {
+                "annotations": {
+                  "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+                },
+                "labels": {
+                  "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+                },
                 "resources": {
                   "$ref": "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
                 },
@@ -4402,26 +4445,6 @@
             "caBundle": {
               "default": "",
               "type": "string"
-            },
-            "certificate": {
-              "additionalProperties": false,
-              "properties": {
-                "algorithm": {
-                  "default": "rsa",
-                  "enum": ["rsa", "ecdsa", "ed25519"],
-                  "type": "string"
-                },
-                "keySize": {
-                  "default": 2048,
-                  "minimum": 0,
-                  "type": "integer"
-                },
-                "validityDuration": {
-                  "$ref": "#/$defs/com.cloudzero.agent.duration",
-                  "default": "8760h"
-                }
-              },
-              "type": "object"
             },
             "crt": {
               "default": "",
