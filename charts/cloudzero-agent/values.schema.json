@@ -5831,6 +5831,12 @@
         "image": {
           "$ref": "#/$defs/com.cloudzero.agent.image"
         },
+        "repository":{
+          "type": ["string", "null"]
+        },
+        "tag":{
+          "type": ["string", "null"]
+        },
         "labels": {
           "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
         },
