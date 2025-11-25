@@ -22,7 +22,7 @@ Usage: {{ include "cloudzero-agent.versionNumber" . }}
 Returns: string with version annotation
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.8  # <- Software release corresponding to this chart version.
+version: 1.2.9  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -139,15 +139,14 @@ Returns: string (e.g., "cloudzero-webhook.default.svc")
 {{- end -}}
 
 {{/*
-Create labels for prometheus
+Common match labels for selectors
 */}}
 {{- define "cloudzero-agent.common.matchLabels" -}}
-app.kubernetes.io/name: {{ include "cloudzero-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "cloudzero-agent.server.matchLabels" -}}
-app.kubernetes.io/component: {{ .Values.server.name }}
+app.kubernetes.io/name: server
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
@@ -156,7 +155,6 @@ Common base labels for all Kubernetes resources
 */}}
 {{- define "cloudzero-agent.baseLabels" -}}
 {{- dict
-    "app.kubernetes.io/name" (include "cloudzero-agent.name" .)
     "app.kubernetes.io/instance" .Release.Name
     "app.kubernetes.io/version" .Chart.AppVersion
     "helm.sh/chart" (include "cloudzero-agent.chart" .)
@@ -207,7 +205,7 @@ Create the name of the service account to use for the server component
 Create the name of the service account to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.serviceAccountName" -}}
-{{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
+{{- $defaultName := include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "init-cert") -}}
 {{ .Values.initCertJob.rbac.serviceAccountName | default $defaultName }}
 {{- end -}}
 
@@ -215,7 +213,7 @@ Create the name of the service account to use for the init-cert Job
 Create the name of the ClusterRole to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.clusterRoleName" -}}
-{{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
+{{- $defaultName := include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "init-cert") -}}
 {{ .Values.initCertJob.rbac.clusterRoleName | default $defaultName }}
 {{- end -}}
 
@@ -223,7 +221,7 @@ Create the name of the ClusterRole to use for the init-cert Job
 Create the name of the ClusterRoleBinding to use for the init-cert Job
 */}}
 {{- define "cloudzero-agent.initCertJob.clusterRoleBindingName" -}}
-{{- $defaultName := (printf "%s-init-cert" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) | trunc 63 -}}
+{{- $defaultName := include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "init-cert") -}}
 {{ .Values.initCertJob.rbac.clusterRoleBindingName | default $defaultName }}
 {{- end -}}
 
@@ -241,19 +239,98 @@ annotations:
 
 
 {{/*
+Override kube-state-metrics subchart naming to use our centralized naming system.
+
+These templates override the kube-state-metrics.fullname and kube-state-metrics.name
+helpers from the subchart, allowing us to integrate the subchart's resources into
+our naming convention and ensure all names are valid Kubernetes identifiers.
+
+Respects nameOverride from the subchart's own values (not parent chart values).
+When this is called from the subchart, .Values refers to the subchart's values.
+*/}}
+{{- define "kube-state-metrics.fullname" -}}
+{{- $component := .Values.nameOverride | default "ksm" -}}
+{{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" $component) -}}
+{{- end -}}
+
+{{/*
+Override kube-state-metrics.name to ensure container names are valid.
+Container names must be lowercase, so we ensure the name is always lowercase.
+*/}}
+{{- define "kube-state-metrics.name" -}}
+{{- .Values.nameOverride | default "ksm" | lower -}}
+{{- end -}}
+
+{{/*
+Centralized Resource Name Generation
+
+This helper generates consistent Kubernetes resource names for all CloudZero Agent components.
+
+Usage: {{ include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "server") }}
+
+Parameters:
+  - context: The template context (usually .)
+  - component: Component identifier (e.g., "server", "webhook", "aggregator")
+  - subcomponent: Optional subcomponent identifier (e.g., "svc", "init-cert", "tls")
+  - suffix: Optional variable suffix (e.g., checksums)
+  - override: Optional name override (takes precedence over standard naming)
+
+Naming pattern: {release-name}-cz-{component}[-{subcomponent}][-{suffix}] (truncated to 63 chars)
+*/}}
+{{- define "cloudzero-agent.internal.resourceName" -}}
+  {{- $component := .component -}}
+  {{- $subcomponent := .subcomponent | default "" -}}
+  {{- $suffix := .suffix | default "" -}}
+  {{- $override := .override | default "" -}}
+  {{- if $override -}}
+    {{- $name := $override -}}
+    {{- if $subcomponent -}}
+      {{- $name = printf "%s-%s" $name $subcomponent -}}
+    {{- end -}}
+    {{- if $suffix -}}
+      {{- $name = printf "%s-%s" $name $suffix -}}
+    {{- end -}}
+    {{- $name | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- $czPrefix := "cz" -}}
+    {{- $minSuffixChars := 4 -}}
+    {{- $importantParts := $component -}}
+    {{- if $subcomponent -}}
+      {{- $importantParts = printf "%s-%s" $importantParts $subcomponent -}}
+    {{- end -}}
+    {{- $suffixSpace := 0 -}}
+    {{- if $suffix -}}
+      {{- $actualSuffixLen := len $suffix -}}
+      {{- if gt $actualSuffixLen $minSuffixChars -}}
+        {{- $suffixSpace = add $minSuffixChars 1 -}}
+      {{- else -}}
+        {{- $suffixSpace = add $actualSuffixLen 1 -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $fixedSpace := add (add (len $czPrefix) (len $importantParts)) 2 -}}
+    {{- $requiredLength := add $fixedSpace $suffixSpace -}}
+    {{- $maxReleaseLen := int (sub 63 $requiredLength) -}}
+    {{- $releaseName := .context.Release.Name -}}
+    {{- if gt (len $releaseName) $maxReleaseLen -}}
+      {{- $releaseName = trunc $maxReleaseLen $releaseName | trimSuffix "-" -}}
+    {{- end -}}
+    {{- $name := printf "%s-%s-%s" $releaseName $czPrefix $importantParts -}}
+    {{- if $suffix -}}
+      {{- $name = printf "%s-%s" $name $suffix -}}
+    {{- end -}}
+    {{- $name | trunc 63 | trimSuffix "-" -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
 Create a fully qualified Prometheus server name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "cloudzero-agent.server.fullname" -}}
 {{- if .Values.server.fullnameOverride -}}
-{{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+  {{- .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.server.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name "server" | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
+  {{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "server") -}}
 {{- end -}}
 {{- end -}}
 
@@ -396,28 +473,14 @@ Required metric labels
 The name of the KSM service target that will be used in the scrape config and validator
 */}}
 {{- define "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" -}}
-{{- $name := "" -}}
-{{/* If the user specifies an override for the service name, use it. */}}
 {{- if .Values.kubeStateMetrics.targetOverride -}}
-{{ .Values.kubeStateMetrics.targetOverride }}
-{{/* After the first override option is not used, try to mirror what the KSM chart does internally. */}}
-{{- else if .Values.kubeStateMetrics.fullnameOverride -}}
-{{- $svcName := .Values.kubeStateMetrics.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
-{{/* If KSM is not enabled, and they haven't set a targetOverride, fail the installation */}}
+{{- .Values.kubeStateMetrics.targetOverride -}}
 {{- else if not .Values.kubeStateMetrics.enabled -}}
 {{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
-{{/* This is the case where the user has not tried to change the name and are still using the internal KSM */}}
-{{- else if .Values.kubeStateMetrics.enabled -}}
-{{- $name = default .Chart.Name .Values.kubeStateMetrics.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- $svcName := .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
 {{- else -}}
-{{- $svcName := printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{ printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) | trim }}
-{{- end }}
-{{- end }}
+{{- $svcName := include "kube-state-metrics.fullname" (dict "Values" .Values.kubeStateMetrics "Chart" (dict "Name" "kube-state-metrics") "Release" .Release) -}}
+{{- printf "%s.%s.svc.cluster.local:%d" $svcName .Release.Namespace (int .Values.kubeStateMetrics.service.port) -}}
+{{- end -}}
 {{- end }}
 
 {{/*
@@ -433,7 +496,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "cloudzero-agent.insightsController.server.matchLabels" -}}
-app.kubernetes.io/component: {{ .Values.insightsController.server.name }}
+app.kubernetes.io/name: webhook-server
 {{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
@@ -456,9 +519,8 @@ app.kubernetes.io/component: {{ include "cloudzero-agent.configLoaderJobName" . 
 Create common matchLabels for aggregator
 */}}
 {{- define "cloudzero-agent.aggregator.matchLabels" -}}
-app.kubernetes.io/component: aggregator
-app.kubernetes.io/name: {{ include "cloudzero-agent.aggregator.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/name: aggregator
+{{ include "cloudzero-agent.common.matchLabels" . }}
 {{- end -}}
 
 {{/*
@@ -546,16 +608,7 @@ Create a fully qualified webhook server name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "cloudzero-agent.insightsController.server.webhookFullname" -}}
-{{- if .Values.server.fullnameOverride -}}
-{{- printf "%s-webhook" .Values.server.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.insightsController.server.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.insightsController.server.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+{{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook") -}}
 {{- end -}}
 
 {{/*
@@ -569,23 +622,23 @@ Name for the webhook server Deployment
 Name for the webhook server service
 */}}
 {{- define "cloudzero-agent.serviceName" -}}
-{{- printf "%s-svc" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook") -}}
 {{- end }}
 
 {{/*
 Name for the validating webhook configuration resource
 */}}
 {{- define "cloudzero-agent.validatingWebhookConfigName" -}}
-{{- printf "%s-webhook" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook") -}}
 {{- end }}
 
 
 {{ define "cloudzero-agent.webhookConfigMapName" -}}
-{{ .Values.insightsController.ConfigMapNameOverride | default (printf "%s-webhook-configuration" .Release.Name) }}
+{{ .Values.insightsController.ConfigMapNameOverride | default (include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "configuration")) }}
 {{- end}}
 
 {{ define "cloudzero-agent.aggregator.name" -}}
-{{ .Values.aggregator.name | default (printf "%s-aggregator" .Release.Name) }}
+{{ include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "aggregator" "override" .Values.aggregator.name) }}
 {{- end}}
 
 {{/*
@@ -599,7 +652,7 @@ Mount path for the insights server configuration file
 Name for the issuer resource
 */}}
 {{- define "cloudzero-agent.issuerName" -}}
-{{- printf "%s-issuer" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "issuer") }}
 {{- end }}
 
 {{/*
@@ -623,9 +676,22 @@ Note that jobConfigID *only* exists so we can avoid lots of commit noise when
 regenerating the manifests in tests/helm/template. It should never be set in
 production, as it will break important functionality to automatically reload
 things when a ConfigMap changes.
+
+When used as a subchart, .global values from the parent chart are excluded
+from the checksum.
 */}}
 {{- define "cloudzero-agent.configurationChecksum" -}}
-{{ .Values.jobConfigID | default (. | toYaml | sha256sum) }}
+{{- if .Values.jobConfigID -}}
+{{ .Values.jobConfigID }}
+{{- else -}}
+{{- $cleanValues := omit .Values "global" -}}
+{{- if $cleanValues.kubeStateMetrics -}}
+  {{- $cleanKSM := omit $cleanValues.kubeStateMetrics "global" -}}
+  {{- $_ := set $cleanValues "kubeStateMetrics" $cleanKSM -}}
+{{- end -}}
+{{- $context := dict "Chart" .Chart "Release" .Release "Values" $cleanValues "Capabilities" .Capabilities -}}
+{{ $context | toYaml | sha256sum }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -685,14 +751,14 @@ annotations:
 Name for the certificate resource
 */}}
 {{- define "cloudzero-agent.certificateName" -}}
-{{- printf "%s-certificate" (include "cloudzero-agent.insightsController.server.webhookFullname" .) }}
+{{- include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "certificate") }}
 {{- end }}
 
 {{/*
 Name for the secret holding TLS certificates
 */}}
 {{- define "cloudzero-agent.tlsSecretName" -}}
-{{- .Values.insightsController.tls.secret.name | default (printf "%s-tls" (include "cloudzero-agent.insightsController.server.webhookFullname" .)) }}
+{{- .Values.insightsController.tls.secret.name | default (include "cloudzero-agent.internal.resourceName" (dict "context" . "component" "webhook" "subcomponent" "tls")) }}
 {{- end }}
 
 {{/*
@@ -809,42 +875,113 @@ dnsConfig:
 {{- end -}}
 
 {{/*
-Generate labels for a component
+Generate labels with merge support, name, and optional component.
+
+Parameters (dict):
+- root: Chart context (.) (required)
+- name: Application name for app.kubernetes.io/name label (required)
+- component: Optional architectural component for app.kubernetes.io/component label (optional)
+- labels: List of label dicts to merge in order, from lowest to highest priority (required)
+
+Returns: Formatted "labels:\n  key: value" output
+
+Merge behavior:
+- Starts with base labels (app.kubernetes.io/instance, app.kubernetes.io/part-of, etc.)
+- Merges each dict in the labels list in order (later values override earlier)
+- Adds app.kubernetes.io/name LAST (highest priority, cannot be overridden)
+- Adds app.kubernetes.io/component LAST if provided (highest priority, cannot be overridden)
+
+Following Kubernetes recommended labels:
+- app.kubernetes.io/name: The application (e.g., "server", "aggregator", "webhook-server")
+- app.kubernetes.io/component: Optional architectural role (e.g., "gatherer", "processor")
+- app.kubernetes.io/part-of: Set to "cloudzero-agent" in baseLabels
+
+The caller controls the priority order by arranging the labels list. Common pattern:
+  (list defaults commonLabels componentLabels)
+
+Example:
+  {{- include "cloudzero-agent.generateLabels" (dict
+      "root" .
+      "name" "server"
+      "labels" (list
+        .Values.defaults.labels
+        .Values.commonMetaLabels
+        .Values.components.agent.labels
+      )
+    ) | nindent 8 }}
 */}}
 {{- define "cloudzero-agent.generateLabels" -}}
-{{- if .component -}}
-{{- $merged := mergeOverwrite
-     (include "cloudzero-agent.baseLabels" .globals | fromYaml)
-     (dict "app.kubernetes.io/component" .component)
-     (.globals.Values.defaults.labels | default (dict))
-     (.globals.Values.commonMetaLabels | default (dict))
-     (.labels | default (dict))
--}}
+{{- $root := .root | required "root context required" -}}
+{{- $name := .name | required "name parameter required" -}}
+{{- $component := .component | default "" -}}
+{{- $labelsList := .labels | required "labels list required" -}}
+
+{{/* Start with base labels */}}
+{{- $merged := include "cloudzero-agent.baseLabels" $root | fromYaml -}}
+
+{{/* Merge each label dict in order (lowest to highest priority) */}}
+{{- range $labelDict := $labelsList -}}
+  {{- if $labelDict -}}
+    {{- $merged = mergeOverwrite $merged $labelDict -}}
+  {{- end -}}
+{{- end -}}
+
+{{/* Add name label LAST so it has highest priority and cannot be overridden */}}
+{{- $merged = mergeOverwrite $merged (dict "app.kubernetes.io/name" $name) -}}
+
+{{/* Add component label if provided */}}
+{{- if $component -}}
+  {{- $merged = mergeOverwrite $merged (dict "app.kubernetes.io/component" $component) -}}
+{{- end -}}
+
+{{/* Output formatted labels */}}
 {{- if len $merged -}}
 labels:
 {{- $merged | toYaml | nindent 2 -}}
-{{- end -}}
-{{- else -}}
-{{- $merged := mergeOverwrite
-     (include "cloudzero-agent.baseLabels" .globals | fromYaml)
-     (.globals.Values.defaults.labels | default (dict))
-     (.globals.Values.commonMetaLabels | default (dict))
-     (.labels | default (dict))
--}}
-{{- if len $merged -}}
-labels:
-{{- $merged | toYaml | nindent 2 -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Generate annotations
+Generate annotations with merge support.
+
+Parameters (dict):
+- root: Chart context (.) (required)
+- annotations: List of annotation dicts to merge in order, from lowest to highest priority (required)
+
+Returns: Formatted "annotations:\n  key: value" output
+
+Merge behavior:
+- Merges each dict in the annotations list in order (later values override earlier)
+- The caller controls the priority order by arranging the annotations list
+
+Example:
+  {{- include "cloudzero-agent.generateAnnotations" (dict
+      "root" .
+      "annotations" (list
+        .Values.defaults.annotations
+        .Values.components.agent.annotations
+        .Values.server.podAnnotations
+        (dict "checksum/config" (include "cloudzero-agent.configChecksum" .))
+      )
+    ) | nindent 8 }}
 */}}
 {{- define "cloudzero-agent.generateAnnotations" -}}
-{{- if . -}}
+{{- $root := .root | required "root context required" -}}
+{{- $annotationsList := .annotations | required "annotations list required" -}}
+
+{{- $merged := dict -}}
+
+{{/* Merge each annotation dict in order (lowest to highest priority) */}}
+{{- range $annotDict := $annotationsList -}}
+  {{- if $annotDict -}}
+    {{- $merged = mergeOverwrite $merged $annotDict -}}
+  {{- end -}}
+{{- end -}}
+
+{{/* Output formatted annotations */}}
+{{- if len $merged -}}
 annotations:
-{{- . | toYaml | nindent 2 -}}
+{{- $merged | toYaml | nindent 2 -}}
 {{- end -}}
 {{- end -}}
 
@@ -912,8 +1049,20 @@ kind: PodDisruptionBudget
 metadata:
   name: {{ .name }}
   namespace: {{ .root.Release.Namespace }}
-  {{- include "cloudzero-agent.generateLabels" (dict "globals" .root "component" .componentName) | nindent 2 }}
-  {{- include "cloudzero-agent.generateAnnotations" .root.Values.defaults.annotations | nindent 2 }}
+  {{- include "cloudzero-agent.generateLabels" (dict
+      "root" .root
+      "name" .componentName
+      "labels" (list
+        .root.Values.defaults.labels
+        .root.Values.commonMetaLabels
+      )
+    ) | nindent 2 }}
+  {{- include "cloudzero-agent.generateAnnotations" (dict
+      "root" .root
+      "annotations" (list
+        .root.Values.defaults.annotations
+      )
+    ) | nindent 2 }}
 spec:
   {{- if $pdb.minAvailable }}
   {{- if lt $replicas (int $pdb.minAvailable) -}}
@@ -1107,4 +1256,152 @@ Container-level security context properties (from k8s.json schema):
       "value" ((include "cloudzero-agent.filterProperties" (dict "input" . "properties" $containerProperties)) | fromJson)
     ) -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Alloy/Prometheus Implementation Detection Helpers
+
+These helpers determine which metrics collector implementation to use based on
+the configuration and provide utilities for selecting the appropriate behavior.
+*/}}
+
+{{/*
+Derive the agent mode from legacy properties if explicitly set, otherwise fall back to components.agent.mode.
+
+The mode is derived as follows:
+1. If legacy properties are explicitly set (non-null), derive from them:
+   - defaults.federation.enabled=true -> "federated"
+   - server.agentMode=true -> "agent"
+   - server.agentMode=false -> "server"
+2. Otherwise, use components.agent.mode (which has a default value)
+   - components.agent.mode can be "federated", "agent", "server", or "clustered"
+   - Note: The only way to use Alloy is by setting components.agent.mode to "clustered"
+
+Returns one of: "federated", "agent", "server", "clustered"
+
+Usage in templates: {{ eq (include "cloudzero-agent.Values.components.agent.mode" .) "federated" }}
+*/}}
+{{- define "cloudzero-agent.Values.components.agent.mode" -}}
+  {{- /* If components.agent.mode is set (not null), it takes precedence over everything. */ -}}
+  {{- if .Values.components.agent.mode -}}
+    {{- .Values.components.agent.mode -}}
+  {{- else -}}
+    {{- /* Automatic mode: use legacy properties with default to agent */ -}}
+    {{- if and .Values.defaults .Values.defaults.federation (eq .Values.defaults.federation.enabled true) -}}
+      federated
+    {{- else if and .Values.server (ne .Values.server.agentMode nil) (eq .Values.server.agentMode false) -}}
+      server
+    {{- else -}}
+      {{- /* Default: Prometheus agent mode */ -}}
+      agent
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Get the metrics collector image configuration
+
+Returns the appropriate image configuration based on which collector is active:
+- For Alloy: Uses components.agent.clusteredNode.image
+- For Prometheus: Uses components.prometheus.image
+
+Usage: {{ include "cloudzero-agent.agentCollectorImage" . }}
+Returns: Image object with repository, tag, registry, pullPolicy
+*/}}
+{{- define "cloudzero-agent.agentCollectorImage" -}}
+{{- if eq (include "cloudzero-agent.Values.components.agent.mode" .) "clustered" -}}
+  {{- toYaml .Values.components.agent.clusteredNode.image -}}
+{{- else -}}
+  {{- toYaml .Values.components.prometheus.image -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get autoscaling configuration with fallback to defaults
+
+Returns the autoscaling configuration, falling back to defaults.autoscaling
+when the component-specific autoscaling is null or when individual properties
+are not set.
+
+Usage: {{ include "cloudzero-agent.getAutoscaling" (dict "component" .Values.components.agent.autoscaling "defaults" .Values.defaults.autoscaling) }}
+Returns: Autoscaling configuration object
+*/}}
+{{- define "cloudzero-agent.getAutoscaling" -}}
+{{- if .component -}}
+  {{- $result := dict
+        "enabled" (hasKey .component "enabled" | ternary .component.enabled .defaults.enabled)
+        "minReplicas" (.component.minReplicas | default .defaults.minReplicas)
+        "maxReplicas" (.component.maxReplicas | default .defaults.maxReplicas)
+        "targetCPUUtilizationPercentage" (.component.targetCPUUtilizationPercentage | default .defaults.targetCPUUtilizationPercentage)
+        "targetMemoryUtilizationPercentage" (.component.targetMemoryUtilizationPercentage | default .defaults.targetMemoryUtilizationPercentage)
+  -}}
+  {{- toYaml $result -}}
+{{- else -}}
+  {{- toYaml .defaults -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the metrics collector container name
+
+Returns the appropriate container name for the metrics collector:
+- "alloy" for Alloy
+- "prometheus" for Prometheus
+
+Usage: {{ include "cloudzero-agent.agentCollectorContainerName" . }}
+*/}}
+{{- define "cloudzero-agent.agentCollectorContainerName" -}}
+{{- if eq (include "cloudzero-agent.Values.components.agent.mode" .) "clustered" -}}
+alloy
+{{- else -}}
+prometheus
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the metrics collector configuration file name
+
+Returns the appropriate configuration file name:
+- "alloy-config.river" for Alloy
+- "prometheus.yml" for Prometheus
+
+Usage: {{ include "cloudzero-agent.agentCollectorConfigFileName" . }}
+*/}}
+{{- define "cloudzero-agent.agentCollectorConfigFileName" -}}
+{{- if eq (include "cloudzero-agent.Values.components.agent.mode" .) "clustered" -}}
+alloy-config.river
+{{- else -}}
+prometheus.yml
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the appropriate Prometheus agent mode flag based on version and mode
+
+Determines whether Prometheus should run in agent mode and which flag to use:
+- Prometheus 2.x uses --enable-feature=agent
+- Prometheus 3.x uses --agent
+- Returns empty string if not in agent/federated mode
+
+The cloudzero-agent.Values.components.agent.mode helper already handles all the
+complex mode derivation logic, so we just check if it returns "agent" or "federated"
+and then determine the appropriate version-specific flag.
+
+Uses the same tag fallback chain as image generation:
+server.image.tag -> components.prometheus.image.tag -> Chart.AppVersion
+
+Usage: {{ include "cloudzero-agent.prometheusAgentFlag" . }}
+Returns: string (either "--agent", "--enable-feature=agent", or empty string)
+*/}}
+{{- define "cloudzero-agent.prometheusAgentFlag" -}}
+  {{- $mode := include "cloudzero-agent.Values.components.agent.mode" . -}}
+  {{- if or (eq $mode "agent") (eq $mode "federated") -}}
+    {{- /* Use same fallback chain as image generation: server.image.tag -> components.prometheus.image.tag -> Chart.AppVersion */ -}}
+    {{- $tag := .Values.server.image.tag | default .Values.components.prometheus.image.tag | default .Chart.AppVersion -}}
+    {{- if hasPrefix "v2." $tag -}}
+      --enable-feature=agent
+    {{- else -}}
+      --agent
+    {{- end -}}
+  {{- end -}}
 {{- end -}}

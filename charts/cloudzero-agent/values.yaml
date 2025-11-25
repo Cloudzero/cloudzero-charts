@@ -44,12 +44,6 @@ existingSecretName: null
 # components within this chart, or used as defaults in case values are not
 # explicitly set per-component.
 defaults:
-  # Federated mode deploys the agent as a DaemonSet, with each node in the
-  # cluster running its own metrics collector.
-  federation:
-    # Whether to enable federated mode.
-    enabled: false
-
   # The default image settings which will be fallen back on for all components.
   #
   # Note that all image values (including repository, tag, etc.) are valid here,
@@ -179,6 +173,28 @@ defaults:
   # Note that if you set this, you'll likely also want to set
   # kubeStateMetrics.priorityClassName.
   priorityClassName:
+  # Default number of replicas to use for components which support multiple
+  # replicas. This can be overridden by component-specific replica settings.
+  replicas: 3
+  # Default Horizontal Pod Autoscaler configuration to use across components
+  # which support autoscaling. Component-specific autoscaling settings will
+  # fall back to these defaults when not explicitly set.
+  #
+  # For details, see the Kubernetes documentation on HPA:
+  # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+  autoscaling:
+    # Whether to enable horizontal pod autoscaling.
+    enabled: false
+    # Minimum number of replicas.
+    minReplicas: 1
+    # Maximum number of replicas.
+    maxReplicas: 10
+    # Target CPU utilization percentage for autoscaling.
+    # Set to null to disable CPU-based scaling.
+    targetCPUUtilizationPercentage: 80
+    # Target memory utilization percentage for autoscaling.
+    # Set to null to disable memory-based scaling.
+    targetMemoryUtilizationPercentage: 80
   # Default security context for all pods. Component-specific security contexts
   # will be merged with these defaults, with component settings taking precedence.
   #
@@ -200,11 +216,65 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.2.8  # <- Software release corresponding to this chart version.
+      tag: 1.2.9  # <- Software release corresponding to this chart version.
+
+    # Agent deployment mode. Controls how the agent collects and processes metrics.
+    #
+    # Valid values:
+    #
+    # - "agent": Deploys Prometheus in agent mode. This is optimized for remote write
+    #   scenarios and uses fewer resources.
+    #
+    # - "server": Deploys Prometheus in server mode. This is the traditional Prometheus
+    #   deployment with full storage and query capabilities.
+    #
+    # - "federated": Deploys the agent in federated mode as a DaemonSet with one pod
+    #   per node. This is equivalent to setting defaults.federation.enabled to true.
+    #   Uses Prometheus in server mode for metrics collection.
+    #
+    # - "clustered": EXPERIMENTAL. Uses Grafana Alloy instead of Prometheus for
+    #   metrics collection. Alloy provides better performance and native
+    #   horizontal scalability.
+    #
+    # - null means automatic mode (currently defaults to "agent").
+    mode: null
+
+    # Horizontal Pod Autoscaler configuration for the agent.
+    # Only applies when components.agent.mode is set to "clustered".
+    #
+    # HPA enables automatic scaling based on resource utilization,
+    # allowing the deployment to handle varying load efficiently.
+    #
+    # If null, falls back to defaults.autoscaling.
+    #
+    # For details, see the Kubernetes documentation on HPA:
+    # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+    autoscaling: null
+
     podDisruptionBudget:
       # enabled:
       # minAvailable:
       # maxUnavailable:
+    # Annotations to add to the agent component.
+    #
+    # These annotations are merged with defaults.annotations and apply to
+    # parent resources (Deployment/DaemonSet) and pods.
+    annotations: {}
+    # Labels to add to the agent component.
+    #
+    # These labels are merged with defaults.labels and apply to parent
+    # resources (Deployment/DaemonSet) and pods.
+    labels: {}
+    # Pod-specific annotations that apply ONLY to pod templates.
+    #
+    # These annotations are merged after component annotations and only
+    # appear in pod metadata, not on parent resources.
+    podAnnotations: {}
+    # Pod-specific labels that apply ONLY to pod templates.
+    #
+    # These labels are merged after component labels with highest priority
+    # and only appear in pod metadata, not on parent resources.
+    podLabels: {}
     # Security context for the agent pods.
     #
     # For details, see the Kubernetes documentation on security contexts:
@@ -221,8 +291,29 @@ components:
       limits:
         memory: "1024Mi"
         cpu: "1000m"
+
     # The agent federated node component runs on each node for federation.
     federatedNode:
+      # Annotations to add to the agent federated node component.
+      #
+      # These annotations are merged with defaults.annotations and
+      # components.agent.annotations, applying to the DaemonSet and pods.
+      annotations: {}
+      # Labels to add to the agent federated node component.
+      #
+      # These labels are merged with defaults.labels and components.agent.labels,
+      # applying to the DaemonSet and pods.
+      labels: {}
+      # Pod-specific annotations that apply ONLY to pod templates.
+      #
+      # These annotations are merged after federated node annotations and only
+      # appear in pod metadata, not on the DaemonSet.
+      podAnnotations: {}
+      # Pod-specific labels that apply ONLY to pod templates.
+      #
+      # These labels are merged after federated node labels with highest priority
+      # and only appear in pod metadata, not on the DaemonSet.
+      podLabels: {}
       # Security context for the agent federated node pods.
       #
       # For details, see the Kubernetes documentation on security contexts:
@@ -239,6 +330,31 @@ components:
         limits:
           memory: "1024Mi"
           cpu: "1000m"
+
+    # The agent clustered node component configuration.
+    # Only applies when components.agent.mode is set to "clustered".
+    clusteredNode:
+      # Container image configuration for Grafana Alloy.
+      image:
+        repository: docker.io/grafana/alloy
+        tag: v1.11.3
+
+      # Resource requirements and limits for the container.
+      #
+      # Alloy has different performance characteristics than Prometheus and
+      # typically requires less resources for the same workload due to its more
+      # efficient design.
+      #
+      # For details, see the Kubernetes documentation on resource management:
+      # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "50m"
+        limits:
+          memory: "512Mi"
+          cpu: "100m"
+
     # The agent configmap reloader component watches for configuration changes.
     reloader:
       # Security context for the agent configmap reloader container.
@@ -261,6 +377,14 @@ components:
   # The validator component performs validation checks and notifies the platform
   # of installation status changes.
   validator:
+    # Annotations to add to the validator component.
+    #
+    # These annotations are merged with defaults.annotations.
+    annotations: {}
+    # Labels to add to the validator component.
+    #
+    # These labels are merged with defaults.labels.
+    labels: {}
     # Resource requirements and limits for the validator component.
     #
     # For details, see the Kubernetes documentation on resource management:
@@ -295,12 +419,24 @@ components:
       securityContext: {}
       # Annotations to add to the config loader job.
       #
-      # These annotations are merged with defaults.annotations.
+      # These annotations are merged with defaults.annotations and apply to
+      # the Job and pods.
       annotations: {}
       # Labels to add to the config loader job.
       #
-      # These labels are merged with defaults.labels.
+      # These labels are merged with defaults.labels and apply to the
+      # Job and pods.
       labels: {}
+      # Pod-specific annotations that apply ONLY to pod templates.
+      #
+      # These annotations are merged after component annotations and only
+      # appear in pod metadata, not on the Job.
+      podAnnotations: {}
+      # Pod-specific labels that apply ONLY to pod templates.
+      #
+      # These labels are merged after component labels with highest priority
+      # and only appear in pod metadata, not on the Job.
+      podLabels: {}
     # The helmless job component generates configuration without Helm.
     helmless:
       # Resource requirements and limits for the helmless job component.
@@ -321,14 +457,46 @@ components:
       securityContext: {}
       # Annotations to add to the helmless job.
       #
-      # These annotations are merged with defaults.annotations.
+      # These annotations are merged with defaults.annotations and apply to
+      # the Job and pods.
       annotations: {}
       # Labels to add to the helmless job.
       #
-      # These labels are merged with defaults.labels.
+      # These labels are merged with defaults.labels and apply to the
+      # Job and pods.
       labels: {}
+      # Pod-specific annotations that apply ONLY to pod templates.
+      #
+      # These annotations are merged after component annotations and only
+      # appear in pod metadata, not on the Job.
+      podAnnotations: {}
+      # Pod-specific labels that apply ONLY to pod templates.
+      #
+      # These labels are merged after component labels with highest priority
+      # and only appear in pod metadata, not on the Job.
+      podLabels: {}
     # The init cert job component initializes TLS certificates.
     initCert:
+      # Annotations to add to the init cert job component.
+      #
+      # These annotations are merged with defaults.annotations and apply to
+      # the Job and pods.
+      annotations: {}
+      # Labels to add to the init cert job component.
+      #
+      # These labels are merged with defaults.labels and apply to the
+      # Job and pods.
+      labels: {}
+      # Pod-specific annotations that apply ONLY to pod templates.
+      #
+      # These annotations are merged after component annotations and only
+      # appear in pod metadata, not on the Job.
+      podAnnotations: {}
+      # Pod-specific labels that apply ONLY to pod templates.
+      #
+      # These labels are merged after component labels with highest priority
+      # and only appear in pod metadata, not on the Job.
+      podLabels: {}
       # Resource requirements and limits for the init cert job component.
       #
       # For details, see the Kubernetes documentation on resource management:
@@ -362,19 +530,38 @@ components:
   prometheusReloader:
     image:
       repository: quay.io/prometheus-operator/prometheus-config-reloader
-      tag: "v0.84.0"
+      tag: "v0.87.0"
 
   # Settings for the aggregator component. This is the piece which accepts
   # metrics from the agent, webhook, etc., and sends them to the CloudZero API
   # after some processing.
   aggregator:
-    replicas: 3
+    replicas: null
     podDisruptionBudget:
       # enabled:
       # minAvailable:
       # maxUnavailable:
     tolerations: []
+    # Annotations to add to the aggregator component.
+    #
+    # These annotations are merged with defaults.annotations and apply to
+    # the Deployment and pods.
     annotations: {}
+    # Labels to add to the aggregator component.
+    #
+    # These labels are merged with defaults.labels and apply to the
+    # Deployment and pods.
+    labels: {}
+    # Pod-specific annotations that apply ONLY to pod templates.
+    #
+    # These annotations are merged after component annotations and only
+    # appear in pod metadata, not on the Deployment.
+    podAnnotations: {}
+    # Pod-specific labels that apply ONLY to pod templates.
+    #
+    # These labels are merged after component labels with highest priority
+    # and only appear in pod metadata, not on the Deployment.
+    podLabels: {}
     # Security context for the aggregator pods.
     #
     # For details, see the Kubernetes documentation on security contexts:
@@ -414,11 +601,40 @@ components:
 
   # Settings for the webhook server.
   webhookServer:
-    replicas: 3
+    replicas: null
+    # Horizontal Pod Autoscaler configuration for the webhook server.
+    #
+    # When enabled, automatically scales the webhook server based on CPU and/or
+    # memory utilization. This is particularly useful for high-churn clusters
+    # with frequent resource creation/modification events.
+    #
+    # For details, see the Kubernetes documentation on HPA:
+    # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+    autoscaling: null
     podDisruptionBudget:
       # enabled:
       # minAvailable:
       # maxUnavailable:
+    # Annotations to add to the webhook server component.
+    #
+    # These annotations are merged with defaults.annotations and apply to
+    # the Deployment and pods.
+    annotations: {}
+    # Labels to add to the webhook server component.
+    #
+    # These labels are merged with defaults.labels and apply to the
+    # Deployment and pods.
+    labels: {}
+    # Pod-specific annotations that apply ONLY to pod templates.
+    #
+    # These annotations are merged after component annotations and only
+    # appear in pod metadata, not on the Deployment.
+    podAnnotations: {}
+    # Pod-specific labels that apply ONLY to pod templates.
+    #
+    # These labels are merged after component labels with highest priority
+    # and only appear in pod metadata, not on the Deployment.
+    podLabels: {}
     # Security context for the webhook server pods.
     #
     # For details, see the Kubernetes documentation on security contexts:
@@ -437,6 +653,26 @@ components:
         cpu: "500m"
     # The backfill job component performs initial data backfilling.
     backfill:
+      # Annotations to add to the backfill job component.
+      #
+      # These annotations are merged with defaults.annotations and
+      # components.webhookServer.annotations, applying to the CronJob/Job and pods.
+      annotations: {}
+      # Labels to add to the backfill job component.
+      #
+      # These labels are merged with defaults.labels and
+      # components.webhookServer.labels, applying to the CronJob/Job and pods.
+      labels: {}
+      # Pod-specific annotations that apply ONLY to pod templates.
+      #
+      # These annotations are merged after backfill annotations and only
+      # appear in pod metadata, not on the CronJob/Job.
+      podAnnotations: {}
+      # Pod-specific labels that apply ONLY to pod templates.
+      #
+      # These labels are merged after backfill labels with highest priority
+      # and only appear in pod metadata, not on the CronJob/Job.
+      podLabels: {}
       # Schedule for the backfill CronJob. Defaults to every 12 hours. Use standard cron format.
       schedule: "0 */12 * * *"
       # Resource requirements and limits for the backfill job component.
@@ -479,11 +715,11 @@ kubeStateMetrics:
   image:
     registry: registry.k8s.io
     repository: kube-state-metrics/kube-state-metrics
-    tag: "v2.16.0"
+    tag: "v2.17.0"
     sha:
     pullPolicy: IfNotPresent
   imagePullSecrets: []
-  nameOverride: "cloudzero-state-metrics"
+  nameOverride:
   # Resource requirements and limits for kube-state-metrics.
   #
   # https://github.com/kubernetes/kube-state-metrics/blob/main/README.md#scaling-kube-state-metrics:
@@ -554,6 +790,11 @@ prometheusConfig:
       enabled: true
       # Scrape interval for aggregator job
       scrapeInterval: 120s
+    # -- Enables the GPU metrics scrape job (NVIDIA DCGM Exporter auto-discovery).
+    gpu:
+      enabled: false
+      # Scrape interval for GPU metrics job
+      scrapeInterval: 30s
     # -- Any items added to this list will be added to the Prometheus scrape configuration.
     additionalScrapeJobs: []
 
@@ -706,7 +947,9 @@ server:
   # -- Priority class name for the server pods. Falls back to defaults.priorityClassName if not set.
   priorityClassName:
   # Whether the server is running in agent mode.
-  agentMode: true
+  # If set (true or false) and components.agent.mode is not explicitly set, this is used to derive the mode.
+  # null means use components.agent.mode.
+  agentMode: null
   # Command-line arguments to pass to the server.
   args:
     - --config.file=/etc/config/prometheus/configmaps/prometheus.yml

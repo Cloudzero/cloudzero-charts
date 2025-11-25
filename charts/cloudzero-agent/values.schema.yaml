@@ -93,6 +93,53 @@ $defs:
     type: string
     pattern: '^[0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h)([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))*$'
 
+  com.cloudzero.agent.AutoscalingSpec:
+    description: |
+      Horizontal Pod Autoscaler configuration specification.
+
+      This type defines the common structure for autoscaling configuration
+      used across multiple components. Component-specific autoscaling
+      configurations should reference this type and can extend it with
+      additional properties if needed.
+
+      For details, see the Kubernetes documentation on HPA:
+      https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+    type: object
+    additionalProperties: false
+    properties:
+      enabled:
+        description: |
+          Whether to enable horizontal pod autoscaling.
+        type: boolean
+      minReplicas:
+        description: |
+          Minimum number of replicas.
+        type: integer
+        minimum: 1
+      maxReplicas:
+        description: |
+          Maximum number of replicas.
+        type: integer
+        minimum: 1
+      targetCPUUtilizationPercentage:
+        description: |
+          Target CPU utilization percentage for autoscaling.
+          Set to null to disable CPU-based scaling.
+        oneOf:
+          - type: integer
+            minimum: 1
+            maximum: 100
+          - type: "null"
+      targetMemoryUtilizationPercentage:
+        description: |
+          Target memory utilization percentage for autoscaling.
+          Set to null to disable memory-based scaling.
+        oneOf:
+          - type: integer
+            minimum: 1
+            maximum: 100
+          - type: "null"
+
   com.cloudzero.agent.PodDisruptionBudgetSpec:
     description: |
       A Pod Disruption Budget.
@@ -218,15 +265,19 @@ properties:
     properties:
       federation:
         description: |
-          Federated mode deploys the agent as a DaemonSet, with each node in the
-          cluster running its own metrics collector.
+          Federated mode deploys the agent in a distributed configuration for
+          high-scale clusters as a DaemonSet with one pod per node.
         type: object
         additionalProperties: false
         properties:
           enabled:
             description: |
               Whether to enable federated mode.
-            type: boolean
+              If set (true or false), this takes precedence over components.agent.mode.
+              null means use components.agent.mode.
+            type:
+              - boolean
+              - "null"
       image:
         description: |
           The default image settings which will be fallen back on for all
@@ -268,6 +319,22 @@ properties:
         type:
           - string
           - "null"
+      replicas:
+        description: |
+          Default number of replicas to use across components which support
+          multiple replicas. This can be overridden by component-specific
+          replica settings.
+        type: integer
+        default: 3
+      autoscaling:
+        description: |
+          Default Horizontal Pod Autoscaler configuration to use across
+          components which support autoscaling. Component-specific autoscaling
+          settings will fall back to these defaults when not explicitly set.
+
+          For details, see the Kubernetes documentation on HPA:
+          https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+        $ref: "#/$defs/com.cloudzero.agent.AutoscalingSpec"
       securityContext:
         description: |
           Default security context for all pods. Component-specific security contexts
@@ -295,6 +362,36 @@ properties:
             description: |
               Container image configuration for the agent.
             $ref: "#/$defs/com.cloudzero.agent.image"
+          mode:
+            description: |
+              Agent deployment mode. Controls how the agent collects and processes metrics.
+
+              Valid values:
+              - "federated": Deploys the agent in federated mode as a DaemonSet with one pod
+                per node. This is equivalent to setting defaults.federation.enabled to true.
+                Uses Prometheus in server mode for metrics collection.
+              - "agent": Deploys Prometheus in agent mode. This is optimized for remote write
+                scenarios and uses fewer resources. Equivalent to server.agentMode=true.
+              - "server": Deploys Prometheus in server mode. This is the traditional Prometheus
+                deployment with full storage and query capabilities. Equivalent to
+                server.agentMode=false.
+              - "clustered": EXPERIMENTAL. Uses Grafana Alloy instead of Prometheus for metrics
+                collection. Alloy provides better performance and native horizontal scalability.
+
+              If null (automatic mode), the mode will be derived from legacy configuration:
+              - defaults.federation.enabled=true -> "federated"
+              - server.agentMode=false -> "server"
+              - Default -> "agent"
+
+              If set, takes precedence over all legacy properties.
+            oneOf:
+              - enum:
+                  - federated
+                  - agent
+                  - server
+                  - clustered
+              - type: "null"
+            default: null
           podDisruptionBudget:
             description: |
               Pod disruption budget configuration for the agent.
@@ -307,7 +404,24 @@ properties:
           replicas:
             description: |
               Number of replicas to deploy.
-            type: integer
+
+              For modes other than "clustered", if set, this must be 1, or left
+              unset. For "clustered" mode, this can be any integer value. If
+              null, falls back to defaults.replicas.
+            oneOf:
+              - type: integer
+              - type: "null"
+          autoscaling:
+            description: |
+              Horizontal Pod Autoscaler configuration for the agent.
+              Only applies when components.agent.mode is set to "clustered".
+              If null, falls back to defaults.autoscaling.
+
+              For details, see the Kubernetes documentation on HPA:
+              https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+            oneOf:
+              - $ref: "#/$defs/com.cloudzero.agent.AutoscalingSpec"
+              - type: "null"
           tolerations:
             description: |
               Tolerations configuration for the agent pods.
@@ -329,12 +443,64 @@ properties:
               For details, see the Kubernetes documentation on security contexts:
               https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
             $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          labels:
+            description: |
+              Labels to be added to agent resources.
+
+              These labels are merged with defaults.labels.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+          annotations:
+            description: |
+              Annotations to be added to agent resources.
+
+              These annotations are merged with defaults.annotations.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+          podLabels:
+            description: |
+              Pod-specific labels that apply ONLY to pod templates.
+
+              These labels are merged after component labels with highest priority
+              and only appear in pod metadata, not on parent resources.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+          podAnnotations:
+            description: |
+              Pod-specific annotations that apply ONLY to pod templates.
+
+              These annotations are merged after component annotations and only
+              appear in pod metadata, not on parent resources.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           federatedNode:
             description: |
               The agent federated node component runs on each node for federation.
             additionalProperties: false
             type: object
             properties:
+              labels:
+                description: |
+                  Labels to be added to agent federated node resources.
+
+                  These labels are merged with defaults.labels and components.agent.labels.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              annotations:
+                description: |
+                  Annotations to be added to agent federated node resources.
+
+                  These annotations are merged with defaults.annotations and components.agent.annotations.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+              podLabels:
+                description: |
+                  Pod-specific labels that apply ONLY to pod templates.
+
+                  These labels are merged after federated node labels with highest priority
+                  and only appear in pod metadata, not on the DaemonSet.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podAnnotations:
+                description: |
+                  Pod-specific annotations that apply ONLY to pod templates.
+
+                  These annotations are merged after federated node annotations and only
+                  appear in pod metadata, not on the DaemonSet.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
               resources:
                 description: |
                   Resource requirements and limits for the agent federated node component.
@@ -345,6 +511,34 @@ properties:
               securityContext:
                 description: |
                   Security context for the agent federated node pods.
+
+                  For details, see the Kubernetes documentation on security contexts:
+                  https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          clusteredNode:
+            description: |
+              The agent clustered node component configuration for Alloy-based metrics collection.
+              Only applies when components.agent.mode is set to "clustered".
+            additionalProperties: false
+            type: object
+            properties:
+              image:
+                description: |
+                  Container image configuration for Grafana Alloy.
+                $ref: "#/$defs/com.cloudzero.agent.image"
+              resources:
+                description: |
+                  Resource requirements and limits for the Alloy container.
+
+                  Alloy has different performance characteristics than Prometheus and typically
+                  requires less resources for the same workload due to its more efficient design.
+
+                  For details, see the Kubernetes documentation on resource management:
+                  https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+              securityContext:
+                description: |
+                  Security context for the Alloy pods.
 
                   For details, see the Kubernetes documentation on security contexts:
                   https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -369,6 +563,82 @@ properties:
                   For details, see the Kubernetes documentation on resource management:
                   https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                 $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+        allOf:
+          # Conditional: Replicas constraint for non-clustered modes
+          #
+          # If mode is null (automatic) or one of ["federated", "agent",
+          # "server"], and replicas is explicitly set to an integer, then
+          # replicas must be 1.
+          #
+          # This ensures that non-clustered modes only support single-replica
+          # deployments, which is necessary because Prometheus can't really
+          # scale horizontally automatically.
+          - if:
+              anyOf:
+                - properties:
+                    mode:
+                      type: "null"
+                - properties:
+                    mode:
+                      enum: ["federated", "agent", "server"]
+            then:
+              if:
+                properties:
+                  replicas:
+                    type: integer
+              then:
+                properties:
+                  replicas:
+                    const: 1
+
+          # Conditional: Autoscaling constraint for non-clustered modes
+          # If mode is null (automatic) or one of ["federated", "agent",
+          #
+          # "server"], then autoscaling must be either:
+          #
+          #   - null (disabled), OR
+          #   - an object with enabled: false (explicitly disabled)
+          #
+          # This prevents enabling autoscaling in non-clustered modes, as
+          # autoscaling only works with the "clustered" mode. Error message will
+          # indicate autoscaling.enabled must be false, not that mode must be
+          # clustered.
+          - if:
+              anyOf:
+                - properties:
+                    mode:
+                      type: "null"
+                - properties:
+                    mode:
+                      enum: ["federated", "agent", "server"]
+            then:
+              properties:
+                autoscaling:
+                  oneOf:
+                    - type: "null"
+                    - allOf:
+                        - $ref: "#/$defs/com.cloudzero.agent.AutoscalingSpec"
+                        - properties:
+                            enabled:
+                              const: false
+
+          # Conditional: Autoscaling allowed for clustered mode
+          #
+          # If mode is "clustered", then autoscaling can be:
+          #   - null (will fall back to defaults.autoscaling), OR
+          #   - a valid AutoscalingSpec object (can have enabled: true or false)
+          #
+          # This allows full autoscaling configuration only in clustered mode.
+          - if:
+              properties:
+                mode:
+                  const: clustered
+            then:
+              properties:
+                autoscaling:
+                  oneOf:
+                    - type: "null"
+                    - $ref: "#/$defs/com.cloudzero.agent.AutoscalingSpec"
 
       validator:
         description: |
@@ -377,6 +647,18 @@ properties:
         additionalProperties: false
         type: object
         properties:
+          labels:
+            description: |
+              Labels to be added to validator resources.
+
+              These labels are merged with defaults.labels.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+          annotations:
+            description: |
+              Annotations to be added to validator resources.
+
+              These annotations are merged with defaults.annotations.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           resources:
             description: |
               Resource requirements and limits for the validator component.
@@ -423,6 +705,20 @@ properties:
 
                   These labels are merged with defaults.labels.
                 $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podLabels:
+                description: |
+                  Pod-specific labels that apply ONLY to pod templates.
+
+                  These labels are merged after component labels with highest priority
+                  and only appear in pod metadata, not on the Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podAnnotations:
+                description: |
+                  Pod-specific annotations that apply ONLY to pod templates.
+
+                  These annotations are merged after component annotations and only
+                  appear in pod metadata, not on the Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           helmless:
             description: |
               The helmless job component generates configuration without Helm.
@@ -455,6 +751,20 @@ properties:
 
                   These labels are merged with defaults.labels.
                 $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podLabels:
+                description: |
+                  Pod-specific labels that apply ONLY to pod templates.
+
+                  These labels are merged after component labels with highest priority
+                  and only appear in pod metadata, not on the Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podAnnotations:
+                description: |
+                  Pod-specific annotations that apply ONLY to pod templates.
+
+                  These annotations are merged after component annotations and only
+                  appear in pod metadata, not on the Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           initCert:
             description: |
               The init cert job component initializes TLS certificates.
@@ -475,6 +785,32 @@ properties:
                   For details, see the Kubernetes documentation on security contexts:
                   https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
                 $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+              labels:
+                description: |
+                  Labels to add to the init cert job.
+
+                  These labels are merged with defaults.labels.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              annotations:
+                description: |
+                  Annotations to add to the init cert job.
+
+                  These annotations are merged with defaults.annotations.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+              podLabels:
+                description: |
+                  Pod-specific labels that apply ONLY to pod templates.
+
+                  These labels are merged after component labels with highest priority
+                  and only appear in pod metadata, not on the Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podAnnotations:
+                description: |
+                  Pod-specific annotations that apply ONLY to pod templates.
+
+                  These annotations are merged after component annotations and only
+                  appear in pod metadata, not on the Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
 
       aggregator:
         description: |
@@ -485,9 +821,31 @@ properties:
         additionalProperties: false
         type: object
         properties:
+          labels:
+            description: |
+              Labels to be added to aggregator resources.
+
+              These labels are merged with defaults.labels.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
           annotations:
             description: |
               Annotations to be added to the aggregator deployment.
+
+              These annotations are merged with defaults.annotations.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+          podLabels:
+            description: |
+              Pod-specific labels that apply ONLY to pod templates.
+
+              These labels are merged after component labels with highest priority
+              and only appear in pod metadata, not on the Deployment.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+          podAnnotations:
+            description: |
+              Pod-specific annotations that apply ONLY to pod templates.
+
+              These annotations are merged after component annotations and only
+              appear in pod metadata, not on the Deployment.
             $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           collector:
             description: |
@@ -544,7 +902,8 @@ properties:
               - type: "null"
           replicas:
             description: |
-              Number of replicas to deploy.
+              Number of replicas to deploy. If null, falls back to
+              defaults.replicas.
             additionalProperties: false
             type:
               - integer
@@ -611,6 +970,20 @@ properties:
         additionalProperties: false
         type: object
         properties:
+          autoscaling:
+            description: |
+              Horizontal Pod Autoscaler configuration for the webhook server.
+
+              When enabled, automatically scales the webhook server based on CPU and/or
+              memory utilization. This is particularly useful for high-churn clusters
+              with frequent resource creation/modification events.
+
+              If null, falls back to defaults.autoscaling. Individual properties
+              within this object will also fall back to defaults.autoscaling if not
+              explicitly set.
+            oneOf:
+              - $ref: "#/$defs/com.cloudzero.agent.AutoscalingSpec"
+              - type: "null"
           podDisruptionBudget:
             description: |
               Pod disruption budget configuration for the webhook server.
@@ -622,7 +995,8 @@ properties:
               - type: "null"
           replicas:
             description: |
-              Number of replicas to deploy.
+              Number of replicas to deploy. If null, falls back to
+              defaults.replicas.
             additionalProperties: false
             type:
               - integer
@@ -641,6 +1015,32 @@ properties:
               For details, see the Kubernetes documentation on security contexts:
               https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
             $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          labels:
+            description: |
+              Labels to be added to webhook server resources.
+
+              These labels are merged with defaults.labels.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+          annotations:
+            description: |
+              Annotations to be added to webhook server resources.
+
+              These annotations are merged with defaults.annotations.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+          podLabels:
+            description: |
+              Pod-specific labels that apply ONLY to pod templates.
+
+              These labels are merged after component labels with highest priority
+              and only appear in pod metadata, not on the Deployment.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+          podAnnotations:
+            description: |
+              Pod-specific annotations that apply ONLY to pod templates.
+
+              These annotations are merged after component annotations and only
+              appear in pod metadata, not on the Deployment.
+            $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           backfill:
             description: |
               The backfill job component performs initial data backfilling.
@@ -652,6 +1052,32 @@ properties:
                   Schedule for the backfill CronJob. Defaults to every 3 hours. Use standard cron format.
                 $ref: "#/$defs/io.k8s.api.batch.v1.CronJobSpec/properties/schedule"
                 default: "0 */3 * * *"
+              labels:
+                description: |
+                  Labels to be added to backfill job resources.
+
+                  These labels are merged with defaults.labels and components.webhookServer.labels.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              annotations:
+                description: |
+                  Annotations to be added to backfill job resources.
+
+                  These annotations are merged with defaults.annotations and components.webhookServer.annotations.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+              podLabels:
+                description: |
+                  Pod-specific labels that apply ONLY to pod templates.
+
+                  These labels are merged after backfill labels with highest priority
+                  and only appear in pod metadata, not on the CronJob or Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
+              podAnnotations:
+                description: |
+                  Pod-specific annotations that apply ONLY to pod templates.
+
+                  These annotations are merged after backfill annotations and only
+                  appear in pod metadata, not on the CronJob or Job.
+                $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
               resources:
                 description: |
                   Resource requirements and limits for the backfill job component.
@@ -908,6 +1334,28 @@ properties:
               scrapeInterval:
                 description: |
                   Scrape interval for aggregator job.
+                $ref: "#/$defs/com.cloudzero.agent.duration"
+          gpu:
+            description: |
+              GPU metrics scrape job configuration.
+
+              Automatically discovers and scrapes GPU metrics from NVIDIA DCGM
+              Exporter. Collects GPU compute utilization and memory usage
+              metrics with per-container attribution.
+            type: object
+            additionalProperties: false
+            properties:
+              enabled:
+                description: |
+                  Whether to enable the GPU metrics scrape job.
+
+                  When enabled, Prometheus will automatically discover GPU
+                  exporters (currently only NVIDIA DCGM ins supported) and
+                  collect metrics.
+                type: boolean
+              scrapeInterval:
+                description: |
+                  Scrape interval for GPU metrics job.
                 $ref: "#/$defs/com.cloudzero.agent.duration"
           additionalScrapeJobs:
             description: |
@@ -1654,10 +2102,16 @@ properties:
           Annotations to add to the server pods.
         $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
       agentMode:
+        deprecated: true
         description: |
+          This field is deprecated. Please use `components.agent.mode` instead.
+
           Whether the server is running in agent mode.
-        type: boolean
-        default: true
+          If set (true or false) and components.agent.mode is not explicitly set, this is used to derive the mode.
+          null means use components.agent.mode.
+        type:
+          - boolean
+          - "null"
       logging:
         description: |
           Logging configuration settings for the Prometheus server.
@@ -2059,3 +2513,81 @@ properties:
       between parent and child charts.
 
       For more information, see: https://helm.sh/docs/chart_template_guide/subcharts_and_globals/
+
+# Root-level conditional validations that span multiple properties
+allOf:
+  # Conditional: Federation mode constraint
+  #
+  # If defaults.federation.enabled is true, then components.agent.mode must be
+  # either null (automatic, which will resolve to "federated") or explicitly
+  # set to "federated". It cannot be set to "clustered", "agent", or "server".
+  #
+  # This ensures that when federation is enabled via defaults.federation.enabled,
+  # the mode is consistent with federation settings. When mode is null and
+  # defaults.federation.enabled is true, the helper function will automatically
+  # resolve the mode to "federated" for template rendering purposes.
+  #
+  # Note: This validation only triggers when defaults.federation.enabled is
+  # explicitly set to true. If it's null or not set, this validation does not apply.
+  - if:
+      allOf:
+        - properties:
+            defaults:
+              type: object
+              required:
+                - federation
+              properties:
+                federation:
+                  type: object
+                  required:
+                    - enabled
+                  properties:
+                    enabled:
+                      const: true
+    then:
+      properties:
+        components:
+          type: object
+          properties:
+            agent:
+              type: object
+              properties:
+                mode:
+                  oneOf:
+                    - type: "null"
+                    - const: federated
+
+  # Conditional: Persistent volume constraint for clustered mode
+  #
+  # If components.agent.mode is "clustered" (Alloy mode), then
+  # server.persistentVolume.enabled must be false.
+  #
+  # This is necessary because:
+  # 1. Alloy doesn't use the persistent volume mount (it uses /tmp/alloy)
+  # 2. Alloy is designed for horizontal scaling with multiple replicas
+  # 3. Persistent volumes with ReadWriteOnce can't be shared across pods
+  # 4. The Recreate deployment strategy (required for PV) prevents proper
+  #    rolling updates needed for multi-replica deployments
+  #
+  # In clustered/Alloy mode, metrics data should be transient and stored
+  # in remote storage via remote_write configuration.
+  - if:
+      properties:
+        components:
+          type: object
+          properties:
+            agent:
+              type: object
+              properties:
+                mode:
+                  const: clustered
+    then:
+      properties:
+        server:
+          type: object
+          properties:
+            persistentVolume:
+              type: object
+              properties:
+                enabled:
+                  const: false

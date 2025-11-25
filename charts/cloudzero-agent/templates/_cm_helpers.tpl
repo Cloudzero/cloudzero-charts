@@ -164,6 +164,94 @@ remote_write:
 {{- end -}}
 
 {{/*
+NVIDIA DCGM GPU Metrics Scrape Job Configuration Template
+
+Generates Prometheus scrape job configuration for collecting NVIDIA GPU metrics from
+DCGM Exporter. This enables CloudZero cost allocation for NVIDIA GPU workloads in
+Kubernetes clusters.
+
+DCGM metrics collected:
+- DCGM_FI_DEV_GPU_UTIL: GPU compute utilization (0-100%)
+- DCGM_FI_DEV_FB_USED: GPU memory used per GPU (bytes)
+- DCGM_FI_DEV_FB_FREE: GPU memory free per GPU (bytes)
+
+Scraping features:
+- Auto-discovery: Kubernetes service discovery with label selector for DCGM services
+- Container attribution: Per-container GPU usage via Kubernetes Pod Resources API
+- Label preservation: All DCGM labels (gpu, container, pod, namespace, Hostname, modelName, UUID) forwarded
+- Metric filtering: Collects only the 3 DCGM metrics needed, drops unattributed metrics
+- Provenance tracking: Adds "provenance=dcgm" label to identify metric source
+
+Note: This template is specific to NVIDIA DCGM Exporter. Future GPU vendors (AMD, Intel)
+will have separate scrape job templates added alongside this one.
+
+This configuration enables accurate GPU cost allocation by tracking per-container
+GPU usage across compute and memory dimensions, supporting multi-GPU containers
+and GPU time-slicing scenarios.
+*/}}
+{{- define "cloudzero-agent.prometheus.scrapeGPU" -}}
+# NVIDIA DCGM GPU Metrics Scrape Job
+# cloudzero-dcgm-exporter
+#
+# Automatically discovers and scrapes NVIDIA GPU metrics from DCGM Exporter
+# for GPU cost allocation and utilization tracking.
+#
+# This job is specific to NVIDIA DCGM Exporter. Future GPU vendors (AMD, Intel)
+# will have separate scrape jobs added to this configuration.
+- job_name: cloudzero-dcgm-exporter
+  scrape_interval: {{ .Values.prometheusConfig.scrapeJobs.gpu.scrapeInterval }}
+
+  # Discover DCGM Exporter services in all namespaces
+  # Use label selector to filter at the Kubernetes API level for performance
+  kubernetes_sd_configs:
+    - role: service
+      kubeconfig_file: ""
+      selectors:
+        - role: service
+          label: "app.kubernetes.io/name=dcgm-exporter"
+
+  # Relabel configs for label enrichment
+  relabel_configs:
+
+    # Add provenance label to indicate DCGM as the metric source
+    - source_labels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
+      regex: dcgm-exporter
+      replacement: dcgm
+      target_label: provenance
+
+    # Add Kubernetes metadata for cost attribution
+    - source_labels: [__meta_kubernetes_namespace]
+      target_label: kubernetes_namespace
+
+    - source_labels: [__meta_kubernetes_service_name]
+      target_label: kubernetes_service
+
+    # Note: __address__ is automatically set by service discovery to <service>:<port>
+    # No need to override it - Prometheus will use the port from the Service definition
+
+  # Metric relabel configs for filtering
+  metric_relabel_configs:
+    # Collect only the 3 raw DCGM metrics needed
+    - source_labels: [__name__]
+      regex: DCGM_FI_DEV_GPU_UTIL|DCGM_FI_DEV_FB_USED|DCGM_FI_DEV_FB_FREE
+      action: keep
+
+    # Drop metrics without container attribution
+    # (These are node-level GPU metrics not assigned to containers)
+    - source_labels: [container]
+      regex: ^$
+      action: drop
+
+    - source_labels: [pod]
+      regex: ^$
+      action: drop
+
+    - source_labels: [namespace]
+      regex: ^$
+      action: drop
+{{- end -}}
+
+{{/*
 Prometheus Self-Monitoring Scrape Job Configuration Template
 
 Generates Prometheus scrape job configuration for collecting operational metrics from
@@ -332,7 +420,7 @@ providing the cluster state foundation for all downstream cost analysis and opti
       action: keep
 
     # Metric labels to keep.
-    - regex: ^(board_asset_tag|container|created_by_kind|created_by_name|image|instance|name|namespace|node|node_kubernetes_io_instance_type|pod|product_name|provider_id|resource|unit|uid|_.*|label_.*|app.kubernetes.io/*|k8s.*)$
+    - regex: {{ printf "^(%s)$" (include "cloudzero-agent.requiredMetricLabels" .) }}
       action: labelkeep
 
   static_configs:
@@ -380,7 +468,7 @@ This monitoring is essential for:
     # Keep __meta_kubernetes_endpoints_name labels.
     - source_labels: [__meta_kubernetes_endpoints_name]
       action: keep
-      regex: {{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}-svc
+      regex: {{ include "cloudzero-agent.insightsController.server.webhookFullname" . }}
 
   metric_relabel_configs:
     # Metrics to keep.
@@ -469,9 +557,9 @@ and optimization recommendations across Kubernetes workloads.
   # Scrape metrics from cAdvisor.
   relabel_configs:
 
-    # Replace the value of __address__ labels with "kubernetes.default.svc:443"
+    # Replace the value of __address__ labels with "kubernetes.default.svc.cluster.local:443"
     - target_label: __address__
-      replacement: kubernetes.default.svc:443
+      replacement: kubernetes.default.svc.cluster.local:443
 
     # Replace the value of __metrics_path__ in __meta_kubernetes_node_name with
     # "/api/v1/nodes/$1/proxy/metrics/cadvisor"
