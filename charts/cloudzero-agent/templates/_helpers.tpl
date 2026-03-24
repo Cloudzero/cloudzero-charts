@@ -22,7 +22,7 @@ Usage: {{ include "cloudzero-agent.versionNumber" . }}
 Returns: string with version annotation
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.9  # <- Software release corresponding to this chart version.
+version: 1.2.10  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -121,6 +121,14 @@ Returns: string (e.g., "cloudzero-webhook.default.svc")
   valueFrom:
     fieldRef:
       fieldPath: metadata.name
+- name: ISTIO_AMBIENT_REDIRECTION
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.annotations['ambient.istio.io/redirection']
+- name: ISTIO_TOPOLOGY_CLUSTER
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.labels['topology.istio.io/cluster']
 {{- end}}
 
 {{/*
@@ -475,6 +483,8 @@ The name of the KSM service target that will be used in the scrape config and va
 {{- define "cloudzero-agent.kubeStateMetrics.kubeStateMetricsSvcTargetName" -}}
 {{- if .Values.kubeStateMetrics.targetOverride -}}
 {{- .Values.kubeStateMetrics.targetOverride -}}
+{{- else if .Values.components.agent.kubeState.enabled -}}
+{{/* KubeState plugin is enabled; no KSM service to target */}}
 {{- else if not .Values.kubeStateMetrics.enabled -}}
 {{- required "You must set a targetOverride for kubeStateMetrics" .Values.kubeStateMetrics.targetOverride -}}
 {{- else -}}
@@ -831,6 +841,26 @@ configuration will not overwrite values from the first configuration.
 {{- end -}}
 
 {{/*
+Generate container command with special handling:
+- null/not set: Uses provided default command array
+- empty array []: No command output (uses image's default entrypoint)
+- non-empty array: Uses the specified command
+
+Usage: {{ include "cloudzero-agent.generateContainerCommand" (dict "command" .Values.components.agent.clusteredNode.command "default" (list "/app/cloudzero-alloy")) | nindent 10 }}
+*/}}
+{{- define "cloudzero-agent.generateContainerCommand" -}}
+{{- $isEmptyArray := and (kindIs "slice" .command) (empty .command) -}}
+{{- if not $isEmptyArray -}}
+command:
+  {{- if kindIs "invalid" .command }}
+  {{- toYaml .default | nindent 2 }}
+  {{- else }}
+  {{- toYaml .command | nindent 2 }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Generate image configuration with defaults.
 */}}
 {{- define "cloudzero-agent.generateImage" -}}
@@ -1122,6 +1152,12 @@ Example usage:
 {{/*
 Generate imagePullSecrets block
 Accepts a dictionary with "root" (the top-level chart context) and "image" (the component's image configuration object)
+
+Fallback chain:
+1. Component-specific: .image.pullSecrets
+2. Defaults: .root.Values.defaults.image.pullSecrets
+3. Deprecated root-level: .root.Values.imagePullSecrets
+
 Example usage:
 {{- include "cloudzero-agent.generateImagePullSecrets" (dict
       "root" .
@@ -1131,7 +1167,7 @@ Example usage:
 {{- define "cloudzero-agent.generateImagePullSecrets" -}}
 {{- include "cloudzero-agent.maybeGenerateSection" (dict
       "name" "imagePullSecrets"
-      "value" (.image.pullSecrets | default .root.Values.defaults.image.pullSecrets)
+      "value" (.image.pullSecrets | default .root.Values.defaults.image.pullSecrets | default .root.Values.imagePullSecrets)
     ) -}}
 {{- end -}}
 
@@ -1376,6 +1412,23 @@ prometheus.yml
 {{- end -}}
 
 {{/*
+Resolve the Prometheus image tag.
+
+Resolves the tag from components.prometheus.image.tag, falling back to
+Chart.AppVersion with "-distroless" appended to use the official distroless
+image variant (no shell, minimal attack surface).
+
+Note: the deprecated server.image.tag compat override is handled by
+generateImage's compat layer at the call site, not here.
+
+Usage: {{ include "cloudzero-agent.Values.components.prometheus.image.tag" . }}
+Returns: string (e.g., "v3.10.0-distroless", "v3.7.3")
+*/}}
+{{- define "cloudzero-agent.Values.components.prometheus.image.tag" -}}
+  {{- .Values.components.prometheus.image.tag | default (printf "%s-distroless" .Chart.AppVersion) -}}
+{{- end -}}
+
+{{/*
 Get the appropriate Prometheus agent mode flag based on version and mode
 
 Determines whether Prometheus should run in agent mode and which flag to use:
@@ -1387,8 +1440,8 @@ The cloudzero-agent.Values.components.agent.mode helper already handles all the
 complex mode derivation logic, so we just check if it returns "agent" or "federated"
 and then determine the appropriate version-specific flag.
 
-Uses the same tag fallback chain as image generation:
-server.image.tag -> components.prometheus.image.tag -> Chart.AppVersion
+Uses the same tag fallback chain as image generation via
+cloudzero-agent.Values.components.prometheus.image.tag
 
 Usage: {{ include "cloudzero-agent.prometheusAgentFlag" . }}
 Returns: string (either "--agent", "--enable-feature=agent", or empty string)
@@ -1396,12 +1449,119 @@ Returns: string (either "--agent", "--enable-feature=agent", or empty string)
 {{- define "cloudzero-agent.prometheusAgentFlag" -}}
   {{- $mode := include "cloudzero-agent.Values.components.agent.mode" . -}}
   {{- if or (eq $mode "agent") (eq $mode "federated") -}}
-    {{- /* Use same fallback chain as image generation: server.image.tag -> components.prometheus.image.tag -> Chart.AppVersion */ -}}
-    {{- $tag := .Values.server.image.tag | default .Values.components.prometheus.image.tag | default .Chart.AppVersion -}}
+    {{- $tag := include "cloudzero-agent.Values.components.prometheus.image.tag" . -}}
     {{- if hasPrefix "v2." $tag -}}
       --enable-feature=agent
     {{- else -}}
       --agent
     {{- end -}}
   {{- end -}}
+{{- end -}}
+
+{{/*
+Istio Integration Detection Helper
+
+Determines whether Istio integration should be enabled based on configuration
+and cluster capabilities. Supports three modes:
+
+- null (default): Auto-detect Istio via CRD presence in the cluster
+- true: Force Istio integration enabled
+- false: Force Istio integration disabled
+
+When Istio is detected/enabled:
+- If cluster ID is set: DestinationRule and VirtualService are created for cluster-local service isolation
+- Webhook/backfill pods get port exclusion annotations (when not using cert-manager)
+
+When Istio is NOT detected/disabled:
+- No DestinationRule/VirtualService are created
+- No Istio-specific annotations are added
+
+Usage: {{ if include "cloudzero-agent.Values.integrations.istio.enabled" . }}...{{ end }}
+Returns: "true" (truthy) when enabled, empty string (falsy) when disabled
+*/}}
+{{- define "cloudzero-agent.Values.integrations.istio.enabled" -}}
+{{- $istioSetting := .Values.integrations.istio.enabled -}}
+{{- if kindIs "invalid" $istioSetting -}}
+  {{- /* null/not set = auto-detect via CRD presence */ -}}
+  {{- if or (.Capabilities.APIVersions.Has "networking.istio.io/v1") (.Capabilities.APIVersions.Has "networking.istio.io/v1beta1") -}}
+    {{- true -}}
+  {{- end -}}
+{{- else if $istioSetting -}}
+  {{- /* true = force enabled */ -}}
+  {{- true -}}
+{{- end -}}
+{{- /* false = force disabled, returns empty string */ -}}
+{{- end -}}
+
+{{/*
+cAdvisor Integration Enabled Helper
+
+Returns "true" if enabled, empty string if disabled (for use in conditionals).
+- prometheusConfig.scrapeJobs.cadvisor.enabled takes priority if explicitly set
+- integrations.cAdvisor.enabled is the fallback when null
+*/}}
+{{- define "cloudzero-agent.Values.integrations.cAdvisor.enabled" -}}
+{{- $enabled := .Values.integrations.cAdvisor.enabled -}}
+{{- if not (kindIs "invalid" .Values.prometheusConfig.scrapeJobs.cadvisor.enabled) -}}
+{{- $enabled = .Values.prometheusConfig.scrapeJobs.cadvisor.enabled -}}
+{{- end -}}
+{{- if $enabled }}true{{- end -}}
+{{- end -}}
+
+{{/*
+Istio Cluster ID Helper
+
+Returns the Istio cluster ID to use for multicluster mesh configurations.
+Falls back from integrations.istio.clusterID to clusterName.
+
+This value is OPTIONAL. When set, DestinationRule and VirtualService resources
+are created to ensure aggregator traffic stays within the local cluster.
+
+If not explicitly set, falls back to clusterName. This allows automatic traffic
+fencing in sidecar mode where we can validate the effective value at runtime.
+
+The validator includes a runtime check that detects cross-cluster load balancing
+and validates the effective cluster ID matches Istio's configuration.
+
+Usage: {{ include "cloudzero-agent.istio.clusterID" . }}
+Returns: The Istio cluster ID string (explicit or fallback to clusterName)
+*/}}
+{{- define "cloudzero-agent.istio.clusterID" -}}
+{{- .Values.integrations.istio.clusterID | default .Values.clusterName -}}
+{{- end -}}
+
+{{/*
+Validator Stage Helper
+
+Generates a complete diagnostic stage configuration from values.yaml.
+Each check value is one of: required, optional, informative, disabled.
+
+Check types:
+  - "required": failures cause non-zero exit code
+  - "optional": failures logged but don't affect exit code
+  - "informative": information gathering only, always passes
+  - "disabled": check is not run
+
+Arguments (passed as dict):
+  - stage: The stage name (e.g., "pre-start", "post-start", "config-load")
+  - checksConfig: The full checks map (.Values.components.validator.checks)
+
+Usage: {{ include "cloudzero-agent.validator.stageCheck" (dict "stage" "pre-start" "checksConfig" .Values.components.validator.checks) }}
+Returns: YAML stage object with name and checks fields
+*/}}
+{{- define "cloudzero-agent.validator.stageCheck" -}}
+{{- $stage := .stage -}}
+{{- $stageChecks := index .checksConfig $stage | default dict -}}
+{{- $checks := list -}}
+{{- range $checkName, $checkType := $stageChecks -}}
+  {{/* Skip disabled checks */}}
+  {{- if ne $checkType "disabled" -}}
+    {{/* Default null/empty type to "optional" */}}
+    {{- $effectiveType := $checkType | default "optional" -}}
+    {{- $checks = append $checks (dict "name" $checkName "type" $effectiveType) -}}
+  {{- end -}}
+{{- end -}}
+{{/* Output with consistent field order: name first, then checks */}}
+name: {{ $stage }}
+checks: {{ $checks | toYaml | nindent 2 -}}
 {{- end -}}

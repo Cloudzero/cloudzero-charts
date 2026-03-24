@@ -41,6 +41,11 @@
       },
       "type": "object"
     },
+    "com.cloudzero.agent.CheckConfig": {
+      "default": "optional",
+      "enum": ["required", "optional", "informative", "disabled"],
+      "type": "string"
+    },
     "com.cloudzero.agent.PodDisruptionBudgetSpec": {
       "additionalProperties": false,
       "properties": {
@@ -52,6 +57,82 @@
         },
         "minAvailable": {
           "$ref": "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudgetSpec/properties/minAvailable"
+        }
+      },
+      "type": "object"
+    },
+    "com.cloudzero.agent.StageChecks": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_settings": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "api_key_valid": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "istio_xcluster_lb": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "k8s_namespace": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "k8s_provider": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "k8s_version": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "kube_state_metrics_reachable": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "prometheus_version": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "scrape_cfg": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
+        },
+        "webhook_server_reachable": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/com.cloudzero.agent.CheckConfig"
+            }
+          ]
         }
       },
       "type": "object"
@@ -5756,6 +5837,27 @@
                   }
                 }
               }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kubeState": {
+                    "properties": {
+                      "enabled": {
+                        "const": true
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "mode": {
+                    "const": "clustered"
+                  }
+                }
+              }
             }
           ],
           "properties": {
@@ -5775,6 +5877,16 @@
             "clusteredNode": {
               "additionalProperties": false,
               "properties": {
+                "command": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/io.k8s.api.core.v1.Container/properties/command"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "image": {
                   "$ref": "#/$defs/com.cloudzero.agent.image"
                 },
@@ -5813,6 +5925,18 @@
             },
             "image": {
               "$ref": "#/$defs/com.cloudzero.agent.image"
+            },
+            "kubeState": {
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "reemitInterval": {
+                  "$ref": "#/$defs/com.cloudzero.agent.duration"
+                }
+              },
+              "type": "object"
             },
             "labels": {
               "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
@@ -6065,6 +6189,24 @@
           "properties": {
             "annotations": {
               "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+            },
+            "checks": {
+              "additionalProperties": false,
+              "properties": {
+                "config-load": {
+                  "$ref": "#/$defs/com.cloudzero.agent.StageChecks"
+                },
+                "post-start": {
+                  "$ref": "#/$defs/com.cloudzero.agent.StageChecks"
+                },
+                "pre-start": {
+                  "$ref": "#/$defs/com.cloudzero.agent.StageChecks"
+                },
+                "pre-stop": {
+                  "$ref": "#/$defs/com.cloudzero.agent.StageChecks"
+                }
+              },
+              "type": "object"
             },
             "labels": {
               "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
@@ -6646,8 +6788,16 @@
               "default": "1m"
             },
             "suppressIstioAnnotations": {
-              "default": false,
-              "type": "boolean"
+              "default": null,
+              "deprecated": true,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "tolerations": {
               "$ref": "#/$defs/com.cloudzero.agent.tolerations"
@@ -6756,6 +6906,69 @@
       },
       "type": "object"
     },
+    "integrations": {
+      "additionalProperties": false,
+      "properties": {
+        "cAdvisor": {
+          "additionalProperties": false,
+          "properties": {
+            "directNodeAccess": {
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "port": {
+              "default": 10250,
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "tls": {
+              "additionalProperties": false,
+              "properties": {
+                "insecureSkipVerify": {
+                  "default": true,
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "istio": {
+          "additionalProperties": false,
+          "properties": {
+            "clusterID": {
+              "default": null,
+              "type": ["string", "null"]
+            },
+            "enabled": {
+              "default": null,
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
     "jobConfigID": {
       "type": ["string", "null"]
     },
@@ -6811,14 +7024,21 @@
               "additionalProperties": false,
               "properties": {
                 "enabled": {
-                  "enum": [true],
-                  "type": "boolean"
+                  "default": null,
+                  "deprecated": true,
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
                 },
                 "scrapeInterval": {
                   "$ref": "#/$defs/com.cloudzero.agent.duration"
                 }
               },
-              "required": ["enabled"],
               "type": "object"
             },
             "gpu": {
@@ -6874,7 +7094,16 @@
       "type": "object"
     },
     "region": {
-      "type": ["string", "null"]
+      "oneOf": [
+        {
+          "minLength": 4,
+          "pattern": "^(([a-z]+-[a-z]+-?[0-9]+)|([a-z]{4,}[0-9]*))$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "secretAnnotations": {
       "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations",

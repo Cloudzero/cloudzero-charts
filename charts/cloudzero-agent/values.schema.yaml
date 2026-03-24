@@ -155,6 +155,148 @@ $defs:
       maxUnavailable:
         $ref: "#/$defs/io.k8s.api.policy.v1.PodDisruptionBudgetSpec/properties/maxUnavailable"
 
+  com.cloudzero.agent.CheckConfig:
+    description: |
+      Configuration for a single diagnostic check. Specifies how check
+      failures are handled:
+      - required: failures cause non-zero exit code
+      - optional: failures are logged but don't affect exit code (default)
+      - informative: information gathering only, always passes
+      - disabled: check is not run at all
+
+      Note: Due to a Helm limitation (helm/helm#11588), null values cannot be
+      rejected at the schema level. A null value (e.g., "api_key_valid:")
+      is treated as "not configured" and the check uses its default type.
+    type: string
+    enum:
+      - required
+      - optional
+      - informative
+      - disabled
+    default: optional
+
+  com.cloudzero.agent.StageChecks:
+    description: |
+      Per-check configuration for a validator stage.
+      Keys are check names, values are check types (required, optional,
+      informative, or disabled). Checks default to "required" unless
+      explicitly configured otherwise.
+    type: object
+    additionalProperties: false
+    properties:
+      api_key_valid:
+        description: |
+          Validates the CloudZero API key by making an authenticated request
+          to the CloudZero API (/v2/insights endpoint). This is the most
+          critical check - without a valid API key, the agent cannot send
+          data to CloudZero.
+
+          Pass: API returns HTTP 200 with valid response
+          Fail: Connection error, authentication failure, or invalid response
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      k8s_version:
+        description: |
+          Retrieves and reports the Kubernetes cluster version (Major.Minor)
+          by querying the Kubernetes Discovery API. The version is included
+          in telemetry data sent to CloudZero.
+
+          Pass: Successfully queries K8s API and extracts version
+          Fail: Cannot connect to K8s API or parse version info
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      k8s_namespace:
+        description: |
+          Detects and reports the namespace where the CloudZero agent is
+          running. Uses the NAMESPACE environment variable set via the
+          Kubernetes Downward API.
+
+          Pass: Namespace environment variable is set
+          Fail: Cannot determine namespace from environment
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      k8s_provider:
+        description: |
+          Detects the cloud provider/infrastructure by examining the node's
+          provider ID (e.g., "aws://us-east-1/i-1234567890abcdef0"). Queries
+          the K8s API to get the node where the validator pod is running.
+
+          Pass: Successfully retrieves provider ID from node spec
+          Fail: Cannot query pod/node or provider ID unavailable
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      kube_state_metrics_reachable:
+        description: |
+          Validates connectivity to Kube State Metrics (KSM) and confirms
+          required metrics are available. Makes HTTP request to KSM /metrics
+          endpoint and checks for presence of configured required metrics.
+
+          Pass: KSM endpoint returns HTTP 200 and all required metrics present
+          Fail: Cannot reach KSM, non-200 response, or required metrics missing
+
+          Note: Retries up to 12 times with 10-second intervals (~2 min total)
+          to handle KSM startup timing.
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      prometheus_version:
+        description: |
+          Retrieves and reports the Prometheus binary version by executing
+          the prometheus binary with the --version flag. The version is
+          included in telemetry data.
+
+          Pass: Prometheus binary executes and returns version info
+          Fail: Binary not found, not executable, or execution fails
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      scrape_cfg:
+        description: |
+          Validates that Prometheus scrape configuration files exist and are
+          readable. Checks all configured scrape config file paths.
+
+          Pass: All configured config files exist and can be read
+          Fail: Config file missing, unreadable, or no configs configured
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      webhook_server_reachable:
+        description: |
+          Validates that the Kubernetes admission webhook (insights-admission)
+          can be reached and responds to validation requests. Sends a test
+          Pod admission request to the webhook endpoint.
+
+          Pass: Webhook returns HTTP 200 to test admission request
+          Fail: Cannot reach webhook or validation request fails
+
+          Note: Retries up to 6 times with exponential backoff (~70s total)
+          to handle webhook startup timing.
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      istio_xcluster_lb:
+        description: |
+          Detects Istio service mesh presence and validates cross-cluster
+          load balancing configuration. Supports both sidecar and ambient
+          mesh modes.
+
+          No Istio: Always passes (not in mesh)
+          Sidecar mode: Validates cluster ID matches Istio's effective cluster ID
+          Ambient mode: Requires explicit integrations.istio.clusterID setting
+
+          Pass: No Istio, or Istio cluster ID configuration is correct
+          Fail: Cluster ID mismatch (can cause cross-cluster traffic issues)
+
+          Note: Only relevant for Istio service mesh users. For non-Istio
+          clusters, this check passes immediately.
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+      agent_settings:
+        description: |
+          Validates agent configuration settings. (Currently not implemented -
+          reserved for future use.)
+
+          Pass: N/A (not implemented)
+          Fail: N/A (not implemented)
+        allOf:
+          - $ref: "#/$defs/com.cloudzero.agent.CheckConfig"
+
 type: object
 additionalProperties: false
 required:
@@ -202,9 +344,33 @@ properties:
 
       The name of the Kubernetes cluster.
   region:
-    type:
-      - string
-      - "null"
+    oneOf:
+      - type: string
+        minLength: 4
+        # Cloud providers use distinct region naming conventions:
+        #
+        #   AWS:   {area}-{locality}-{number}    e.g., us-east-1, ap-southeast-2
+        #   GCP:   {area}-{locality}{number}     e.g., us-central1, europe-west10
+        #   Azure: {lowercase words}[{number}]   e.g., eastus, westeurope, eastus2
+        #
+        # The pattern uses alternation to cover all three:
+        #
+        #   [a-z]+-[a-z]+-?[0-9]+   AWS/GCP: lowercase alpha groups separated
+        #                            by hyphens, ending with digits. The optional
+        #                            hyphen before the digits handles both AWS
+        #                            (us-east-1) and GCP (us-central1).
+        #
+        #   [a-z]{4,}[0-9]*         Azure: lowercase alpha (no hyphens), at
+        #                            least 4 characters, with optional trailing
+        #                            digits (e.g., eastus2).
+        #
+        # This intentionally rejects:
+        #   - Availability zones (us-east-1a, us-central1-a)
+        #   - Display names (US East, "US East (N. Virginia)")
+        #   - Uppercase, spaces, underscores
+        #   - Hyphenated strings without trailing digits (test-region)
+        pattern: "^(([a-z]+-[a-z]+-?[0-9]+)|([a-z]{4,}[0-9]*))$"
+      - type: "null"
     description: |
       *WARNING*: use of this property is generally discouraged as in most cases
       it can be detected automatically.
@@ -515,6 +681,27 @@ properties:
                   For details, see the Kubernetes documentation on security contexts:
                   https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
                 $ref: "#/$defs/io.k8s.api.core.v1.PodSecurityContext"
+          kubeState:
+            description: |
+              KubeState plugin configuration. When enabled, the CloudZero Alloy
+              KubeState plugin replaces the kube-state-metrics (KSM) subchart for
+              collecting Kubernetes state metrics. Requires clustered mode and
+              kubeStateMetrics.enabled to be false.
+            additionalProperties: false
+            type: object
+            properties:
+              enabled:
+                description: |
+                  Enable the KubeState plugin in Alloy to replace the
+                  kube-state-metrics subchart. When true, kubeStateMetrics.enabled
+                  must be false.
+                type: boolean
+              reemitInterval:
+                description: |
+                  How often to re-emit metrics for all watched resources. Ensures
+                  metrics are periodically refreshed even when no Kubernetes events
+                  occur. Set to "0" to disable.
+                $ref: "#/$defs/com.cloudzero.agent.duration"
           clusteredNode:
             description: |
               The agent clustered node component configuration for Alloy-based metrics collection.
@@ -524,8 +711,19 @@ properties:
             properties:
               image:
                 description: |
-                  Container image configuration for Grafana Alloy.
+                  Container image override for the Alloy container. By default, the Alloy
+                  container uses the agent image (components.agent.image) which embeds the
+                  CloudZero Alloy binary. Set repository/tag here to override separately.
                 $ref: "#/$defs/com.cloudzero.agent.image"
+              command:
+                description: |
+                  Command to run in the Alloy container.
+                  - null (default): Uses /app/cloudzero-alloy (CloudZero Alloy binary)
+                  - [] (empty array): Uses the image's default entrypoint
+                  - ["/custom/path"]: Uses the specified command
+                oneOf:
+                  - $ref: "#/$defs/io.k8s.api.core.v1.Container/properties/command"
+                  - type: "null"
               resources:
                 description: |
                   Resource requirements and limits for the Alloy container.
@@ -640,6 +838,23 @@ properties:
                     - type: "null"
                     - $ref: "#/$defs/com.cloudzero.agent.AutoscalingSpec"
 
+          # Conditional: KubeState plugin requires clustered mode
+          #
+          # If kubeState.enabled is true, then mode must be "clustered".
+          # The KubeState plugin runs inside Alloy, which only operates in
+          # clustered mode.
+          - if:
+              properties:
+                kubeState:
+                  type: object
+                  properties:
+                    enabled:
+                      const: true
+            then:
+              properties:
+                mode:
+                  const: clustered
+
       validator:
         description: |
           The validator component performs validation checks and notifies the platform
@@ -666,6 +881,27 @@ properties:
               For details, see the Kubernetes documentation on resource management:
               https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
             $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+          checks:
+            description: |
+              Per-stage check configuration. Each check can be configured with:
+              - type: "required" (default), "optional", or "informative"
+              - enabled: true (default) or false
+
+              Check types control how failures are handled:
+              - required: failures cause non-zero exit code
+              - optional: failures are logged but don't affect exit code
+              - informative: information gathering only, always passes
+            type: object
+            additionalProperties: false
+            properties:
+              pre-start:
+                $ref: "#/$defs/com.cloudzero.agent.StageChecks"
+              post-start:
+                $ref: "#/$defs/com.cloudzero.agent.StageChecks"
+              pre-stop:
+                $ref: "#/$defs/com.cloudzero.agent.StageChecks"
+              config-load:
+                $ref: "#/$defs/com.cloudzero.agent.StageChecks"
 
       miscellaneous:
         description: |
@@ -1294,14 +1530,19 @@ properties:
               cadvisor scrape job configuration.
             type: object
             additionalProperties: false
-            required:
-              - enabled
             properties:
               enabled:
                 description: |
-                  Whether to enable the cadvisor scrape job.
-                type: boolean
-                enum: [true]
+                  DEPRECATED: Use integrations.cAdvisor.enabled instead.
+
+                  Whether to enable the cadvisor scrape job. If set to a boolean
+                  value, it takes precedence over integrations.cAdvisor.enabled.
+                  If null (default), falls back to integrations.cAdvisor.enabled.
+                oneOf:
+                  - type: "null"
+                  - type: boolean
+                default: null
+                deprecated: true
               scrapeInterval:
                 description: |
                   Scrape interval for nodesCadvisor job.
@@ -1895,13 +2136,18 @@ properties:
               Annotations to add to the webhook server pods.
             $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
           suppressIstioAnnotations:
+            deprecated: true
             description: |
-              Whether to suppress Istio-related annotations on webhook server pods.
-              When false (default), the sidecar.istio.io/inject: "false" annotation is added
-              to prevent Istio sidecar injection which can interfere with webhook TLS.
-              Set to true to disable this behavior and allow Istio sidecar injection.
-            type: boolean
-            default: false
+              **DEPRECATED**: This setting no longer has any effect and will be removed
+              in a future release.
+
+              Istio integration is now controlled via `integrations.istio.enabled` and
+              the chart automatically detects Istio and applies appropriate port exclusion
+              annotations when needed. See helm/docs/istio.md for details.
+            oneOf:
+              - type: "null"
+              - type: boolean
+            default: null
       volumeMounts:
         description: |
           Additional volume mounts to add to the insights controller pods.
@@ -1985,6 +2231,130 @@ properties:
           - "null"
         description: |
           Override the name of the ConfigMap used for configuration.
+
+  integrations:
+    type: object
+    additionalProperties: false
+    description: |
+      Integration configuration for external systems and service meshes.
+
+      These settings control how the CloudZero Agent integrates with other
+      infrastructure components like Istio service mesh.
+    properties:
+      istio:
+        type: object
+        additionalProperties: false
+        description: |
+          Istio service mesh integration settings.
+
+          When Istio is detected or enabled, the chart:
+          - Creates a DestinationRule and VirtualService for cluster-local service
+            isolation (prevents cross-cluster load balancing in multi-cluster mesh environments)
+          - Allows Istio sidecar injection on webhook pods
+
+          For more details, see helm/docs/istio.md
+        properties:
+          enabled:
+            oneOf:
+              - type: "null"
+              - type: boolean
+            default: null
+            description: |
+              Controls Istio integration behavior.
+
+              Possible values:
+              - null (default): Auto-detect Istio via CRD presence in the cluster
+              - true: Force Istio integration enabled
+              - false: Force Istio integration disabled
+          clusterID:
+            type:
+              - string
+              - "null"
+            default: null
+            description: |
+              Istio cluster ID for multicluster mesh environments.
+
+              In an Istio multicluster mesh, each cluster has a unique cluster ID that
+              identifies it within the mesh. This value is used by the DestinationRule
+              to pin traffic to pods in the local cluster using the
+              `topology.istio.io/cluster` label that Istio automatically adds to pods.
+
+              If not set, falls back to the top-level `clusterName` value. At least one
+              of these must be set when Istio integration is enabled.
+
+              Note that, if cross-cluster load balancing is enabled on your cluster,
+              this *MUST* be set to the correct value.
+
+              To find your Istio cluster ID, use istioctl to query any Istio-injected
+              pod's bootstrap config:
+
+                istioctl proxy-config bootstrap <pod>.<namespace> -o yaml | \
+                  grep 'CLUSTER_ID:' | awk '{print $2}'
+
+              Or check the istiod deployment (assumes istio-system namespace):
+
+                kubectl -n istio-system get deploy istiod \
+                  -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="CLUSTER_ID")].value}'
+      cAdvisor:
+        type: object
+        additionalProperties: false
+        description: |
+          cAdvisor container metrics integration settings.
+
+          Controls how cAdvisor metrics are collected from cluster nodes.
+        properties:
+          enabled:
+            type: boolean
+            default: true
+            description: |
+              Enable cAdvisor metrics collection.
+              Default: true
+          port:
+            type: integer
+            default: 10250
+            minimum: 1
+            maximum: 65535
+            description: |
+              Kubelet port for direct kubelet connections.
+              Used by both federated mode and direct node access mode.
+              The standard default is 10250, but can be changed via --port on kubelet.
+          tls:
+            type: object
+            additionalProperties: false
+            description: |
+              TLS configuration for cAdvisor metrics collection.
+            properties:
+              insecureSkipVerify:
+                type: boolean
+                default: true
+                description: |
+                  Skip TLS certificate verification when scraping cAdvisor metrics.
+
+                  Default: true (required for most clusters where certificates may not
+                  have proper SANs or are self-signed).
+
+                  Set to false only if you have proper TLS certificates configured and
+                  want strict certificate verification.
+          directNodeAccess:
+            type: object
+            additionalProperties: false
+            description: |
+              Direct node access configuration for cAdvisor metrics collection.
+
+              When enabled, the agent connects directly to node kubelets instead of
+              routing through the Kubernetes API server proxy. This removes the need
+              for the dangerous nodes/proxy RBAC permission.
+
+              Requirements:
+              - Network connectivity from collector pod to all nodes on the kubelet port
+              - Will not work with strict NetworkPolicies blocking pod-to-node traffic
+            properties:
+              enabled:
+                type: boolean
+                default: false
+                description: |
+                  Enable direct node access mode.
+                  Default: false (uses API server proxy for maximum compatibility)
 
   kubeStateMetrics:
     type: object

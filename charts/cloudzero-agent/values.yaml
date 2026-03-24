@@ -206,6 +206,78 @@ defaults:
     runAsGroup: 65534
     fsGroup: 65534
 
+# Integration configuration for external systems and service meshes.
+integrations:
+  # Istio service mesh integration settings.
+  istio:
+    # Controls Istio integration behavior.
+    #
+    # Possible values:
+    # - null (default): Auto-detect Istio via CRD presence in the cluster
+    # - true: Force Istio integration enabled
+    # - false: Force Istio integration disabled
+    enabled: null
+    # Istio cluster ID for multicluster mesh environments.
+    #
+    # In an Istio multicluster mesh, each cluster has a unique cluster ID that
+    # identifies it within the mesh. This value is used by the DestinationRule
+    # to pin traffic to pods in the local cluster using the
+    # `topology.istio.io/cluster` label that Istio automatically adds to pods.
+    #
+    # If not set, falls back to the top-level `clusterName` value. At least one
+    # of these must be set when Istio integration is enabled.
+    #
+    # Note that, if cross-cluster load balancing is enabled on your cluster,
+    # this *MUST* be set to the correct value.
+    #
+    # To find your Istio cluster ID, use istioctl to query any Istio-injected
+    # pod's bootstrap config:
+    #
+    #   istioctl proxy-config bootstrap <pod>.<namespace> -o yaml | \
+    #     grep 'CLUSTER_ID:' | awk '{print $2}'
+    #
+    # Or check the istiod deployment (assumes istio-system namespace):
+    #
+    #   kubectl -n istio-system get deploy istiod \
+    #     -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="CLUSTER_ID")].value}'
+    clusterID: null
+
+  # cAdvisor container metrics integration settings.
+  cAdvisor:
+    # Enable cAdvisor metrics collection.
+    # Default: true
+    enabled: true
+
+    # Kubelet port for direct kubelet connections.
+    # Used by both federated mode and direct node access mode.
+    # The standard default is 10250, but can be changed via --port on kubelet.
+    port: 10250
+
+    # TLS configuration for cAdvisor metrics collection.
+    tls:
+      # Skip TLS certificate verification when scraping cAdvisor metrics.
+      #
+      # Default: true (required for most clusters where certificates may not
+      # have proper SANs or are self-signed).
+      #
+      # Set to false only if you have proper TLS certificates configured and
+      # want strict certificate verification.
+      insecureSkipVerify: true
+
+    # Direct node access configuration for cAdvisor metrics collection.
+    #
+    # When enabled, the agent connects directly to node kubelets instead of
+    # routing through the Kubernetes API server proxy. This removes the
+    # dangerous nodes/proxy RBAC permission from the ClusterRole.
+    #
+    # Requirements:
+    # - Network connectivity from collector pod to all nodes on the kubelet port
+    # - Will not work with strict NetworkPolicies blocking pod-to-node traffic
+    directNodeAccess:
+      # Enable direct node access mode.
+      # Default: false (uses API server proxy for maximum compatibility)
+      enabled: false
+
 # Component-specific configuration settings.
 components:
   # The agent here refers to the CloudZero Agent, which is the component that
@@ -216,7 +288,7 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.2.9  # <- Software release corresponding to this chart version.
+      tag: 1.2.10  # <- Software release corresponding to this chart version.
 
     # Agent deployment mode. Controls how the agent collects and processes metrics.
     #
@@ -232,9 +304,9 @@ components:
     #   per node. This is equivalent to setting defaults.federation.enabled to true.
     #   Uses Prometheus in server mode for metrics collection.
     #
-    # - "clustered": EXPERIMENTAL. Uses Grafana Alloy instead of Prometheus for
-    #   metrics collection. Alloy provides better performance and native
-    #   horizontal scalability.
+    # - "clustered": EXPERIMENTAL. Uses the embedded CloudZero Alloy binary for
+    #   metrics collection instead of Prometheus. Alloy provides better
+    #   performance and native horizontal scalability.
     #
     # - null means automatic mode (currently defaults to "agent").
     mode: null
@@ -331,13 +403,57 @@ components:
           memory: "1024Mi"
           cpu: "1000m"
 
+    # KubeState plugin configuration.
+    #
+    # When enabled, the CloudZero Alloy KubeState plugin replaces the
+    # kube-state-metrics (KSM) subchart for collecting Kubernetes state
+    # metrics. The KubeState plugin runs inside the Alloy process and
+    # watches the Kubernetes API directly, eliminating the need for a
+    # separate KSM deployment.
+    #
+    # Requirements:
+    # - components.agent.mode must be set to "clustered"
+    # - kubeStateMetrics.enabled must be set to false
+    #
+    # The plugin produces KSM-compatible metrics (kube_node_info,
+    # kube_pod_info, etc.) and forwards them directly through the Alloy
+    # pipeline without HTTP scraping.
+    kubeState:
+      enabled: false
+      # How often to re-emit metrics for all watched resources. This ensures
+      # metrics are periodically refreshed even when no Kubernetes events occur,
+      # preventing staleness in the remote write pipeline.
+      #
+      # Set to "0" to disable periodic re-emission (metrics are only emitted
+      # on Kubernetes add/update/delete events).
+      reemitInterval: 5m
+
     # The agent clustered node component configuration.
     # Only applies when components.agent.mode is set to "clustered".
     clusteredNode:
-      # Container image configuration for Grafana Alloy.
+      # Container image override for the Alloy container.
+      #
+      # By default, the CloudZero Alloy binary is embedded in the agent
+      # image and the Alloy container uses the same image as other agent
+      # containers (components.agent.image). Set repository/tag here only
+      # if you need to override the Alloy container image separately.
       image:
-        repository: docker.io/grafana/alloy
-        tag: v1.11.3
+        repository: null
+        tag: null
+      # Command to run in the Alloy container.
+      #
+      # - null (default): Uses /app/cloudzero-alloy (CloudZero Alloy binary)
+      # - []: Uses the image's default entrypoint (for official Alloy image)
+      # - ["/custom/path"]: Uses the specified command
+      #
+      # To use the official Grafana Alloy image instead of the embedded binary:
+      #
+      #   image:
+      #     repository: docker.io/grafana/alloy
+      #     tag: vX.Y.Z
+      #   command: []
+      #
+      command:
 
       # Resource requirements and limits for the container.
       #
@@ -377,6 +493,39 @@ components:
   # The validator component performs validation checks and notifies the platform
   # of installation status changes.
   validator:
+    # Per-stage, per-check configuration for validator diagnostics.
+    #
+    # Each check value is one of:
+    #   - required: failures cause non-zero exit code
+    #   - optional: failures are logged but don't affect exit code
+    #   - informative: information gathering only, always passes
+    #   - disabled: check is not run at all
+    #
+    # To override a check, set its value in your values override file:
+    #   components:
+    #     validator:
+    #       checks:
+    #         pre-start:
+    #           api_key_valid: optional  # Make non-blocking for testing
+    checks:
+      pre-start:
+        api_key_valid: optional
+        istio_xcluster_lb: required
+      post-start:
+        k8s_version: informative
+        k8s_namespace: informative
+        k8s_provider: informative
+        kube_state_metrics_reachable: optional
+        prometheus_version: informative
+        scrape_cfg: optional
+        webhook_server_reachable: optional
+      pre-stop: {}
+      config-load:
+        api_key_valid: optional
+        k8s_version: informative
+        k8s_namespace: informative
+        k8s_provider: informative
+        kube_state_metrics_reachable: optional
     # Annotations to add to the validator component.
     #
     # These annotations are merged with defaults.annotations.
@@ -598,7 +747,6 @@ components:
         limits:
           memory: "1024Mi"
           cpu: "2000m"
-
   # Settings for the webhook server.
   webhookServer:
     replicas: null
@@ -776,9 +924,12 @@ prometheusConfig:
       enabled: true
       # Scrape interval for kubeStateMetrics job
       scrapeInterval: 60s
-    # -- Enables the cadvisor scrape job.
+    # -- DEPRECATED: Use integrations.cAdvisor.enabled instead.
+    # Enables the cadvisor scrape job. If set to a boolean value, it takes
+    # precedence over integrations.cAdvisor.enabled. If null (default), falls
+    # back to integrations.cAdvisor.enabled.
     cadvisor:
-      enabled: true
+      enabled: null
       # Scrape interval for nodesCadvisor job
       scrapeInterval: 60s
     # -- Enables the prometheus scrape job.
@@ -1213,13 +1364,6 @@ insightsController:
     deploymentAnnotations: {}
     # Annotations to add to the webhook server pods.
     podAnnotations: {}
-    # Whether to suppress Istio-related annotations on webhook server pods. When
-    # false (default), the sidecar.istio.io/inject: "false" annotation is added
-    # to prevent Istio sidecar injection which can interfere with webhook TLS.
-    # Set to true to disable this behavior and allow Istio sidecar injection.
-    # For additional information, see:
-    # https://github.com/Cloudzero/cloudzero-charts/blob/develop/charts/cloudzero-agent/docs/istio.md
-    suppressIstioAnnotations: false
   # Additional volume mounts to add to the insights controller pods.
   volumeMounts: []
   # Additional volumes to add to the insights controller pods.
