@@ -302,11 +302,12 @@ additionalProperties: false
 required:
   - host
 
-# Enforce that exactly one of apiKey or existingSecretName must be set
+# Enforce that exactly one of apiKey, existingSecretName, or apiKeyVolume must be set
 # anyOf ensures at least one is required, oneOf ensures only one has a non-null value
 anyOf:
   - required: [apiKey]
   - required: [existingSecretName]
+  - required: [apiKeyVolume]
 oneOf:
   - properties:
       apiKey:
@@ -314,11 +315,22 @@ oneOf:
         pattern: "^[a-zA-Z0-9-_.~!*'();]+$"
       existingSecretName:
         type: "null"
+      apiKeyVolume:
+        type: "null"
   - properties:
       apiKey:
         type: "null"
       existingSecretName:
         type: string
+      apiKeyVolume:
+        type: "null"
+  - properties:
+      apiKey:
+        type: "null"
+      existingSecretName:
+        type: "null"
+      apiKeyVolume:
+        $ref: "#/$defs/io.k8s.api.core.v1.Volume"
 
 properties:
   cloudAccountId:
@@ -393,6 +405,13 @@ properties:
       - "null"
     description: |
       The name of an existing Kubernetes secret containing the API key.
+  apiKeyVolume:
+    oneOf:
+      - $ref: "#/$defs/io.k8s.api.core.v1.Volume"
+      - type: "null"
+    description: |
+      A custom Kubernetes Volume definition to mount the CloudZero API key
+      from an external source such as Secrets Store CSI Driver.
   nameOverride:
     deprecated: true
     type:

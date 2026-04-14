@@ -1,0 +1,159 @@
+suite: test apiKeyVolume support
+templates:
+  - templates/aggregator-deploy.yaml
+  - templates/agent-deploy.yaml
+  - templates/agent-daemonset.yaml
+  - templates/config-loader-job.yaml
+  - templates/webhook-deploy.yaml
+  - templates/backfill-job.yaml
+tests:
+  - it: should mount a custom CSI volume for the API key in the aggregator deployment
+    set:
+      clusterName: "test-cluster"
+      cloudAccountId: "123456789"
+      region: "us-east-1"
+      apiKey: null
+      existingSecretName: null
+      apiKeyVolume:
+        name: csi-api-key
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "cloudzero-api-key-spc"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: csi-api-key
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "cloudzero-api-key-spc"
+        template: templates/aggregator-deploy.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: csi-api-key
+            mountPath: /etc/config/secrets/
+            subPath: ""
+            readOnly: true
+        template: templates/aggregator-deploy.yaml
+
+  - it: should mount a custom CSI volume for the API key in the main agent deployment
+    set:
+      clusterName: "test-cluster"
+      cloudAccountId: "123456789"
+      region: "us-east-1"
+      apiKey: null
+      existingSecretName: null
+      apiKeyVolume:
+        name: csi-api-key
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "cloudzero-api-key-spc"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: csi-api-key
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "cloudzero-api-key-spc"
+        template: templates/agent-deploy.yaml
+      - contains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            name: csi-api-key
+            mountPath: /etc/config/secrets/
+            subPath: ""
+            readOnly: true
+        template: templates/agent-deploy.yaml
+
+  - it: should mount a custom CSI volume for the API key in webhook and config jobs
+    set:
+      clusterName: "test-cluster"
+      cloudAccountId: "123456789"
+      region: "us-east-1"
+      apiKey: null
+      existingSecretName: null
+      apiKeyVolume:
+        name: csi-api-key
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "cloudzero-api-key-spc"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: csi-api-key
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "cloudzero-api-key-spc"
+        template: templates/webhook-deploy.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: csi-api-key
+            mountPath: /etc/config/secrets/
+            subPath: ""
+            readOnly: true
+        template: templates/webhook-deploy.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: csi-api-key
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "cloudzero-api-key-spc"
+        template: templates/config-loader-job.yaml
+
+  - it: should mount a custom CSI volume for the API key in federated mode and backfill
+    set:
+      clusterName: "test-cluster"
+      cloudAccountId: "123456789"
+      region: "us-east-1"
+      apiKey: null
+      existingSecretName: null
+      defaults:
+        federation:
+          enabled: true
+      apiKeyVolume:
+        name: csi-api-key
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "cloudzero-api-key-spc"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: csi-api-key
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "cloudzero-api-key-spc"
+        template: templates/agent-daemonset.yaml
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.volumes
+          content:
+            name: csi-api-key
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "cloudzero-api-key-spc"
+        template: templates/backfill-job.yaml

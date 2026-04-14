@@ -201,11 +201,7 @@ spec:
             name: {{ .Release.Name }}-daemonset-cm
         - name: processed-config-volume
           emptyDir: {}
-        {{- if or .Values.existingSecretName .Values.apiKey }}
-        - name: cloudzero-api-key
-          secret:
-            secretName: {{ include "cloudzero-agent.secretName" . }}
-        {{- end }}
+        {{- include "cloudzero-agent.apiKeyVolume" . | nindent 8 }}
         - name: cloudzero-agent-storage-volume
           emptyDir:
           {{- if .Values.server.emptyDir.sizeLimit }}

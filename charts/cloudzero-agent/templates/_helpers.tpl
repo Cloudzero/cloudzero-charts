@@ -772,11 +772,44 @@ Name for the secret holding TLS certificates
 {{- end }}
 
 {{/*
+Whether an API key source has been configured.
+*/}}
+{{- define "cloudzero-agent.hasApiKeySource" -}}
+{{- if or .Values.existingSecretName .Values.apiKey .Values.apiKeyVolume -}}true{{- end -}}
+{{- end }}
+
+{{/*
+Name of the volume that exposes the API key.
+*/}}
+{{- define "cloudzero-agent.apiKeyVolumeName" -}}
+{{- if .Values.apiKeyVolume -}}
+{{- .Values.apiKeyVolume.name -}}
+{{- else -}}
+cloudzero-api-key
+{{- end -}}
+{{- end }}
+
+{{/*
+Volume definition for the API key.
+*/}}
+{{- define "cloudzero-agent.apiKeyVolume" -}}
+{{- if include "cloudzero-agent.hasApiKeySource" . -}}
+{{- if .Values.apiKeyVolume -}}
+{{ toYaml (list .Values.apiKeyVolume) }}
+{{- else -}}
+- name: {{ include "cloudzero-agent.apiKeyVolumeName" . }}
+  secret:
+    secretName: {{ include "cloudzero-agent.secretName" . }}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 Volume mount for the API key
 */}}
 {{- define "cloudzero-agent.apiKeyVolumeMount" -}}
-{{- if or .Values.existingSecretName .Values.apiKey -}}
-- name: cloudzero-api-key
+{{- if include "cloudzero-agent.hasApiKeySource" . -}}
+- name: {{ include "cloudzero-agent.apiKeyVolumeName" . }}
   mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
   subPath: ""
   readOnly: true
