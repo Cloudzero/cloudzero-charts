@@ -775,33 +775,7 @@ Name for the secret holding TLS certificates
 Whether an API key source has been configured.
 */}}
 {{- define "cloudzero-agent.hasApiKeySource" -}}
-{{- if or .Values.existingSecretName .Values.apiKey .Values.apiKeyVolume -}}true{{- end -}}
-{{- end }}
-
-{{/*
-Name of the volume that exposes the API key.
-*/}}
-{{- define "cloudzero-agent.apiKeyVolumeName" -}}
-{{- if .Values.apiKeyVolume -}}
-{{- .Values.apiKeyVolume.name -}}
-{{- else -}}
-cloudzero-api-key
-{{- end -}}
-{{- end }}
-
-{{/*
-Volume definition for the API key.
-*/}}
-{{- define "cloudzero-agent.apiKeyVolume" -}}
-{{- if include "cloudzero-agent.hasApiKeySource" . -}}
-{{- if .Values.apiKeyVolume -}}
-{{ toYaml (list .Values.apiKeyVolume) }}
-{{- else -}}
-- name: {{ include "cloudzero-agent.apiKeyVolumeName" . }}
-  secret:
-    secretName: {{ include "cloudzero-agent.secretName" . }}
-{{- end -}}
-{{- end -}}
+{{- if or .Values.existingSecretName .Values.apiKey -}}true{{- end -}}
 {{- end }}
 
 {{/*
@@ -809,11 +783,29 @@ Volume mount for the API key
 */}}
 {{- define "cloudzero-agent.apiKeyVolumeMount" -}}
 {{- if include "cloudzero-agent.hasApiKeySource" . -}}
-- name: {{ include "cloudzero-agent.apiKeyVolumeName" . }}
+- name: cloudzero-api-key
   mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
   subPath: ""
   readOnly: true
 {{- end }}
+{{- end }}
+
+{{/*
+Additional volume mounts for user-provided extensions.
+*/}}
+{{- define "cloudzero-agent.extraVolumeMounts" -}}
+{{- with .Values.extraVolumeMounts -}}
+{{ toYaml . }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Additional volumes for user-provided extensions.
+*/}}
+{{- define "cloudzero-agent.extraVolumes" -}}
+{{- with .Values.extraVolumes -}}
+{{ toYaml . }}
+{{- end -}}
 {{- end }}
 
 {{/*

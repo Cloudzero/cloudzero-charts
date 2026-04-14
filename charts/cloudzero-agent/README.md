@@ -150,9 +150,10 @@ Below is a summary of these settings and how they are used:
 | cloudAccountId     | string | `nil`                 | Account ID in AWS, subscription ID in Azure, or project number in GCP. Auto-detected via IMDS when available; required if IMDS is blocked.           |
 | clusterName        | string | `nil`                 | Name of the cluster (RFC 1123). Mandatory on EKS and AKS; auto-detected on GKE; required on any provider if IMDS is blocked.                         |
 | host               | string | `"api.cloudzero.com"` | CloudZero host to send metrics to. Override only for non-production or custom environments.                                                          |
-| apiKey             | string | `nil`                 | CloudZero API key used for exporting metrics. Required unless `existingSecretName` or `apiKeyVolume` is set.                                         |
-| existingSecretName | string | `nil`                 | Name of the Secret that contains the CloudZero API key. Required when not providing the API key via `apiKey` or `apiKeyVolume`.                      |
-| apiKeyVolume       | object | `nil`                 | Custom Kubernetes `Volume` definition for mounting the CloudZero API key from an external source such as Secrets Store CSI Driver.                    |
+| apiKey             | string | `nil`                 | CloudZero API key used for exporting metrics. Required unless `existingSecretName` is set.                                                           |
+| existingSecretName | string | `nil`                 | Name of the Secret that contains the CloudZero API key. Required when not providing the API key via `apiKey`.                                        |
+| extraVolumeMounts  | array  | `[]`                  | Additional Kubernetes `VolumeMount` entries to add to the CloudZero workloads.                                                                       |
+| extraVolumes       | array  | `[]`                  | Additional Kubernetes `Volume` entries to add to the CloudZero workloads.                                                                             |
 | region             | string | `nil`                 | Cloud provider region (e.g., `us-east-1`, `eastus`). Auto-detected via IMDS; required if IMDS is blocked or you want to override the detected value. |
 
 > It is recommended to use a `values-override.yaml` file for customizations. For details, refer to the [official Helm documentation](https://helm.sh/docs/helm/helm_install/#synopsis).
@@ -239,7 +240,7 @@ It's important to note that CloudZero has taken great care to ensure that the se
 
 The chart requires a CloudZero API key to send metric data. Admins can retrieve API keys from the [CloudZero API keys page](https://app.cloudzero.com/organization/api-keys).
 
-The API key is typically stored in a Secret in the cluster. The `cloudzero-agent` chart will create a Secret if the API key is provided via the `apiKey` argument. Alternatively, the API key can be stored in a Secret external to the chart via `existingSecretName`, or mounted from a custom Kubernetes `Volume` via `apiKeyVolume` for integrations such as Secrets Store CSI Driver. If creating a Secret external to the chart, ensure the Secret is in the same namespace as the chart and follows this format:
+The API key is typically stored in a Secret in the cluster. The `cloudzero-agent` chart will create a Secret if the API key is provided via the `apiKey` argument. Alternatively, the API key can be stored in a Secret external to the chart; this Secret name would then be set as the `existingSecretName` argument. If creating a Secret external to the chart, ensure the Secret is in the same namespace as the chart and follows this format:
 
 **Example User-Created Secret Content**
 
@@ -255,6 +256,8 @@ kubectl create secret -n example-namespace generic example-secret-name --from-li
 ```
 
 The secret can then be used with `existingSecretName`.
+
+For advanced integrations, you can also use `extraVolumes` and `extraVolumeMounts` to attach additional volumes such as CSI-backed secrets to the CloudZero workloads.
 
 ### Update Helm Chart
 

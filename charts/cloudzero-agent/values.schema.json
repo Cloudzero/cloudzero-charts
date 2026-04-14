@@ -5535,9 +5535,6 @@
     },
     {
       "required": ["existingSecretName"]
-    },
-    {
-      "required": ["apiKeyVolume"]
     }
   ],
   "oneOf": [
@@ -5549,9 +5546,6 @@
         },
         "existingSecretName": {
           "type": "null"
-        },
-        "apiKeyVolume": {
-          "type": "null"
         }
       }
     },
@@ -5562,22 +5556,6 @@
         },
         "existingSecretName": {
           "type": "string"
-        },
-        "apiKeyVolume": {
-          "type": "null"
-        }
-      }
-    },
-    {
-      "properties": {
-        "apiKey": {
-          "type": "null"
-        },
-        "existingSecretName": {
-          "type": "null"
-        },
-        "apiKeyVolume": {
-          "$ref": "#/$defs/io.k8s.api.core.v1.Volume"
         }
       }
     }
@@ -5730,10 +5708,26 @@
     "apiKey": {
       "type": ["string", "null"]
     },
-    "apiKeyVolume": {
+    "extraVolumeMounts": {
       "oneOf": [
         {
-          "$ref": "#/$defs/io.k8s.api.core.v1.Volume"
+          "items": {
+            "$ref": "#/$defs/io.k8s.api.core.v1.VolumeMount"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extraVolumes": {
+      "oneOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/io.k8s.api.core.v1.Volume"
+          },
+          "type": "array"
         },
         {
           "type": "null"
