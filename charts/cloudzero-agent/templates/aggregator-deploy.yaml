@@ -80,9 +80,12 @@ spec:
             - name: port-collector
               containerPort: {{ .Values.aggregator.collector.port }}
           command: ["/app/cloudzero-collector", "-config", "{{ .Values.aggregator.mountRoot }}/config/config.yml"]
-          env:
-            - name: SERVER_PORT
-              value: "{{ .Values.aggregator.collector.port }}"
+          {{- include "cloudzero-agent.generateEnv" (dict
+              "env" (list
+                .Values.defaults.env
+                (list (dict "name" "SERVER_PORT" "value" (printf "%d" (int .Values.aggregator.collector.port))))
+              )
+            ) | nindent 10 }}
           volumeMounts:
             {{- include "cloudzero-agent.apiKeyVolumeMount" . | nindent 12 }}
             - name: aggregator-config-volume
@@ -90,20 +93,27 @@ spec:
               readOnly: true
             - name: aggregator-persistent-storage
               mountPath: {{ .Values.aggregator.mountRoot }}/data
+          {{- $collectorReadiness := mergeOverwrite (deepCopy .Values.aggregator.readinessProbe) (.Values.aggregator.collector.readinessProbe | default (dict)) -}}
+          {{- $collectorLiveness := mergeOverwrite (deepCopy .Values.aggregator.livenessProbe) (.Values.aggregator.collector.livenessProbe | default (dict)) }}
           readinessProbe:
             httpGet:
               path: /healthz
               port: {{ .Values.aggregator.collector.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: {{ $collectorReadiness.initialDelaySeconds }}
+            periodSeconds: {{ $collectorReadiness.periodSeconds }}
+            failureThreshold: {{ $collectorReadiness.failureThreshold }}
           livenessProbe:
             httpGet:
-              path: /healthz
+              # /livez has sticky-latch semantics — once the collector's
+              # error-rate tracker has observed an unhealthy evaluation, it
+              # stays 503 through the cooldown so liveness actually fires a
+              # restart rather than oscillating Ready / NotReady with
+              # /healthz. Readiness stays on /healthz so recovery is fast.
+              path: /livez
               port: {{ .Values.aggregator.collector.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            failureThreshold: 3
+            initialDelaySeconds: {{ $collectorLiveness.initialDelaySeconds }}
+            periodSeconds: {{ $collectorLiveness.periodSeconds }}
+            failureThreshold: {{ $collectorLiveness.failureThreshold }}
           {{- include "cloudzero-agent.generateResources" (include "cloudzero-agent.mergeStringOverwrite" (list
               (.Values.components.aggregator.collector.resources | default (dict))
               (.Values.aggregator.collector.resources | default (dict))
@@ -119,9 +129,12 @@ spec:
             - name: port-shipper
               containerPort: {{ .Values.aggregator.shipper.port }}
           command: ["/app/cloudzero-shipper", "-config", "{{ .Values.aggregator.mountRoot }}/config/config.yml"]
-          env:
-            - name: SERVER_PORT
-              value: "{{ .Values.aggregator.shipper.port }}"
+          {{- include "cloudzero-agent.generateEnv" (dict
+              "env" (list
+                .Values.defaults.env
+                (list (dict "name" "SERVER_PORT" "value" (printf "%d" (int .Values.aggregator.shipper.port))))
+              )
+            ) | nindent 10 }}
           volumeMounts:
             {{- include "cloudzero-agent.apiKeyVolumeMount" . | nindent 12 }}
             - name: aggregator-config-volume
@@ -129,20 +142,24 @@ spec:
               readOnly: true
             - name: aggregator-persistent-storage
               mountPath: {{ .Values.aggregator.mountRoot }}/data
+          {{- $shipperReadiness := mergeOverwrite (deepCopy .Values.aggregator.readinessProbe) (.Values.aggregator.shipper.readinessProbe | default (dict)) -}}
+          {{- $shipperLiveness := mergeOverwrite (deepCopy .Values.aggregator.livenessProbe) (.Values.aggregator.shipper.livenessProbe | default (dict)) }}
           readinessProbe:
             httpGet:
               path: /healthz
               port: {{ .Values.aggregator.shipper.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 3
+            initialDelaySeconds: {{ $shipperReadiness.initialDelaySeconds }}
+            periodSeconds: {{ $shipperReadiness.periodSeconds }}
+            failureThreshold: {{ $shipperReadiness.failureThreshold }}
           livenessProbe:
             httpGet:
+              # The shipper has no in-process error-rate tracker, so /livez
+              # would not exist here — stay on /healthz.
               path: /healthz
               port: {{ .Values.aggregator.shipper.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            failureThreshold: 3
+            initialDelaySeconds: {{ $shipperLiveness.initialDelaySeconds }}
+            periodSeconds: {{ $shipperLiveness.periodSeconds }}
+            failureThreshold: {{ $shipperLiveness.failureThreshold }}
           {{- include "cloudzero-agent.generateResources" (include "cloudzero-agent.mergeStringOverwrite" (list
               (.Values.components.aggregator.shipper.resources | default (dict))
               (.Values.aggregator.shipper.resources | default (dict))
@@ -175,11 +192,7 @@ spec:
             name: {{ template "cloudzero-agent.validatorConfigMapName" . }}
         - name: lifecycle-volume
           emptyDir: {}
-        {{- if or .Values.existingSecretName .Values.apiKey }}
-        - name: cloudzero-api-key
-          secret:
-            secretName: {{ include "cloudzero-agent.secretName" . }}
-        {{- end }}
+        {{- include "cloudzero-agent.apiKeyVolume" . | nindent 8 }}
         - name: aggregator-config-volume
           configMap:
             name: {{ include "cloudzero-agent.aggregator.name" . }}

@@ -302,23 +302,7 @@ additionalProperties: false
 required:
   - host
 
-# Enforce that exactly one of apiKey or existingSecretName must be set
-# anyOf ensures at least one is required, oneOf ensures only one has a non-null value
-anyOf:
-  - required: [apiKey]
-  - required: [existingSecretName]
-oneOf:
-  - properties:
-      apiKey:
-        type: string
-        pattern: "^[a-zA-Z0-9-_.~!*'();]+$"
-      existingSecretName:
-        type: "null"
-  - properties:
-      apiKey:
-        type: "null"
-      existingSecretName:
-        type: string
+# Root-level cross-field validations live in allOf below.
 
 properties:
   cloudAccountId:
@@ -461,6 +445,16 @@ properties:
         description: |
           Annotations to be added to all resources.
         $ref: "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/annotations"
+      env:
+        description: |
+          Additional environment variables to inject into every container the
+          chart manages. Merged with the chart's per-container env on a
+          last-wins-by-name basis. Canonical knob for routing chart traffic
+          through an HTTP(S) proxy (set HTTP_PROXY / HTTPS_PROXY / NO_PROXY
+          here) — also usable for any other env var needed across the chart.
+        type: array
+        items:
+          $ref: "#/$defs/io.k8s.api.core.v1.EnvVar"
       affinity:
         description: |
           Affinity settings to be added to all resources.
@@ -516,6 +510,23 @@ properties:
     additionalProperties: false
     type: object
     properties:
+      apiKey:
+        description: |
+          API key CSI configuration. Takes effect only when both top-level
+          apiKey and existingSecretName are null.
+        type: object
+        additionalProperties: false
+        properties:
+          secretProviderClass:
+            description: |
+              Name of a Kubernetes SecretProviderClass resource. When set, the
+              chart mounts the API key via the Secrets Store CSI Driver instead
+              of a Kubernetes Secret volume. The SecretProviderClass must be
+              created separately and configured to produce a file named after
+              serverConfig.containerSecretFileName at the mount path.
+            type:
+              - string
+              - "null"
       agent:
         description: |
           The CloudZero Agent.
@@ -1206,6 +1217,28 @@ properties:
         additionalProperties: false
         type: object
         properties:
+          enabled:
+            description: |
+              Whether to run the webhook server (admission controller for
+              resource metadata).
+
+              - "auto" (default): Let the chart decide. Currently equivalent to
+                true; a future release will make "auto" follow the KubeState
+                configuration.
+              - true: Always run the webhook server.
+              - false: Never run it (e.g. when the in-agent KubeState plugin
+                supplies metadata, or cluster policy disallows admission webhooks).
+
+              Takes effect only when the deprecated insightsController.enabled is
+              unset (null). When insightsController.enabled is explicitly set, it
+              takes precedence over this field.
+            default: auto
+            oneOf:
+              - type: "null"
+              - type: boolean
+              - type: string
+                enum:
+                  - auto
           autoscaling:
             description: |
               Horizontal Pod Autoscaler configuration for the webhook server.
@@ -1331,36 +1364,46 @@ properties:
 
       monitoring:
         description: |
-          Prometheus Operator monitoring integration.
+          Monitoring integration with the customer's Prometheus stack.
 
-          When enabled, the chart creates ServiceMonitor and PrometheusRule CRDs
-          that allow the Prometheus Operator to automatically discover and scrape
-          CloudZero Agent metrics and evaluate pre-configured alert rules.
-
-          Regardless of this setting, prometheus.io/* annotations are always added
-          to Services for customers using standard Prometheus service discovery.
+          The chart integrates two ways: via the Prometheus Operator (ServiceMonitor
+          + PrometheusRule CRDs) and/or via prometheus.io/* annotations on Services.
+          monitoring.enabled turns it on; monitoring.discovery.method selects which.
         additionalProperties: false
         type: object
         properties:
           enabled:
             description: |
-              Controls creation of Prometheus Operator CRDs (ServiceMonitor, PrometheusRule).
+              Whether to create the monitoring resources. Off by default; set to
+              true to enable. With the default discovery method (serviceMonitors),
+              this creates monitoring.coreos.com/v1 CRDs, so the install fails if the
+              Prometheus Operator is not present -- use discovery.method: annotations
+              otherwise.
+            default: false
+            type: boolean
+          discovery:
+            description: |
+              How the agent's metrics are advertised when monitoring.enabled is on.
+            additionalProperties: false
+            type: object
+            properties:
+              method:
+                description: |
+                  Discovery mechanism used when monitoring.enabled resolves on.
 
-              - null (default): Follow the release default. Currently maps to false
-                while this feature is being validated. In a future release, null will
-                map to "auto".
-              - "auto": Auto-detect. Creates monitoring CRDs only if the Prometheus
-                Operator CRDs (monitoring.coreos.com/v1) are available in the cluster.
-              - true: Always create monitoring CRDs. Helm will fail if the Prometheus
-                Operator CRDs are not installed.
-              - false: Never create monitoring CRDs.
-            default: null
-            oneOf:
-              - type: "null"
-              - type: boolean
-              - type: string
+                  - "auto" (default): Pick automatically. Resolves to "serviceMonitors"
+                    today; kept as an enum so a future auto-detectable backend can extend
+                    it without changing the default.
+                  - "serviceMonitors": Emit ServiceMonitor CRDs plus the PrometheusRule
+                    alert bundle for the Prometheus Operator.
+                  - "annotations": Emit prometheus.io/* annotations only -- no Operator
+                    CRDs and no alert bundle. Explicit opt-in; never auto-selected.
+                default: auto
+                type: string
                 enum:
                   - auto
+                  - serviceMonitors
+                  - annotations
           namespace:
             description: |
               Namespace override for PrometheusRule and ServiceMonitor CRDs.
@@ -1439,6 +1482,40 @@ properties:
           How frequently to close HTTP connections from clients, to help
           distribute the load across the various collector replicas. 0=never,
           otherwise 1/N probability.
+      readinessProbe:
+        type: object
+        additionalProperties: false
+        description: |
+          Readiness probe configuration applied to both the collector and
+          shipper containers of the aggregator.
+        properties:
+          initialDelaySeconds:
+            type: integer
+            minimum: 0
+          periodSeconds:
+            type: integer
+            minimum: 1
+          failureThreshold:
+            type: integer
+            minimum: 1
+      livenessProbe:
+        type: object
+        additionalProperties: false
+        description: |
+          Liveness probe configuration applied to both the collector and
+          shipper containers of the aggregator. Liveness is deliberately more
+          tolerant than readiness so a pod has time to self-heal before being
+          restarted.
+        properties:
+          initialDelaySeconds:
+            type: integer
+            minimum: 0
+          periodSeconds:
+            type: integer
+            minimum: 1
+          failureThreshold:
+            type: integer
+            minimum: 1
       image:
         deprecated: true
         $ref: "#/$defs/com.cloudzero.agent.image"
@@ -1516,6 +1593,38 @@ properties:
           # Resource requirements for the collector
           resources:
             $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+          readinessProbe:
+            type: object
+            additionalProperties: false
+            description: |
+              Per-container overrides for the collector readiness probe,
+              merged on top of aggregator.readinessProbe.
+            properties:
+              initialDelaySeconds:
+                type: integer
+                minimum: 0
+              periodSeconds:
+                type: integer
+                minimum: 1
+              failureThreshold:
+                type: integer
+                minimum: 1
+          livenessProbe:
+            type: object
+            additionalProperties: false
+            description: |
+              Per-container overrides for the collector liveness probe,
+              merged on top of aggregator.livenessProbe.
+            properties:
+              initialDelaySeconds:
+                type: integer
+                minimum: 0
+              periodSeconds:
+                type: integer
+                minimum: 1
+              failureThreshold:
+                type: integer
+                minimum: 1
       shipper:
         type: object
         additionalProperties: false
@@ -1530,6 +1639,38 @@ properties:
           # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
           resources:
             $ref: "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
+          readinessProbe:
+            type: object
+            additionalProperties: false
+            description: |
+              Per-container overrides for the shipper readiness probe,
+              merged on top of aggregator.readinessProbe.
+            properties:
+              initialDelaySeconds:
+                type: integer
+                minimum: 0
+              periodSeconds:
+                type: integer
+                minimum: 1
+              failureThreshold:
+                type: integer
+                minimum: 1
+          livenessProbe:
+            type: object
+            additionalProperties: false
+            description: |
+              Per-container overrides for the shipper liveness probe,
+              merged on top of aggregator.livenessProbe.
+            properties:
+              initialDelaySeconds:
+                type: integer
+                minimum: 0
+              periodSeconds:
+                type: integer
+                minimum: 1
+              failureThreshold:
+                type: integer
+                minimum: 1
       # Node selector for the aggregator
       nodeSelector:
         $ref: "#/$defs/io.k8s.api.core.v1.PodSpec/properties/nodeSelector"
@@ -1869,10 +2010,15 @@ properties:
     properties:
       enabled:
         description: |
-          Whether to enable the insights controller. It is strongly recommended
-          that this feature be enabled as it provides important functionality.
-        type: boolean
-        default: true
+          DEPRECATED: use components.webhookServer.enabled instead. Retained for
+          backward compatibility: when explicitly set (true/false) this value
+          takes precedence over components.webhookServer.enabled. Leave unset
+          (null) to use the new field.
+        deprecated: true
+        default: null
+        oneOf:
+          - type: "null"
+          - type: boolean
       labels:
         description: |
           Configuration for collecting labels from Kubernetes resources.
@@ -2967,6 +3113,41 @@ properties:
 
 # Root-level conditional validations that span multiple properties
 allOf:
+  # Conditional: API key source validation
+  #
+  # Top-level apiKey/existingSecretName take priority when set. If both are
+  # null, the chart falls back to components.apiKey where exactly one of
+  # value, name, or secretProviderClass must be non-null.
+  - if:
+      properties:
+        apiKey:
+          type: "null"
+        existingSecretName:
+          type: "null"
+    then:
+      properties:
+        components:
+          properties:
+            apiKey:
+              properties:
+                secretProviderClass:
+                  type: string
+                  minLength: 1
+              required: [secretProviderClass]
+    else:
+      oneOf:
+        - properties:
+            apiKey:
+              type: string
+              pattern: "^[a-zA-Z0-9-_.~!*'();]+$"
+            existingSecretName:
+              type: "null"
+        - properties:
+            apiKey:
+              type: "null"
+            existingSecretName:
+              type: string
+
   # Conditional: Federation mode constraint
   #
   # If defaults.federation.enabled is true, then components.agent.mode must be

@@ -1,4 +1,4 @@
-{{- if .Values.insightsController.enabled }}
+{{- if eq (include "cloudzero-agent.webhookServer.enabled" .) "true" }}
 {{ $backFillValues := (include "cloudzero-agent.backFill" . | fromYaml) }}
 {{- if $backFillValues.enabled }}
 {{- /*
@@ -155,6 +155,11 @@ spec:
                 - -config
                 - "{{ include "cloudzero-agent.insightsController.configurationMountPath" $ }}/server-config.yaml"
                 - -backfill
+              {{- include "cloudzero-agent.generateEnv" (dict
+                  "env" (list
+                    $.Values.defaults.env
+                  )
+                ) | nindent 14 }}
               {{- include "cloudzero-agent.generateResources" (include "cloudzero-agent.mergeStringOverwrite" (list
                     ($.Values.components.webhookServer.backfill.resources | default (dict))
                     ($.Values.insightsController.resources | default (dict))
@@ -166,18 +171,13 @@ spec:
               volumeMounts:
                 - name: insights-server-config
                   mountPath: {{ include "cloudzero-agent.insightsController.configurationMountPath" $ }}
+                {{- include "cloudzero-agent.apiKeyVolumeMount" $ | nindent 16 }}
               {{- if or $.Values.insightsController.volumeMounts $.Values.insightsController.tls.enabled }}
-              {{- if or $.Values.existingSecretName $.Values.apiKey }}
-                - name: cloudzero-api-key
-                  mountPath: {{ $.Values.serverConfig.containerSecretFilePath }}
-                  subPath: ""
-                  readOnly: true
-              {{- end }}
                 {{- with $.Values.insightsController.volumeMounts }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
               {{- end }}
-          {{- if or $.Values.insightsController.volumes $.Values.insightsController.tls.enabled }}
+          {{- if or $.Values.insightsController.volumes $.Values.insightsController.tls.enabled (ne (include "cloudzero-agent.apiKey.mode" $) "none") }}
           volumes:
             - name: insights-server-config
               configMap:
@@ -187,11 +187,7 @@ spec:
               secret:
                 secretName: {{ include "cloudzero-agent.tlsSecretName" $ }}
             {{- end }}
-            {{- if or $.Values.existingSecretName $.Values.apiKey }}
-            - name: cloudzero-api-key
-              secret:
-                secretName: {{ include "cloudzero-agent.secretName" $ }}
-            {{- end }}
+            {{- include "cloudzero-agent.apiKeyVolume" $ | nindent 12 }}
             {{- with $.Values.insightsController.volumes }}
               {{- toYaml . | nindent 12 }}
             {{- end }}

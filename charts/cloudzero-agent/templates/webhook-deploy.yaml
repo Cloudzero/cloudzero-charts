@@ -23,7 +23,7 @@ Operational characteristics:
 The webhook server is essential for CloudZero cost allocation accuracy,
 ensuring complete resource metadata collection across all Kubernetes workloads.
 */}}
-{{- if .Values.insightsController.enabled }}
+{{- if eq (include "cloudzero-agent.webhookServer.enabled" .) "true" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -118,6 +118,11 @@ spec:
           args:
             - -config
             - "{{ include "cloudzero-agent.insightsController.configurationMountPath" . }}/server-config.yaml"
+          {{- include "cloudzero-agent.generateEnv" (dict
+              "env" (list
+                .Values.defaults.env
+              )
+            ) | nindent 10 }}
           ports:
             - containerPort: 8443
           {{- include "cloudzero-agent.generateResources" (include "cloudzero-agent.mergeStringOverwrite" (list
@@ -137,12 +142,6 @@ spec:
               mountPath: {{ .Values.insightsController.tls.mountPath }}
               readOnly: true
             {{- end }}
-          {{- if or .Values.existingSecretName .Values.apiKey }}
-            - name: cloudzero-api-key
-              mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
-              subPath: ""
-              readOnly: true
-          {{- end }}
             {{- with .Values.insightsController.volumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -178,11 +177,6 @@ spec:
         - name: tls-certs
           secret:
             secretName: {{ include "cloudzero-agent.tlsSecretName" . }}
-        {{- end }}
-        {{- if or .Values.existingSecretName .Values.apiKey }}
-        - name: cloudzero-api-key
-          secret:
-            secretName: {{ include "cloudzero-agent.secretName" . }}
         {{- end }}
         {{- with .Values.insightsController.volumes }}
           {{- toYaml . | nindent 8 }}

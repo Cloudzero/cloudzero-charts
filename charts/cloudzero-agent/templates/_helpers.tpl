@@ -22,7 +22,7 @@ Usage: {{ include "cloudzero-agent.versionNumber" . }}
 Returns: string with version annotation
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.11  # <- Software release corresponding to this chart version.
+version: 1.2.12  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -52,6 +52,23 @@ Returns: string (e.g., "my-release-api-key" or custom existing secret name)
 {{ define "cloudzero-agent.secretName" -}}
 {{ .Values.existingSecretName | default (printf "%s-api-key" .Release.Name) }}
 {{- end}}
+
+{{/*
+Determine the API key provisioning mode.
+
+Returns one of: "inline", "secret", "csi", "none"
+*/}}
+{{- define "cloudzero-agent.apiKey.mode" -}}
+{{- if .Values.apiKey -}}
+  {{- print "inline" -}}
+{{- else if .Values.existingSecretName -}}
+  {{- print "secret" -}}
+{{- else if and .Values.components .Values.components.apiKey .Values.components.apiKey.secretProviderClass -}}
+  {{- print "csi" -}}
+{{- else -}}
+  {{- print "none" -}}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Define the path and filename on the container filesystem which holds the CloudZero API key.
@@ -772,14 +789,38 @@ Name for the secret holding TLS certificates
 {{- end }}
 
 {{/*
-Volume mount for the API key
+Volume mount for the API key.
+Renders for inline, secret, and csi modes. No output for "none".
 */}}
 {{- define "cloudzero-agent.apiKeyVolumeMount" -}}
-{{- if or .Values.existingSecretName .Values.apiKey -}}
+{{- $mode := include "cloudzero-agent.apiKey.mode" . -}}
+{{- if ne $mode "none" -}}
 - name: cloudzero-api-key
   mountPath: {{ .Values.serverConfig.containerSecretFilePath }}
   subPath: ""
   readOnly: true
+{{- end }}
+{{- end }}
+
+{{/*
+Volume definition for the API key.
+- inline/secret: Kubernetes Secret volume
+- csi: Secrets Store CSI Driver volume
+- none: no output
+*/}}
+{{- define "cloudzero-agent.apiKeyVolume" -}}
+{{- $mode := include "cloudzero-agent.apiKey.mode" . -}}
+{{- if or (eq $mode "inline") (eq $mode "secret") -}}
+- name: cloudzero-api-key
+  secret:
+    secretName: {{ include "cloudzero-agent.secretName" . }}
+{{- else if eq $mode "csi" -}}
+- name: cloudzero-api-key
+  csi:
+    driver: secrets-store.csi.k8s.io
+    readOnly: true
+    volumeAttributes:
+      secretProviderClass: {{ .Values.components.apiKey.secretProviderClass }}
 {{- end }}
 {{- end }}
 
@@ -1012,6 +1053,76 @@ Example:
 {{- if len $merged -}}
 annotations:
 {{- $merged | toYaml | nindent 2 -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate a container env block by merging a list of env-entry sources.
+
+Parameters (dict):
+- env:  List of env-entry lists to merge (required).
+
+Each list element is itself a list of env-entry dicts ({name, value} or
+{name, valueFrom}). Sources can come from:
+  - an inline list of dicts built with `(list (dict "name" "..." "value" ...))`
+  - the output of an env-emitting helper, parsed via `fromYamlArray`:
+      (include "cloudzero-agent.validatorEnv" . | fromYamlArray)
+  - a list value from values.yaml: `.Values.defaults.env`
+
+Merge behavior:
+- Later sources override earlier sources by `name` (last wins).
+- First-seen wins for ordering; overrides retain the entry's original position.
+- Nil/empty sources are skipped.
+- Entries without a `name` field are skipped (defensive only — the
+  `.Values.defaults.env` schema rejects them at render time via the
+  io.k8s.api.core.v1.EnvVar ref).
+
+Output:
+- If at least one entry survives the merge, emits an `env:` key followed by
+  the merged list as YAML.
+- If the merged list is empty, emits nothing — caller's container ends up
+  with no env block, preserving the chart's default rendering.
+
+Source-list precedence convention (lowest → highest):
+  1. `.Values.defaults.env` — chart-wide user override; lowest priority.
+  2. Component-specific user env (e.g. `.Values.server.env`) — overrides
+     chart-wide user env on collision but loses to chart-emitted entries.
+  3. Chart-emitted helper output (`validatorEnv` etc.).
+  4. Chart-emitted hardcoded literals (`SERVER_PORT`, `NODE_NAME`,
+     `HOSTNAME`) — highest priority; these are load-bearing for the
+     chart's correctness and must not be overridable.
+
+Example:
+  {{- include "cloudzero-agent.generateEnv" (dict
+      "env" (list
+        .Values.defaults.env
+        .Values.server.env
+        (include "cloudzero-agent.validatorEnv" . | fromYamlArray)
+        (list (dict "name" "SERVER_PORT" "value" (printf "%d" (int .Values.aggregator.shipper.port))))
+      )
+    ) | nindent 10 }}
+*/}}
+{{- define "cloudzero-agent.generateEnv" -}}
+{{- $sources := .env | default (list) -}}
+{{- $byName := dict -}}
+{{- $order := list -}}
+{{- range $list := $sources -}}
+  {{- range $entry := $list -}}
+    {{- if and $entry $entry.name -}}
+      {{- if not (hasKey $byName $entry.name) -}}
+        {{- $order = append $order $entry.name -}}
+      {{- end -}}
+      {{- $_ := set $byName $entry.name $entry -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if $order -}}
+{{- $result := list -}}
+{{- range $name := $order -}}
+  {{- $result = append $result (index $byName $name) -}}
+{{- end -}}
+env:
+{{- $result | toYaml | nindent 2 -}}
 {{- end -}}
 {{- end -}}
 
@@ -1530,6 +1641,7 @@ Returns: The Istio cluster ID string (explicit or fallback to clusterName)
 {{- .Values.integrations.istio.clusterID | default .Values.clusterName -}}
 {{- end -}}
 
+
 {{/*
 Validator Stage Helper
 
@@ -1567,42 +1679,52 @@ checks: {{ $checks | toYaml | nindent 2 -}}
 {{- end -}}
 
 {{/*
-Prometheus Operator Monitoring Enabled Helper
+Prometheus monitoring resolution helpers.
 
-Determines whether Prometheus Operator CRDs (ServiceMonitor, PrometheusRule) should
-be created.
+The chart integrates with a customer's Prometheus stack through the Prometheus
+Operator (ServiceMonitor + PrometheusRule CRDs) and/or prometheus.io/* annotations.
 
-  - null (default): Follow the release default. Currently maps to "false"
-    (disabled) while the feature is being validated in customer environments.
-    In a future release, null will map to "auto".
-  - "auto": Auto-detect via CRD presence in the cluster. Creates monitoring
-    resources only if the Prometheus Operator CRDs (monitoring.coreos.com/v1)
-    are available.
-  - true: Force enable (will fail if CRDs are not installed)
-  - false: Force disable
+  components.monitoring.enabled (true|false, default false) -- whether any
+      monitoring resources are created. Explicit; there is no auto-detection.
+  components.monitoring.discovery.method (auto|serviceMonitors|annotations) -- when
+      enabled, the discovery mechanism:
+        auto (default)  = resolves to serviceMonitors today; left as an enum so a
+                          future mechanism can extend it without changing the default
+        serviceMonitors = ServiceMonitor CRDs (+ the PrometheusRule alert bundle).
+                          These are monitoring.coreos.com/v1 CRDs, so the install
+                          fails if the Prometheus Operator is not present.
+        annotations     = prometheus.io/* annotations only (no Operator CRDs, no alerts)
 
-Usage: {{ if include "cloudzero-agent.monitoring.enabled" . }}...{{ end }}
-Returns: "true" (truthy) when enabled, empty string (falsy) when disabled
+The ServiceMonitors and the PrometheusRule are one Operator bundle: both ride the
+serviceMonitors path. Choosing annotations is discovery-only (no alert bundle).
+Each helper returns "true"/"". The `dig` default mirrors values.yaml so values
+files predating `discovery` still resolve.
 */}}
-{{- define "cloudzero-agent.monitoring.enabled" -}}
-{{- $monitoringSetting := .Values.components.monitoring.enabled -}}
-{{- if kindIs "invalid" $monitoringSetting -}}
-  {{- /* null/not set = release default. Currently: disabled.
-         Change this block to auto-detect when promoting to GA:
-           if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1"
-             true
-           end
-  */ -}}
-{{- else if eq (toString $monitoringSetting) "auto" -}}
-  {{- /* "auto" = detect Prometheus Operator CRDs */ -}}
-  {{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" -}}
-    {{- true -}}
-  {{- end -}}
-{{- else if eq (toString $monitoringSetting) "true" -}}
-  {{- /* true = force enabled */ -}}
-  {{- true -}}
+{{/* Resolved discovery method: "annotations" only when explicitly chosen; "auto" and
+     "serviceMonitors" both resolve to serviceMonitors (auto is extensible in future). */}}
+{{- define "cloudzero-agent.monitoring.method" -}}
+{{- if eq (toString (dig "discovery" "method" "auto" .Values.components.monitoring)) "annotations" -}}
+{{- "annotations" -}}
+{{- else -}}
+{{- "serviceMonitors" -}}
 {{- end -}}
-{{- /* false = force disabled, returns empty string */ -}}
+{{- end -}}
+
+{{- define "cloudzero-agent.monitoring.serviceMonitorsActive" -}}
+{{- if dig "enabled" false .Values.components.monitoring -}}
+{{- if eq (include "cloudzero-agent.monitoring.method" .) "serviceMonitors" -}}{{- true -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* The PrometheusRule alert bundle ships with the ServiceMonitor (operator) path. */}}
+{{- define "cloudzero-agent.monitoring.rulesActive" -}}
+{{- include "cloudzero-agent.monitoring.serviceMonitorsActive" . -}}
+{{- end -}}
+
+{{- define "cloudzero-agent.monitoring.annotationsActive" -}}
+{{- if dig "enabled" false .Values.components.monitoring -}}
+{{- if eq (include "cloudzero-agent.monitoring.method" .) "annotations" -}}{{- true -}}{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*

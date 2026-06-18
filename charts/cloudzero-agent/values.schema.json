@@ -5444,6 +5444,60 @@
   "additionalProperties": false,
   "allOf": [
     {
+      "else": {
+        "oneOf": [
+          {
+            "properties": {
+              "apiKey": {
+                "pattern": "^[a-zA-Z0-9-_.~!*'();]+$",
+                "type": "string"
+              },
+              "existingSecretName": {
+                "type": "null"
+              }
+            }
+          },
+          {
+            "properties": {
+              "apiKey": {
+                "type": "null"
+              },
+              "existingSecretName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "if": {
+        "properties": {
+          "apiKey": {
+            "type": "null"
+          },
+          "existingSecretName": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "properties": {
+              "apiKey": {
+                "properties": {
+                  "secretProviderClass": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["secretProviderClass"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "if": {
         "allOf": [
           {
@@ -5529,37 +5583,6 @@
       }
     }
   ],
-  "anyOf": [
-    {
-      "required": ["apiKey"]
-    },
-    {
-      "required": ["existingSecretName"]
-    }
-  ],
-  "oneOf": [
-    {
-      "properties": {
-        "apiKey": {
-          "pattern": "^[a-zA-Z0-9-_.~!*'();]+$",
-          "type": "string"
-        },
-        "existingSecretName": {
-          "type": "null"
-        }
-      }
-    },
-    {
-      "properties": {
-        "apiKey": {
-          "type": "null"
-        },
-        "existingSecretName": {
-          "type": "string"
-        }
-      }
-    }
-  ],
   "properties": {
     "aggregator": {
       "additionalProperties": false,
@@ -5593,8 +5616,44 @@
         "collector": {
           "additionalProperties": false,
           "properties": {
+            "livenessProbe": {
+              "additionalProperties": false,
+              "properties": {
+                "failureThreshold": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
             "port": {
               "type": "integer"
+            },
+            "readinessProbe": {
+              "additionalProperties": false,
+              "properties": {
+                "failureThreshold": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "type": "object"
             },
             "resources": {
               "$ref": "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
@@ -5656,6 +5715,24 @@
           "$ref": "#/$defs/com.cloudzero.agent.image",
           "deprecated": true
         },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
         "logging": {
           "additionalProperties": false,
           "properties": {
@@ -5683,6 +5760,24 @@
         "profiling": {
           "type": "boolean"
         },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
         "reconnectFrequency": {
           "minimum": 0,
           "type": "integer"
@@ -5690,8 +5785,44 @@
         "shipper": {
           "additionalProperties": false,
           "properties": {
+            "livenessProbe": {
+              "additionalProperties": false,
+              "properties": {
+                "failureThreshold": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
             "port": {
               "type": "integer"
+            },
+            "readinessProbe": {
+              "additionalProperties": false,
+              "properties": {
+                "failureThreshold": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "type": "object"
             },
             "resources": {
               "$ref": "#/$defs/io.k8s.api.core.v1.ResourceRequirements"
@@ -6078,6 +6209,15 @@
           },
           "type": "object"
         },
+        "apiKey": {
+          "additionalProperties": false,
+          "properties": {
+            "secretProviderClass": {
+              "type": ["string", "null"]
+            }
+          },
+          "type": "object"
+        },
         "kubectl": {
           "additionalProperties": false,
           "deprecated": true,
@@ -6169,20 +6309,20 @@
         "monitoring": {
           "additionalProperties": false,
           "properties": {
-            "enabled": {
-              "default": null,
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "boolean"
-                },
-                {
-                  "enum": ["auto"],
+            "discovery": {
+              "additionalProperties": false,
+              "properties": {
+                "method": {
+                  "default": "auto",
+                  "enum": ["auto", "serviceMonitors", "annotations"],
                   "type": "string"
                 }
-              ]
+              },
+              "type": "object"
+            },
+            "enabled": {
+              "default": false,
+              "type": "boolean"
             },
             "labels": {
               "additionalProperties": {
@@ -6303,6 +6443,21 @@
               },
               "type": "object"
             },
+            "enabled": {
+              "default": "auto",
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "enum": ["auto"],
+                  "type": "string"
+                }
+              ]
+            },
             "labels": {
               "$ref": "#/$defs/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta/properties/labels"
             },
@@ -6379,6 +6534,12 @@
         },
         "dns": {
           "$ref": "#/$defs/com.cloudzero.agent.dns"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/io.k8s.api.core.v1.EnvVar"
+          },
+          "type": "array"
         },
         "federation": {
           "additionalProperties": false,
@@ -6660,8 +6821,16 @@
           "type": ["string", "null"]
         },
         "enabled": {
-          "default": true,
-          "type": "boolean"
+          "default": null,
+          "deprecated": true,
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
         },
         "labels": {
           "additionalProperties": false,
