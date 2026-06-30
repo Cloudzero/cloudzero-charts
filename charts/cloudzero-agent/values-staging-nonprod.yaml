@@ -1,0 +1,68 @@
+clusterName: nonprod-staging
+cloudAccountId: "290244732740"
+region: eu-west-1
+
+# WARNING: do not commit this file with a real API key
+apiKey: "gn451xCSZHUCLzS2jS5gaz6d6T-_G4vj2s8cLA"
+
+defaults:
+  podDisruptionBudget:
+    enabled: false
+
+components:
+  agent:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1024Mi
+      limits:
+        memory: 1024Mi
+
+  validator:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+
+  aggregator:
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+    collector:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+    shipper:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+
+  webhookServer:
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+kubeStateMetrics:
+  enabled: false
+  targetOverride: newrelic-kube-state-metrics.newrelic.svc.cluster.local:8080
+
+# The develop branch chart expects prometheus-config-reloader to be embedded in
+# the agent image, but image 1.2.12 does not include it yet. Disable until the
+# image is updated to a version that ships the binary.
+configmapReload:
+  prometheus:
+    enabled: false
