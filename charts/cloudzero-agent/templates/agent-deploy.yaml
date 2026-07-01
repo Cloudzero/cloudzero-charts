@@ -64,6 +64,7 @@ spec:
           {{- include "cloudzero-agent.generateEnv" (dict
               "env" (list
                 .Values.defaults.env
+                .Values.components.validator.env
                 (include "cloudzero-agent.validatorEnv" . | fromYamlArray)
               )
             ) | nindent 10 }}
@@ -91,6 +92,7 @@ spec:
           {{- include "cloudzero-agent.generateEnv" (dict
               "env" (list
                 .Values.defaults.env
+                .Values.components.validator.env
                 (include "cloudzero-agent.validatorEnv" . | fromYamlArray)
               )
             ) | nindent 10 }}
@@ -118,7 +120,9 @@ spec:
         {{- if .Values.configmapReload.prometheus.enabled }}
         # ConfigMap reloader sidecar for Prometheus/Alloy
         - name: {{ template "cloudzero-agent.name" . }}-{{ .Values.server.name }}-configmap-reload
-          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.prometheusReloader.image "compat" .Values.configmapReload.prometheus.image) | nindent 10 }}
+          {{- include "cloudzero-agent.generateImage" (dict "defaults" .Values.defaults.image "image" .Values.components.agent.image) | nindent 10 }}
+          command:
+            - /app/prometheus-config-reloader
           args:
             - --watched-dir=/etc/config
             - --reload-url=http://127.0.0.1:9090/-/reload
@@ -126,6 +130,7 @@ spec:
           {{- include "cloudzero-agent.generateEnv" (dict
               "env" (list
                 .Values.defaults.env
+                .Values.components.agent.reloader.env
               )
             ) | nindent 10 }}
           ports:
@@ -178,6 +183,7 @@ spec:
               "env" (list
                 .Values.defaults.env
                 .Values.server.env
+                .Values.components.agent.env
                 (include "cloudzero-agent.validatorEnv" . | fromYamlArray)
               )
             ) | nindent 10 }}
@@ -270,6 +276,7 @@ spec:
           {{- include "cloudzero-agent.generateEnv" (dict
               "env" (list
                 .Values.defaults.env
+                .Values.components.agent.env
                 (include "cloudzero-agent.validatorEnv" . | fromYamlArray)
                 (list (dict "name" "HOSTNAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))))
               )

@@ -83,6 +83,7 @@ spec:
           {{- include "cloudzero-agent.generateEnv" (dict
               "env" (list
                 .Values.defaults.env
+                .Values.components.aggregator.collector.env
                 (list (dict "name" "SERVER_PORT" "value" (printf "%d" (int .Values.aggregator.collector.port))))
               )
             ) | nindent 10 }}
@@ -132,6 +133,7 @@ spec:
           {{- include "cloudzero-agent.generateEnv" (dict
               "env" (list
                 .Values.defaults.env
+                .Values.components.aggregator.shipper.env
                 (list (dict "name" "SERVER_PORT" "value" (printf "%d" (int .Values.aggregator.shipper.port))))
               )
             ) | nindent 10 }}
@@ -175,7 +177,7 @@ spec:
       {{- include "cloudzero-agent.generateDNSInfo" (dict "defaults" .Values.defaults.dns) | nindent 6 }}
       {{- include "cloudzero-agent.generateImagePullSecrets" (dict "root" . "image" .Values.components.agent.image) | nindent 6 }}
       {{- include "cloudzero-agent.generateNodeSelector" (dict "default" .Values.defaults.nodeSelector "nodeSelector" .Values.aggregator.nodeSelector) | nindent 6 }}
-      {{- include "cloudzero-agent.generateAffinity" (dict "default" .Values.defaults.affinity) | nindent 6 }}
+      {{- include "cloudzero-agent.generateAffinity" (dict "default" .Values.defaults.affinity "affinity" .Values.aggregator.affinity) | nindent 6 }}
       {{- include "cloudzero-agent.generateTolerations" (concat .Values.defaults.tolerations) | nindent 6 }}
 
     {{- with .Values.server.topologySpreadConstraints }}
