@@ -325,7 +325,7 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.2.14  # <- Software release corresponding to this chart version.
+      tag: 1.3.0  # <- Software release corresponding to this chart version.
 
     # Agent deployment mode. Controls how the agent collects and processes metrics.
     #
@@ -341,9 +341,9 @@ components:
     #   per node. This is equivalent to setting defaults.federation.enabled to true.
     #   Uses Prometheus in server mode for metrics collection.
     #
-    # - "clustered": EXPERIMENTAL. Uses the embedded CloudZero Alloy binary for
-    #   metrics collection instead of Prometheus. Alloy provides better
-    #   performance and native horizontal scalability.
+    # - "clustered": Uses the embedded CloudZero Alloy binary for metrics
+    #   collection instead of Prometheus. Alloy provides better performance
+    #   and native horizontal scalability.
     #
     # - null means automatic mode (currently defaults to "agent").
     mode: null
@@ -440,13 +440,14 @@ components:
           memory: "1024Mi"
           cpu: "1000m"
 
-    # KubeState plugin configuration.
+    # KubeState plugin configuration (EXPERIMENTAL).
     #
     # When enabled, the CloudZero Alloy KubeState plugin replaces the
     # kube-state-metrics (KSM) subchart for collecting Kubernetes state
     # metrics. The KubeState plugin runs inside the Alloy process and
     # watches the Kubernetes API directly, eliminating the need for a
-    # separate KSM deployment.
+    # separate KSM deployment. This feature is experimental and may change
+    # in future releases.
     #
     # Requirements:
     # - components.agent.mode must be set to "clustered"
@@ -1749,6 +1750,12 @@ aggregator:
       # Whether to enable the emptyDir volume for the aggregator.
       enabled: true
       # Size limit for the emptyDir volume. If not set, no limit is applied.
+      #
+      # When set, this is also used as the collector container's
+      # ephemeral-storage request, so the pod is only scheduled onto a node
+      # with enough allocatable ephemeral storage. Set
+      # components.aggregator.collector.resources.requests.ephemeral-storage
+      # to override it.
       sizeLimit: ""
   # Configuration for the collector component of the aggregator.
   collector:

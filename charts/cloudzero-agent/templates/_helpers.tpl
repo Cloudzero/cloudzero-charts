@@ -22,7 +22,7 @@ Usage: {{ include "cloudzero-agent.versionNumber" . }}
 Returns: string with version annotation
 */}}
 {{- define "cloudzero-agent.versionNumber" -}}
-version: 1.2.14  # <- Software release corresponding to this chart version.
+version: 1.3.0  # <- Software release corresponding to this chart version.
 {{- end -}}
 
 {{/*
@@ -1345,28 +1345,15 @@ Example usage:
 {{- if . -}}
   {{- $resources := . -}}
   {{- $cleanResources := dict -}}
-  {{- if $resources.requests -}}
-    {{- $cleanRequests := dict -}}
-    {{- if and $resources.requests.cpu (ne $resources.requests.cpu "") -}}
-      {{- $_ := set $cleanRequests "cpu" $resources.requests.cpu -}}
+  {{- range $section := list "requests" "limits" -}}
+    {{- $clean := dict -}}
+    {{- range $name, $value := (index $resources $section | default dict) -}}
+      {{- if and $value (ne (toString $value) "") -}}
+        {{- $_ := set $clean $name $value -}}
+      {{- end -}}
     {{- end -}}
-    {{- if and $resources.requests.memory (ne $resources.requests.memory "") -}}
-      {{- $_ := set $cleanRequests "memory" $resources.requests.memory -}}
-    {{- end -}}
-    {{- if $cleanRequests -}}
-      {{- $_ := set $cleanResources "requests" $cleanRequests -}}
-    {{- end -}}
-  {{- end -}}
-  {{- if $resources.limits -}}
-    {{- $cleanLimits := dict -}}
-    {{- if and $resources.limits.cpu (ne $resources.limits.cpu "") -}}
-      {{- $_ := set $cleanLimits "cpu" $resources.limits.cpu -}}
-    {{- end -}}
-    {{- if and $resources.limits.memory (ne $resources.limits.memory "") -}}
-      {{- $_ := set $cleanLimits "memory" $resources.limits.memory -}}
-    {{- end -}}
-    {{- if $cleanLimits -}}
-      {{- $_ := set $cleanResources "limits" $cleanLimits -}}
+    {{- if $clean -}}
+      {{- $_ := set $cleanResources $section $clean -}}
     {{- end -}}
   {{- end -}}
   {{- if $cleanResources -}}
@@ -1892,4 +1879,36 @@ Returns: "10800s"
 {{- $seconds := include "cloudzero-agent.durationToSeconds" $dur | float64 -}}
 {{- $scaled := mulf $seconds $multiplier | int -}}
 {{- printf "%ds" $scaled -}}
+{{- end -}}
+
+{{/*
+Name of the headless service used for Alloy cluster peer discovery.
+
+Separate from the regular server service because peer discovery needs a
+headless service: it must resolve to the individual replica pod IPs rather than
+to a single virtual ClusterIP, so each Alloy replica can gossip with every
+other one.
+*/}}
+{{- define "cloudzero-agent.server.clusterServiceName" -}}
+{{- /* This name must never equal the regular server Service name. They are
+     different Service contracts, so colliding means a duplicate resource on
+     install, or an upgrade asking Kubernetes to convert an existing ClusterIP
+     Service into a headless one, which it rejects as an immutable field change.
+
+     Reserving room for the suffix is not enough, because appending to a
+     truncated base can rebuild the base. A name ending in "-cluster" whose
+     length puts the cut inside that suffix reconstructs itself: both a
+     63-character and a 62-character name do. Truncating further just repeats
+     the problem at another length, so shortening cannot be the answer.
+
+     When the derived name matches, fall back to a different suffix instead.
+     That is distinct by construction rather than by luck: the branch is only
+     reached when the base ends in "-cluster", and the fallback ends in
+     "-peers", so the two cannot be equal for any input. */ -}}
+{{- $base := include "cloudzero-agent.server.fullname" . -}}
+{{- $name := printf "%s-cluster" ($base | trunc 55 | trimSuffix "-") -}}
+{{- if eq $name $base -}}
+  {{- $name = printf "%s-peers" ($base | trunc 57 | trimSuffix "-") -}}
+{{- end -}}
+{{- $name -}}
 {{- end -}}
