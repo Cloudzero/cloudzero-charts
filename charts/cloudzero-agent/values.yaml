@@ -325,7 +325,7 @@ components:
     # executables, to provide CloudZero functionality.
     image:
       repository: ghcr.io/cloudzero/cloudzero-agent/cloudzero-agent
-      tag: 1.3.1  # <- Software release corresponding to this chart version.
+      tag: 1.3.2  # <- Software release corresponding to this chart version.
 
     # Agent deployment mode. Controls how the agent collects and processes metrics.
     #
@@ -1217,7 +1217,9 @@ server:
   fullnameOverride:
   # -- Override for the server's cluster role name. If not set, uses the server's fullname.
   clusterRoleNameOverride:
-  # -- If set, use an existing ClusterRole instead of creating one.
+  # -- If set, use an existing ClusterRole instead of creating one. With
+  # components.agent.kubeState.enabled, the role must also grant "watch" on
+  # each resource type enabled under insightsController.{labels,annotations}.resources.
   useExistingClusterRoleName:
   # -- Deprecated. Use serviceAccount.automountServiceAccountToken instead. Whether to automatically mount a ServiceAccount token in the server pods.
   automountServiceAccountToken:
